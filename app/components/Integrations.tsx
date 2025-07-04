@@ -31,7 +31,7 @@ function LogoCarousel() {
                                     src={logo.src}
                                     alt={logo.alt}
                                     width={36}
-                                    height={18}
+                                    height={36}
                                     className="opacity-60 hover:opacity-100 transition-opacity"
                                 />
                             </div>

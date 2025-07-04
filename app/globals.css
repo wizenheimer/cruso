@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* Force light mode - disable automatic dark mode */
+:root {
+    color-scheme: light only !important;
+}
+
 :root {
     --foreground-rgb: 0, 0, 0;
     --background-start-rgb: 214, 219, 220;
