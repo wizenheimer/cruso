@@ -19,7 +19,19 @@ export async function getAllPosts(
     page: number = 1,
 ): Promise<{ posts: BlogPost[]; totalPages: number }> {
     const postsDirectory = path.join(process.cwd(), 'content/blog');
-    const filenames = fs.readdirSync(postsDirectory);
+
+    // Check if directory exists before reading
+    if (!fs.existsSync(postsDirectory)) {
+        return { posts: [], totalPages: 0 };
+    }
+
+    let filenames: string[];
+    try {
+        filenames = fs.readdirSync(postsDirectory);
+    } catch (error) {
+        console.error(`Error reading blog posts directory: ${error}`);
+        return { posts: [], totalPages: 0 };
+    }
 
     const posts = filenames
         .filter((filename) => filename.endsWith('.mdx'))

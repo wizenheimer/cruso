@@ -5,7 +5,7 @@ import Footer from './components/Footer';
 
 export default function Page() {
     return (
-        <div className="w-full min-h-screen bg-white flex flex-col">
+        <div className="w-full min-h-screen flex flex-col">
             <Navigation />
             <Hero />
             <Integrations />
