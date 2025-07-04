@@ -53,7 +53,7 @@ export const auth = async (c: Context, next: Next) => {
                 401,
             );
         }
-    } catch (error) {
+    } catch {
         return c.json(
             {
                 error: 'Unauthorized',
@@ -100,7 +100,7 @@ export const optionalAuth = async (c: Context, next: Next) => {
 
                 c.set('user', user);
             }
-        } catch (error) {
+        } catch {
             // Silently fail for optional auth
         }
     }
