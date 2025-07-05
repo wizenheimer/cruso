@@ -1,14 +1,14 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(npm install:*)",
-      "Bash(pnpm add:*)",
-      "Bash(pnpm run:*)",
-      "Bash(npm run dev:*)",
-      "Bash(docker-compose:*)",
-      "Bash(docker volume rm:*)",
-      "Bash(pnpm drizzle-kit:*)"
-    ],
-    "deny": []
-  }
+    "permissions": {
+        "allow": [
+            "Bash(npm install:*)",
+            "Bash(pnpm add:*)",
+            "Bash(pnpm run:*)",
+            "Bash(npm run dev:*)",
+            "Bash(docker-compose:*)",
+            "Bash(docker volume rm:*)",
+            "Bash(pnpm drizzle-kit:*)"
+        ],
+        "deny": []
+    }
 }
