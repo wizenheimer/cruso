@@ -29,6 +29,9 @@ importers:
       drizzle-orm:
         specifier: ^0.44.2
         version: 0.44.2(@types/pg@8.15.4)(postgres@3.4.7)
+      drizzle-zod:
+        specifier: ^0.8.2
+        version: 0.8.2(drizzle-orm@0.44.2(@types/pg@8.15.4)(postgres@3.4.7))(zod@3.25.74)
       google-auth-library:
         specifier: ^10.1.0
         version: 10.1.0
@@ -1431,6 +1434,12 @@ packages:
         optional: true
       sqlite3:
         optional: true
+
+  drizzle-zod@0.8.2:
+    resolution: {integrity: sha512-9Do/16OjFFNrQDZgvMtxtDDwKWbFOxUAIwNPKX98SfxrP8H18vhN1BvNXbhelLcdgCE7GEaXDJqBjMExSkhpkA==}
+    peerDependencies:
+      drizzle-orm: '>=0.36.0'
+      zod: ^3.25.1
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -4005,6 +4014,11 @@ snapshots:
     optionalDependencies:
       '@types/pg': 8.15.4
       postgres: 3.4.7
+
+  drizzle-zod@0.8.2(drizzle-orm@0.44.2(@types/pg@8.15.4)(postgres@3.4.7))(zod@3.25.74):
+    dependencies:
+      drizzle-orm: 0.44.2(@types/pg@8.15.4)(postgres@3.4.7)
+      zod: 3.25.74
 
   dunder-proto@1.0.1:
     dependencies:
