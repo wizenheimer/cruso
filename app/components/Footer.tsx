@@ -43,18 +43,10 @@ export default function Footer() {
                             </li>
                             <li>
                                 <Link
-                                    href="/#follow-ups"
+                                    href="/#dealflow"
                                     className="text-sm text-zinc-400 hover:text-white transition-colors"
                                 >
-                                    Follow-ups
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/#tracking"
-                                    className="text-sm text-zinc-400 hover:text-white transition-colors"
-                                >
-                                    Tracking
+                                    Dealflow
                                 </Link>
                             </li>
                         </ul>
