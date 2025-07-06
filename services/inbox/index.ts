@@ -41,27 +41,33 @@ export class InboxService {
             emailData = await parseInboundWebhookWithAttachments(body);
         } else if (contentType.includes('application/json')) {
             // Outbound email webhook
+            console.log('outbound webhook not supported');
             throw new Error('outbound webhook not supported');
         } else if (contentType.includes('application/x-www-form-urlencoded')) {
             // Inbound email webhook without attachments
             emailData = await parseInboundWebhookWithoutAttachments(body);
         } else {
+            console.log('unsupported content type for inbound webhook', contentType);
             throw new Error('Unsupported content type');
         }
 
         const previousMessageID = emailData.previousMessageId;
         if (!previousMessageID) {
+            console.log('email with no priors, returning');
             return emailData;
         }
 
         // Check if the previous message exists
         const previousMessage = await this.getByMessageId(previousMessageID);
         if (!previousMessage) {
+            console.log('previous message not found, returning');
             return emailData;
         }
 
         // If the previous message exists, we need to update the email data
         emailData.parentId = previousMessage.parentId;
+        console.log('email with previous message, injecting parentId');
+        console.log('emailData', emailData);
         return emailData;
     }
 

@@ -111,7 +111,7 @@ export default function Footer() {
                 </div>
             </div>
             {/* Extended Footer with Logo */}
-            <div className="bg-black py-2 md:py-4 pb-0 overflow-hidden -mt-16 sm:-mt-48 md:-mt-72">
+            <div className="py-2 md:py-4 pb-0 overflow-hidden -mt-16 sm:-mt-48 md:-mt-72">
                 <div className="w-full">
                     <div className="flex justify-center transform translate-y-1/2">
                         {'CRUSO'.split('').map((char, index) => (

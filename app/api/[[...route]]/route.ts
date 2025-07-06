@@ -7,7 +7,6 @@ import health from '../routes/health';
 import users from '../routes/users';
 import inbox from '../routes/inbox';
 import auth from '../routes/auth';
-import email from '../routes/email';
 
 export const runtime = 'nodejs';
 
@@ -35,7 +34,6 @@ const v1 = new Hono();
 v1.route('/users', users);
 v1.route('/inbox', inbox);
 v1.route('/auth', auth);
-v1.route('/email', email);
 
 // Mount versioned routes
 app.route('/v1', v1);

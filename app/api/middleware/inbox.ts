@@ -11,6 +11,7 @@ const rejectDisallowedDomainFlag = process.env.NODE_ENV === 'production';
 
 // Parse email data from the webhook - this is the first middleware to run
 export const parseEmailDataMiddleware = async (c: Context, next: Next) => {
+    console.log('parsing email data');
     try {
         // Get the inbox service instance
         const inboxService = InboxService.getInstance();
@@ -21,6 +22,7 @@ export const parseEmailDataMiddleware = async (c: Context, next: Next) => {
 
         await next();
     } catch (error) {
+        console.error('error parsing email data', error);
         return c.json(
             {
                 status: 'error',
@@ -64,11 +66,14 @@ export const rejectDisallowedDomainsMiddleware = async (c: Context, next: Next) 
 
 // Parse user from email - this is the third middleware to run
 export const parseUserFromEmailMiddleware = async (c: Context, next: Next) => {
+    console.log('parsing user from email');
     // Get the email data from the context
     const emailData = c.get('emailData');
 
     // Get the user from the email
     const user = await getUserByEmail(emailData.sender);
+
+    console.log('setting user in context', { user });
 
     // Store the user in the context
     c.set('user', user);

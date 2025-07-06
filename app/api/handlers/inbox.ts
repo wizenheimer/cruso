@@ -2,7 +2,11 @@ import { Context } from 'hono';
 import { EmailData } from '@/services/inbox/content';
 import { User } from '@/types/api/users';
 import { InboxService } from '@/services/inbox';
+import { createUser } from '@/db/queries/users';
+import { EmailService } from '@/services/email';
+import { uuidv4 } from 'zod/v4';
 
+// allowedWebhookStatusCode is the status code to return for allowed webhook requests
 const allowedWebhookStatusCode = 200;
 
 // handleInboxRequest function for processing inbox requests
@@ -11,6 +15,8 @@ export const handleInboxRequest = async (c: Context) => {
     // and stored emailData in the context
     const emailData = c.get('emailData');
     const user = c.get('user');
+
+    console.log('handling inbox request', { emailData, user });
 
     const inboxService = InboxService.getInstance();
 
@@ -22,6 +28,8 @@ export const handleInboxRequest = async (c: Context) => {
 
     // Determine the action based on user status and thread conditions
     const action = determineAction(user, isThreadOpener, isAllowedToBranch);
+
+    console.log('determined action', { action });
 
     // Execute the determined action
     await executeAction(action, emailData, user);
@@ -44,6 +52,8 @@ const determineAction = (
     isThreadOpener: boolean,
     isAllowedToBranch: boolean,
 ): 'onboard' | 'engage' | 'offboard' => {
+    console.log('determining action', { user, isThreadOpener, isAllowedToBranch });
+
     if (!user) {
         // Non-user logic
         if (isThreadOpener) return 'onboard';
@@ -62,6 +72,8 @@ const executeAction = async (
     emailData: EmailData,
     user: User | null,
 ) => {
+    console.log('executing action', { action });
+
     switch (action) {
         case 'onboard':
             await onboardNonUser(emailData);
@@ -86,14 +98,32 @@ const executeAction = async (
 // - kick off onboarding flow
 export const onboardNonUser = async (emailData: EmailData) => {
     console.log('handling new user', { emailData });
+    const user = await createUser(emailData.sender);
+    console.log('created user', { user });
 };
 
 export const engageNonUser = async (emailData: EmailData) => {
-    console.log('handling new user', { emailData });
+    console.log('egaging with a non-user', { emailData });
+    const inboxService = InboxService.getInstance();
+    console.log('saving email to db', { emailData });
+    await inboxService.saveEmail(emailData);
+    const emailService = EmailService.getInstance();
+    const sentEmail = await emailService.sendReplyToAll(emailData, 'Pong', 'Pong');
+    console.log('sent reply email', { sentEmail });
+    const savedEmail = await inboxService.saveEmail(sentEmail);
+    console.log('saved reply email', { savedEmail });
 };
 
 export const engageUser = async (emailData: EmailData, user: User) => {
-    console.log('handling existing user', { emailData, user });
+    console.log('egaging with an existing user', { emailData, user });
+    const inboxService = InboxService.getInstance();
+    console.log('saving email to db', { emailData });
+    await inboxService.saveEmail(emailData);
+    const emailService = EmailService.getInstance();
+    const sentEmail = await emailService.sendReplyToAll(emailData, 'Pong', 'Pong');
+    console.log('sent reply email', { sentEmail });
+    const savedEmail = await inboxService.saveEmail(sentEmail);
+    console.log('saved reply email', { savedEmail });
 };
 
 export const offboardNonUser = async (emailData: EmailData) => {

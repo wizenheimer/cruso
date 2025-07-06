@@ -17,19 +17,6 @@ export type EmailData = {
     type: 'inbound' | 'outbound'; // Type of the email - inbound or outbound
 };
 
-// parseMessageID is a function that parses a Message-ID from an email header.
-export function parseMessageID(messageID: string): string | null {
-    if (!messageID) {
-        return null;
-    }
-
-    // Clean the Message-ID by removing angle brackets and normalizing
-    const cleaned = messageID.replace(/^<|>$/g, '').toLowerCase().trim();
-
-    // Return the cleaned message ID
-    return cleaned;
-}
-
 // generateEmailPrefix is a function that generates a prefix for an email.
 export function generateEmailPrefix(
     sender: { name: string; address: string },
@@ -53,14 +40,14 @@ export async function parseEmailDataFromMailgunWebhookFormData(
     formData: FormData,
 ): Promise<EmailData> {
     // Parse the threading info from email headers
-    const messageID = parseMessageID(getValueFromFormData(formData, 'Message-Id'));
+    const messageID = getValueFromFormData(formData, 'Message-Id');
     if (!messageID) {
         throw new Error('Invalid message ID');
     }
 
     // If the previous message ID is not set, use the message ID as the previous message ID
     //   This indicates start of an exchange
-    const previousMessageID = parseMessageID(getValueFromFormData(formData, 'In-Reply-To'));
+    const previousMessageID = getValueFromFormData(formData, 'In-Reply-To');
 
     // Parse the timestamp from the email headers
     const timestampString = getValueFromFormData(formData, 'timestamp');
