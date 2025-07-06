@@ -1,21 +1,21 @@
-import { Context } from 'hono';
-import {
-    parseInboundWebhookWithAttachments,
-    parseInboundWebhookWithoutAttachments,
-} from './inbound';
-import { EmailData } from './content';
+import { EmailData, RawEmailData } from './types';
 import { db } from '@/db';
 import { inboxData } from '@/db/schema/inbox';
+import { EmailParsingService } from './parsing';
 import { and, asc, count, desc, eq, or, sql } from 'drizzle-orm';
 import { CreateInboxData, InboxFilters } from '@/types/api/inbox';
+import { Context } from 'hono';
+import { uuidv4 } from 'zod/v4';
+import { generatePrefixForBody } from './parsing/text';
 
-// InboxService class for handling the inbox
 export class InboxService {
     private static instance: InboxService | null = null;
     private db: typeof db;
+    private emailParsingService: EmailParsingService;
 
     private constructor() {
         this.db = db;
+        this.emailParsingService = EmailParsingService.getInstance();
     }
 
     public static getInstance(): InboxService {
@@ -25,49 +25,65 @@ export class InboxService {
         return InboxService.instance;
     }
 
-    // parseEmail parses the inbound webhook and returns the parsed data
-    // It supports multipart data.
-    async parseEmail(c: Context): Promise<EmailData> {
-        const contentType = c.req.header('content-type') || '';
+    // processEmail function for processing incoming emails
+    async processEmail(c: Context): Promise<EmailData> {
+        const rawEmailData = await this.emailParsingService.parseEmail(c);
 
-        // Check if it's actually multipart data even if content-type doesn't say so
-        const body = await c.req.text();
-        const isMultipart =
-            body.startsWith('--') && body.includes('Content-Disposition: form-data');
-
-        let emailData: EmailData;
-        if (contentType.includes('multipart/form-data') || isMultipart) {
-            // Inbound email webhook with attachments (or multipart data)
-            emailData = await parseInboundWebhookWithAttachments(body);
-        } else if (contentType.includes('application/json')) {
-            // Outbound email webhook
-            console.log('outbound webhook not supported');
-            throw new Error('outbound webhook not supported');
-        } else if (contentType.includes('application/x-www-form-urlencoded')) {
-            // Inbound email webhook without attachments
-            emailData = await parseInboundWebhookWithoutAttachments(body);
-        } else {
-            console.log('unsupported content type for inbound webhook', contentType);
-            throw new Error('Unsupported content type');
-        }
-
-        const previousMessageID = emailData.previousMessageId;
+        const previousMessageID = rawEmailData.previousMessageId;
         if (!previousMessageID) {
-            console.log('email with no priors, returning');
-            return emailData;
+            return this.newEmailWithoutPriors(rawEmailData);
         }
 
         // Check if the previous message exists
         const previousMessage = await this.getByMessageId(previousMessageID);
         if (!previousMessage) {
-            console.log('previous message not found, returning');
-            return emailData;
+            return this.newEmailWithoutPriors(rawEmailData);
         }
 
-        // If the previous message exists, we need to update the email data
-        emailData.parentId = previousMessage.parentId;
-        console.log('email with previous message, injecting parentId');
-        console.log('emailData', emailData);
+        return this.emailWithPriors(rawEmailData, previousMessage);
+    }
+
+    /**
+     * Create an email without priors
+     * @param rawEmailData - The raw email data
+     * @returns The email data with a new id and parentId
+     */
+    private async newEmailWithoutPriors(rawEmailData: RawEmailData): Promise<EmailData> {
+        const bodyPrefix = generatePrefixForBody(
+            { name: rawEmailData.sender, address: rawEmailData.sender },
+            rawEmailData.timestamp,
+        );
+        const emailData = {
+            ...rawEmailData,
+            id: uuidv4().toString(),
+            parentId: uuidv4().toString(),
+            subject: rawEmailData.rawSubject, // Left unaltered to support threading on Client
+            body: bodyPrefix + rawEmailData.rawBody,
+        };
+        return emailData;
+    }
+
+    /**
+     * Create an email with priors
+     * @param rawEmailData - The raw email data
+     * @param priorEmail - The prior email
+     * @returns The email data with the prior email's parentId
+     */
+    private async emailWithPriors(
+        rawEmailData: RawEmailData,
+        priorEmail: EmailData,
+    ): Promise<EmailData> {
+        const bodyPrefix = generatePrefixForBody(
+            { name: rawEmailData.sender, address: rawEmailData.sender },
+            rawEmailData.timestamp,
+        );
+        const emailData = {
+            ...rawEmailData,
+            id: uuidv4().toString(),
+            parentId: priorEmail.parentId,
+            subject: rawEmailData.rawSubject, // Left unaltered to support threading on Client
+            body: bodyPrefix + rawEmailData.rawBody,
+        };
         return emailData;
     }
 

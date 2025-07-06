@@ -1,5 +1,7 @@
-import { mailgunWebhookSigningKey } from './constants';
-import { getValueFromFormData } from './utils';
+import { getValueFromFormData } from './form';
+
+// mailgunWebhookSigningKey is the signing key for the Mailgun webhook.
+export const mailgunWebhookSigningKey = process.env.MAILGUN_WEBHOOK_SIGNING_KEY;
 
 // verifyWebhook is a function that verifies the signature of a webhook.
 export async function verifyWebhook(

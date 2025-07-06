@@ -1,7 +1,7 @@
 import { Context } from 'hono';
-import { EmailData } from '@/services/inbox/content';
+import { EmailData } from '@/services/inbox/types';
 import { User } from '@/types/api/users';
-import { InboxService } from '@/services/inbox';
+import { InboxService } from '@/services/inbox/index';
 import { ExchangeService } from '@/services/exchange';
 
 // allowedWebhookStatusCode is the status code to return for allowed webhook requests

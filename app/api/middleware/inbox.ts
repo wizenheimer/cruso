@@ -1,5 +1,5 @@
 import { Context, Next } from 'hono';
-import { InboxService } from '@/services/inbox';
+import { InboxService } from '@/services/inbox/index';
 import { getUserByEmail } from '@/db/queries/users';
 import { isDisallowedDomain } from '@/lib/email';
 
@@ -15,7 +15,7 @@ export const parseEmailDataMiddleware = async (c: Context, next: Next) => {
     try {
         // Get the inbox service instance
         const inboxService = InboxService.getInstance();
-        const emailData = await inboxService.parseEmail(c);
+        const emailData = await inboxService.processEmail(c);
 
         // Store email data in context for downstream handlers to use
         c.set('emailData', emailData);

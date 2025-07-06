@@ -1,8 +1,8 @@
 import { EmailService } from '../email';
-import { EmailData } from '../inbox/content';
+import { EmailData } from '../inbox/types';
 import { User } from '@/types/api/users';
-import { createUser, getUserByEmail } from '@/db/queries/users';
-import { InboxService } from '../inbox';
+import { createUser } from '@/db/queries/users';
+import { InboxService } from '@/services/inbox';
 
 export class ExchangeService {
     private static instance: ExchangeService | null = null;
