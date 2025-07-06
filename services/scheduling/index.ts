@@ -1,5 +1,5 @@
 import { EmailService } from '../email';
-import { EmailData } from '../inbox/content';
+import { EmailData } from '../inbox/types';
 import { User } from '@/types/api/users';
 
 export class SchedulingService {

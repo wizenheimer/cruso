@@ -8,6 +8,10 @@ import { Context } from 'hono';
 import { randomUUID } from 'crypto';
 import { cleanTextContent, generatePrefixForBody } from './parsing/text';
 
+export const MAX_EMAILS_IN_EXCHANGE = process.env.MAX_EMAILS_IN_EXCHANGE
+    ? parseInt(process.env.MAX_EMAILS_IN_EXCHANGE) || 25
+    : 25;
+
 export class InboxService {
     private static instance: InboxService | null = null;
     private db: typeof db;
@@ -197,6 +201,12 @@ export class InboxService {
      * @returns Promise<boolean> - True if it's a valid engagement, false otherwise
      */
     async isValidEngagement(emailData: EmailData): Promise<boolean> {
+        // Check the total number of emails in the exchange
+        const totalEmails = await this.countEmailsInExchange(emailData.parentId);
+        if (totalEmails.length !== 0 && totalEmails[0].count > MAX_EMAILS_IN_EXCHANGE) {
+            return false;
+        }
+
         // Get the latest message in the exchange
         const latestMessage = await this.getLatestMessageInExchange(emailData.parentId);
         if (!latestMessage) {
@@ -303,7 +313,7 @@ export class InboxService {
      * @param parentId - The parent ID of the exchange
      * @returns Promise<{count: number}[]> - Array containing the count of emails
      */
-    async countEmailsInExchange(parentId: string) {
+    async countEmailsInExchange(parentId: string): Promise<{ count: number }[]> {
         return await this.db
             .select({ count: count() })
             .from(inboxData)
