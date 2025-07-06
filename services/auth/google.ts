@@ -102,7 +102,7 @@ class GoogleAuthManager {
     }
 
     async getUserInfo() {
-        console.log('🔍 Getting user info - checking credentials:', {
+        console.log('Getting user info - checking credentials:', {
             hasAccessToken: !!this.oauth2Client.credentials?.access_token,
             hasRefreshToken: !!this.oauth2Client.credentials?.refresh_token,
             expiryDate: this.oauth2Client.credentials?.expiry_date,
@@ -121,7 +121,7 @@ class GoogleAuthManager {
             expiry_date: expiryDate?.getTime() || undefined,
         };
 
-        console.log('🔑 Setting credentials:', {
+        console.log('Setting credentials:', {
             hasAccessToken: !!credentials.access_token,
             hasRefreshToken: !!credentials.refresh_token,
             expiryDate: credentials.expiry_date,
@@ -131,7 +131,7 @@ class GoogleAuthManager {
 
         // Verify credentials were set
         const setCredentials = this.oauth2Client.credentials;
-        console.log('✅ Credentials set on client:', {
+        console.log('Credentials set on client:', {
             hasAccessToken: !!setCredentials.access_token,
             hasRefreshToken: !!setCredentials.refresh_token,
             expiryDate: setCredentials.expiry_date,

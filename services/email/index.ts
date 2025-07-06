@@ -41,17 +41,10 @@ export class EmailService {
                 to: emailData.recipients,
                 subject: emailData.subject,
                 text: emailData.body,
-                'h:Message-ID': emailData.messageID,
-                'h:In-Reply-To': emailData.previousMessageID,
-                'h:References': emailData.previousMessageID,
+                'h:Message-ID': emailData.messageId,
+                'h:In-Reply-To': emailData.previousMessageId || '',
+                'h:References': emailData.previousMessageId || '',
             };
-
-            // Add custom metadata as v:<key> fields
-            if (emailData.metadata) {
-                for (const [key, value] of Object.entries(emailData.metadata)) {
-                    messageData[`v:${key}`] = value;
-                }
-            }
 
             const response = await mg.messages.create(this.domain, messageData);
 
@@ -70,5 +63,23 @@ export class EmailService {
                 `Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`,
             );
         }
+    }
+
+    // replyToEmail function for replying to an email
+    async replyToEmail(emailData: EmailData, subject: string, reply: string) {
+        // Recepients would be the To
+        console.log('replying to email', { emailData, subject, reply });
+
+        // Sender would be CC
+
+        // Recepients would be the To
+
+        // Subject would be the subject
+
+        // Body would be the reply
+
+        // Timestamp would be the current time
+
+        // Type would be outbound
     }
 }

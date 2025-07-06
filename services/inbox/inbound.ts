@@ -8,10 +8,7 @@ import { businessEmailToleranceOptions } from './constants';
 import { EmailData, parseEmailDataFromMailgunWebhookFormData } from './content';
 
 // parseInboundWebhookWithoutAttachments is a function that parses an inbound email webhook without attachments.
-export async function parseInboundWebhookWithoutAttachments(
-    c: Context,
-    body: string,
-): Promise<EmailData> {
+export async function parseInboundWebhookWithoutAttachments(body: string): Promise<EmailData> {
     const formData = await parseURLEncodedToFormData(body); // Payload is application/x-www-form-urlencoded
 
     const isSignatureValid = await verifyMailgunWebhookFromFormData(formData);
@@ -39,10 +36,7 @@ export async function parseInboundWebhookWithoutAttachments(
 }
 
 // parseInboundWebhookWithAttachments is a function that parses an inbound email webhook with attachments.
-export async function parseInboundWebhookWithAttachments(
-    c: Context,
-    body: string,
-): Promise<EmailData> {
+export async function parseInboundWebhookWithAttachments(body: string): Promise<EmailData> {
     // Create a new request with the body to parse as multipart
     const formData = await parseMultipartToFormData(body); // Payload is multipart/form-data
 

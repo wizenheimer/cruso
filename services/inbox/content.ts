@@ -6,19 +6,23 @@ import { bodyMaxLength, subjectMaxLength } from './constants';
 // EmailData is a type that represents the data of an email.
 export type EmailData = {
     id: string; // UUID for the email
-    parentID: string; // UUID for the parent email
-    messageID: string; // MessageID of the email
-    previousMessageID: string; // MessageID of the previous email
+    parentId: string; // UUID for the parent email
+    messageId: string; // MessageID of the email
+    previousMessageId: string | null; // MessageID of the previous email - null if the email is the first in the exchange
     sender: string; // Email address of the sender
     recipients: string[]; // Email addresses of the recipients - includes CC and BCC
     subject: string; // Subject of the email
     body: string; // Body of the email
-    timestamp: number; // Timestamp of the email
-    metadata?: Record<string, string>; // Optional custom metadata
+    timestamp: Date; // Timestamp of the email
+    type: 'inbound' | 'outbound'; // Type of the email - inbound or outbound
 };
 
 // parseMessageID is a function that parses a Message-ID from an email header.
-export function parseMessageID(messageID: string): string {
+export function parseMessageID(messageID: string): string | null {
+    if (!messageID) {
+        return null;
+    }
+
     // Clean the Message-ID by removing angle brackets and normalizing
     const cleaned = messageID.replace(/^<|>$/g, '').toLowerCase().trim();
 
@@ -29,7 +33,7 @@ export function parseMessageID(messageID: string): string {
 // generateEmailPrefix is a function that generates a prefix for an email.
 export function generateEmailPrefix(
     sender: { name: string; address: string },
-    timestamp: number,
+    timestamp: Date,
 ): string {
     const formattedDate = new Intl.DateTimeFormat('en-US', {
         weekday: 'short',
@@ -39,20 +43,24 @@ export function generateEmailPrefix(
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-    }).format(new Date(timestamp));
+    }).format(timestamp);
 
     return `${sender.name} <${sender.address}> wrote on ${formattedDate}:`.toLowerCase().trim();
 }
 
 // parseEmailDataFromMailgunWebhookFormData is a function that parses email data from a Mailgun webhook form data.
-export async function parseEmailDataFromMailgunWebhookFormData(formData: FormData) {
+export async function parseEmailDataFromMailgunWebhookFormData(
+    formData: FormData,
+): Promise<EmailData> {
     // Parse the threading info from email headers
     const messageID = parseMessageID(getValueFromFormData(formData, 'Message-Id'));
+    if (!messageID) {
+        throw new Error('Invalid message ID');
+    }
 
     // If the previous message ID is not set, use the message ID as the previous message ID
     //   This indicates start of an exchange
-    const previousMessageID =
-        parseMessageID(getValueFromFormData(formData, 'In-Reply-To')) || messageID;
+    const previousMessageID = parseMessageID(getValueFromFormData(formData, 'In-Reply-To'));
 
     // Parse the timestamp from the email headers
     const timestampString = getValueFromFormData(formData, 'timestamp');
@@ -109,7 +117,7 @@ export async function parseEmailDataFromMailgunWebhookFormData(formData: FormDat
     }
 
     // Create the email attributes
-    const emailAttributes = generateEmailPrefix(sender, timestamp);
+    const emailAttributes = generateEmailPrefix(sender, new Date(timestamp));
 
     // Parse the body of the email
     const body = getValueFromFormData(formData, 'body-plain', {
@@ -124,10 +132,10 @@ export async function parseEmailDataFromMailgunWebhookFormData(formData: FormDat
     const emailData: EmailData = {
         // Exchange Info - ID, ParentID
         id: uuidv4(),
-        parentID: uuidv4(),
+        parentId: uuidv4(),
         // Threading Info - MessageID, PreviousMessageID
-        messageID: messageID,
-        previousMessageID: previousMessageID,
+        messageId: messageID,
+        previousMessageId: previousMessageID,
         // Normalize the sender email address
         sender: sender.address,
         // Normalize the recipients email addresses
@@ -143,8 +151,10 @@ export async function parseEmailDataFromMailgunWebhookFormData(formData: FormDat
         // Content Info - Subject, Body
         subject: subject,
         body: body,
+        // Type of the email
+        type: 'inbound',
         // Timestamp
-        timestamp: timestamp,
+        timestamp: new Date(timestamp),
     };
 
     return emailData;
