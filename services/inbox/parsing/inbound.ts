@@ -9,8 +9,16 @@ import {
     parseEmailDataFromMailgunWebhookFormData,
 } from '@/services/inbox/parsing/form';
 
-// businessEmailToleranceOptions is a function that sets the tolerance for business emails.
-// e.g. - work domains, etc.
+/**
+ * Tolerance options for business emails with higher tolerance settings.
+ * Used for work domains and business-related email addresses.
+ *
+ * @property {number} maxSpamScore - Maximum spam score threshold (2 - higher tolerance for business emails)
+ * @property {number} maxIndividualSpamPoint - Maximum individual spam point threshold (5.0 is the default)
+ * @property {boolean} requireDkim - Whether DKIM verification is required (false - forwarding emails might have misconfigured DKIM)
+ * @property {boolean} requireSpf - Whether SPF verification is required (false - higher tolerance for business emails)
+ * @property {boolean} allowHighRiskRules - Whether to allow high-risk rules (true - results in false positives)
+ */
 export const businessEmailToleranceOptions = {
     maxSpamScore: 2, // 2 - higher tolerance for business emails
     maxIndividualSpamPoint: 5.0, // 5.0 is the default individual spam point
@@ -19,8 +27,16 @@ export const businessEmailToleranceOptions = {
     allowHighRiskRules: true, // true is the default - results in false positives
 };
 
-// personalEmailToleranceOptions is a function that sets the tolerance for personal emails.
-// e.g. - @gmail.com, @yahoo.com, @hotmail.com, @outlook.com, etc.
+/**
+ * Tolerance options for personal emails with stricter settings.
+ * Used for personal email domains like @gmail.com, @yahoo.com, @hotmail.com, @outlook.com, etc.
+ *
+ * @property {number} maxSpamScore - Maximum spam score threshold (0.5 - lower tolerance for personal emails)
+ * @property {number} maxIndividualSpamPoint - Maximum individual spam point threshold (5.0 is the default)
+ * @property {boolean} requireDkim - Whether DKIM verification is required (true - lower tolerance for personal emails)
+ * @property {boolean} requireSpf - Whether SPF verification is required (true - lower tolerance for personal emails)
+ * @property {boolean} allowHighRiskRules - Whether to allow high-risk rules (true - results in false positives)
+ */
 export const personalEmailToleranceOptions = {
     maxSpamScore: 0.5, // 0.5 - lower tolerance for personal emails
     maxIndividualSpamPoint: 5.0, // 5.0 is the default individual spam point
@@ -29,15 +45,35 @@ export const personalEmailToleranceOptions = {
     allowHighRiskRules: true, // true is the default - results in false positives
 };
 
-// subjectMaxLength is the maximum length of the subject of an email.
-// e.g. - 100 characters
+/**
+ * Maximum length allowed for email subject lines.
+ *
+ * @type {number}
+ * @example 100 characters
+ */
 export const subjectMaxLength = 100;
 
-// bodyMaxLength is the maximum length of the body of an email.
-// e.g. - 1000 characters
+/**
+ * Maximum length allowed for email body content.
+ *
+ * @type {number}
+ * @example 1000 characters
+ */
 export const bodyMaxLength = 1000;
 
-// parseInboundWebhookWithoutAttachments is a function that parses an inbound email webhook without attachments.
+/**
+ * Parses an inbound email webhook without attachments.
+ *
+ * @param {string} body - The raw webhook body payload (application/x-www-form-urlencoded format)
+ * @returns {Promise<RawEmailData>} Parsed email data object
+ * @throws {Error} When webhook signature is invalid
+ * @throws {Error} When webhook is flagged as spam
+ *
+ * @example
+ * ```typescript
+ * const emailData = await parseInboundWebhookWithoutAttachments(webhookBody);
+ * ```
+ */
 export async function parseInboundWebhookWithoutAttachments(body: string): Promise<RawEmailData> {
     console.log('parsing inbound webhook without attachments');
     const formData = await parseURLEncodedToFormData(body); // Payload is application/x-www-form-urlencoded
@@ -66,7 +102,19 @@ export async function parseInboundWebhookWithoutAttachments(body: string): Promi
     return emailData;
 }
 
-// parseInboundWebhookWithAttachments is a function that parses an inbound email webhook with attachments.
+/**
+ * Parses an inbound email webhook with attachments.
+ *
+ * @param {string} body - The raw webhook body payload (multipart/form-data format)
+ * @returns {Promise<RawEmailData>} Parsed email data object including attachments
+ * @throws {Error} When webhook signature is invalid
+ * @throws {Error} When webhook is flagged as spam
+ *
+ * @example
+ * ```typescript
+ * const emailData = await parseInboundWebhookWithAttachments(webhookBody);
+ * ```
+ */
 export async function parseInboundWebhookWithAttachments(body: string): Promise<RawEmailData> {
     console.log('parsing inbound webhook with attachments');
     // Create a new request with the body to parse as multipart

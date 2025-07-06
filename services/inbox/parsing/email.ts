@@ -1,9 +1,11 @@
 import * as emailAddresses from 'email-addresses';
 
-// parseEmailAddress is a function that parses a single email address into a name and address.
-// i.e. - "John Doe <john.doe@example.com>", "john.doe@example.com", etc.
-// Returns an object with the name and address.
-// If the email address is not valid, it will be null.
+/**
+ * Parses a single email address into a name and address.
+ *
+ * @param email - The email address string to parse (e.g., "John Doe <john.doe@example.com>", "john.doe@example.com")
+ * @returns An object with the name and address, or null if the email address is not valid
+ */
 export function parseEmailAddress(email: string): { name: string; address: string } | null {
     if (!email) return null;
 
@@ -22,10 +24,12 @@ export function parseEmailAddress(email: string): { name: string; address: strin
     return null;
 }
 
-// parseEmailAddressList is a function that parses a list of email addresses into an array of email addresses.
-// i.e. - "John Doe <john.doe@example.com>, Jane Smith <jane.smith@example.com>"
-// Returns an array of email addresses with the name and address.
-// If the email address is not valid, it will be skipped.
+/**
+ * Parses a list of email addresses into an array of email addresses.
+ *
+ * @param addressListString - The string containing email addresses (e.g., "John Doe <john.doe@example.com>, Jane Smith <jane.smith@example.com>")
+ * @returns An array of email addresses with the name and address. Invalid email addresses will be skipped
+ */
 export function parseEmailAddressList(
     addressListString: string,
 ): { name: string; address: string }[] {
@@ -60,11 +64,13 @@ export function parseEmailAddressList(
     return result;
 }
 
-// parseEmailAddressesFromText is a function that parses a list of email addresses from a text string.
-// This function extracts email addresses from any text, not just properly formatted address lists.
-// i.e. - "Contact us at john.doe@example.com or jane.smith@example.com for more info"
-// Returns an array of email addresses with the name and address.
-// If the email address is not valid, it will be skipped.
+/**
+ * Parses a list of email addresses from a text string.
+ * This function extracts email addresses from any text, not just properly formatted address lists.
+ *
+ * @param text - The text string to extract email addresses from (e.g., "Contact us at john.doe@example.com or jane.smith@example.com for more info")
+ * @returns An array of email addresses with the name and address. Invalid email addresses will be skipped
+ */
 export function parseEmailAddressesFromText(text: string): { name: string; address: string }[] {
     if (!text) return [];
 

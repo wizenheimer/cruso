@@ -1,9 +1,19 @@
 import { getValueFromFormData } from './form';
 
-// mailgunWebhookSigningKey is the signing key for the Mailgun webhook.
+/**
+ * The signing key for the Mailgun webhook verification.
+ * @type {string | undefined}
+ */
 export const mailgunWebhookSigningKey = process.env.MAILGUN_WEBHOOK_SIGNING_KEY;
 
-// verifyWebhook is a function that verifies the signature of a webhook.
+/**
+ * Verifies the signature of a webhook using HMAC-SHA256.
+ *
+ * @param {string} webhookSignature - The signature to verify
+ * @param {string} webhookTimestamp - The timestamp of the webhook
+ * @param {string} webhookToken - The token from the webhook
+ * @returns {Promise<boolean>} True if the signature is valid, false otherwise
+ */
 export async function verifyWebhook(
     webhookSignature: string,
     webhookTimestamp: string,
@@ -34,7 +44,12 @@ export async function verifyWebhook(
     return expectedSignature === webhookSignature;
 }
 
-// verifyMailgunWebhookFromFormData is a function that verifies the signature of a Mailgun webhook from a FormData object.
+/**
+ * Verifies the signature of a Mailgun webhook from a FormData object.
+ *
+ * @param {FormData} formData - The FormData object containing webhook data
+ * @returns {Promise<boolean>} True if the signature is valid, false otherwise
+ */
 export async function verifyMailgunWebhookFromFormData(formData: FormData): Promise<boolean> {
     const webhookToken = getValueFromFormData(formData, 'token');
     const webhookSignature = getValueFromFormData(formData, 'signature');
@@ -43,7 +58,12 @@ export async function verifyMailgunWebhookFromFormData(formData: FormData): Prom
     return verifyWebhook(webhookSignature, webhookTimestampString, webhookToken);
 }
 
-// verifyMailfunWebhookFromJSONPayload is a function that verifies the signature of a Mailgun JSON webhook payload.
+/**
+ * Verifies the signature of a Mailgun JSON webhook payload.
+ *
+ * @param {any} payload - The JSON payload containing webhook data
+ * @returns {Promise<boolean>} True if the signature is valid, false otherwise
+ */
 export async function verifyMailgunWebhookFromJSONPayload(payload: any): Promise<boolean> {
     const signature = payload?.signature;
     if (!signature) {
@@ -57,9 +77,20 @@ export async function verifyMailgunWebhookFromJSONPayload(payload: any): Promise
     return verifyWebhook(webhookSignature, webhookTimestampString, webhookToken);
 }
 
-// verifyMailgunWebhookSpamToleranceFromFormData is a function that verifies the spam tolerance of a Mailgun webhook from a FormData object.
-// i.e. - X-Mailgun-Sscore, X-Mailgun-Sflag, X-Mailgun-Dkim-Check-Result, X-Mailgun-Spf, X-Mailgun-Spam-Points, X-Mailgun-Spam-Rules
-// It returns true if the webhook is spam, else it returns false.
+/**
+ * Verifies the spam tolerance of a Mailgun webhook from a FormData object.
+ * Checks various spam-related headers like X-Mailgun-Sscore, X-Mailgun-Sflag,
+ * X-Mailgun-Dkim-Check-Result, X-Mailgun-Spf, X-Mailgun-Spam-Points, X-Mailgun-Spam-Rules.
+ *
+ * @param {FormData} formData - The FormData object containing webhook data
+ * @param {Object} options - Configuration options for spam filtering
+ * @param {number} [options.maxSpamScore=0.5] - Maximum allowed spam score (0.5 is default)
+ * @param {number} [options.maxIndividualSpamPoint=5.0] - Maximum allowed individual spam point (5.0 is default)
+ * @param {boolean} [options.requireDkim=true] - Whether DKIM verification is required
+ * @param {boolean} [options.requireSpf=true] - Whether SPF verification is required
+ * @param {boolean} [options.allowHighRiskRules=true] - Whether to allow high-risk spam rules
+ * @returns {Promise<boolean>} True if the webhook is considered spam, false otherwise
+ */
 export async function verifyMailgunWebhookSpamThresholdFromFormData(
     formData: FormData,
     options: {
