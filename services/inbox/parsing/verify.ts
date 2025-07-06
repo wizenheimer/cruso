@@ -23,6 +23,8 @@ export async function verifyWebhook(
         return false;
     }
 
+    console.log('webhook signing key', mailgunWebhookSigningKey);
+
     const timestamp = parseInt(webhookTimestamp);
 
     const message = `${timestamp}${webhookToken}`;

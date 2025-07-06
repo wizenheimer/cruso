@@ -2,7 +2,7 @@ import Mailgun from 'mailgun.js';
 import formData from 'form-data';
 import { EmailData } from '../inbox/types';
 import { MailgunMessageData } from 'mailgun.js/definitions';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 // Configuration interface for sending emails
 interface SendEmailConfig {
@@ -117,7 +117,7 @@ export class EmailService {
     private getThreadContext(replyTo?: EmailData, newThread?: boolean) {
         if (newThread || !replyTo) {
             return {
-                parentId: uuidv4(),
+                parentId: randomUUID(),
                 previousMessageId: null,
             };
         }
@@ -196,7 +196,7 @@ export class EmailService {
             });
 
             const messageData: MailgunMessageData = {
-                from: this.senderEmail,
+                from: `Cruso <${this.senderEmail}>`,
                 to,
                 subject,
                 text: body,
@@ -219,7 +219,7 @@ export class EmailService {
             }
 
             return {
-                id: uuidv4(),
+                id: randomUUID(),
                 parentId,
                 messageId: response.id,
                 previousMessageId,

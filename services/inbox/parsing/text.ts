@@ -1,3 +1,5 @@
+import { decodeFormValue } from '@/services/inbox/parsing/form';
+
 /**
  * Clean up the plain text content of an email.
  * @param content - The content to clean up.
@@ -11,10 +13,17 @@ export function cleanTextContent(
         trim?: boolean; // Whether to trim the content
         lowercase?: boolean; // Whether to convert the content to lowercase
         sanitize?: boolean; // Whether to sanitize the content
+        decode?: boolean; // Whether to decode the content
     } = {},
 ) {
     // Set the default options
-    const { maxLength = 1000, trim = false, lowercase = false, sanitize = false } = options;
+    const {
+        maxLength = 1000,
+        trim = false,
+        lowercase = false,
+        sanitize = false,
+        decode = false,
+    } = options;
 
     // If the trim option is set, trim the value
     if (trim) {
@@ -29,6 +38,11 @@ export function cleanTextContent(
     // Sanitize the content
     if (sanitize) {
         content = sanitizeContent(content);
+    }
+
+    // Decode the content
+    if (decode) {
+        content = decodeFormValue(content);
     }
 
     // If the maxLength option is set, truncate the value

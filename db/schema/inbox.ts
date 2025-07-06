@@ -19,7 +19,7 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 export const inboxData = pgTable(
     'inbox_data',
     {
-        id: uuid('id').primaryKey().defaultRandom(),
+        id: uuid('id').primaryKey().notNull().unique(),
         parentId: uuid('parent_id').notNull(), // For tracking exchanges - an exchange can span across threads
         messageId: varchar('message_id', { length: 500 }).notNull().unique(),
         previousMessageId: varchar('previous_message_id', { length: 500 }),

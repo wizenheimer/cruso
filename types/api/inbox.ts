@@ -6,6 +6,7 @@ import { inboxData } from '@/db/schema/inbox';
 
 // CreateInboxDataSchema is the schema for creating a new inbox data
 export const CreateInboxDataSchema = z.object({
+    id: z.string().uuid(),
     parentId: z.string().uuid(),
     messageId: z.string().max(500), // Matches varchar(500) in DB
     previousMessageId: z.string().max(500).nullable(), // Previous message ID is nullable for first message in exchange

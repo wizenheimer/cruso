@@ -236,7 +236,8 @@ export async function parseEmailDataFromMailgunWebhookFormData(
 
     // Try to get the subject from the form data
     const rawSubject =
-        getValueFromFormData(formData, 'subject') || getValueFromFormData(formData, 'Subject');
+        getValueFromFormData(formData, 'subject', { decode: true }) ||
+        getValueFromFormData(formData, 'Subject', { decode: true });
 
     // Parse the recipients info from email headers - To, Cc
     const to = getValueFromFormData(formData, 'To', {
