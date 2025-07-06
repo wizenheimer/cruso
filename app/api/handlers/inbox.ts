@@ -2,9 +2,7 @@ import { Context } from 'hono';
 import { EmailData } from '@/services/inbox/content';
 import { User } from '@/types/api/users';
 import { InboxService } from '@/services/inbox';
-import { createUser } from '@/db/queries/users';
-import { EmailService } from '@/services/email';
-import { uuidv4 } from 'zod/v4';
+import { ExchangeService } from '@/services/exchange';
 
 // allowedWebhookStatusCode is the status code to return for allowed webhook requests
 const allowedWebhookStatusCode = 200;
@@ -23,11 +21,11 @@ export const handleInboxRequest = async (c: Context) => {
     // Check if the email is the first message in the exchange
     const isThreadOpener = await inboxService.isFirstMessageInExchange(emailData);
 
-    // Check if the email can branch the exchange
-    const isAllowedToBranch = await inboxService.canBranchExchange(emailData);
+    // Check if the email is a valid reply to the exchange
+    const isValidEngagement = await inboxService.isValidEngagement(emailData);
 
     // Determine the action based on user status and thread conditions
-    const action = determineAction(user, isThreadOpener, isAllowedToBranch);
+    const action = determineAction(user, isThreadOpener, isValidEngagement);
 
     console.log('determined action', { action });
 
@@ -50,19 +48,22 @@ export const handleInboxRequest = async (c: Context) => {
 const determineAction = (
     user: User | null,
     isThreadOpener: boolean,
-    isAllowedToBranch: boolean,
+    isValidEngagement: boolean,
 ): 'onboard' | 'engage' | 'offboard' => {
-    console.log('determining action', { user, isThreadOpener, isAllowedToBranch });
+    console.log('determining action', { user, isThreadOpener, isValidEngagement });
 
     if (!user) {
-        // Non-user logic
+        // If it is a thread opener, but the user isn't onboarded, onboard them first
         if (isThreadOpener) return 'onboard';
-        return isAllowedToBranch ? 'engage' : 'offboard';
+        // Or else, if it's not a thread opener, then only engage if the engagement is valid
+        return isValidEngagement ? 'engage' : 'offboard';
     }
 
     // Existing user logic
+    // If it is a thread opener, then engage with the user
     if (isThreadOpener) return 'engage';
-    return isAllowedToBranch ? 'engage' : 'offboard';
+    // If it is not a thread opener, then only engage if the engagement is valid
+    return isValidEngagement ? 'engage' : 'offboard';
 };
 
 // executeAction function for executing the determined action
@@ -74,62 +75,25 @@ const executeAction = async (
 ) => {
     console.log('executing action', { action });
 
+    const exchangeService = ExchangeService.getInstance();
+
     switch (action) {
         case 'onboard':
-            await onboardNonUser(emailData);
+            await exchangeService.handleNewUser(emailData);
             break;
         case 'engage':
             if (user) {
-                await engageUser(emailData, user);
+                await exchangeService.handleEngagementForExistingUser(emailData, user);
             } else {
-                await engageNonUser(emailData);
+                await exchangeService.handleEngagementForNonUser(emailData);
             }
             break;
         case 'offboard':
             if (user) {
-                await offboardUser(emailData, user);
+                await exchangeService.handleInvalidEngagementForExistingUser(emailData, user);
             } else {
-                await offboardNonUser(emailData);
+                await exchangeService.handleInvalidEngagementForNonUser(emailData);
             }
             break;
     }
-};
-
-// - kick off onboarding flow
-export const onboardNonUser = async (emailData: EmailData) => {
-    console.log('handling new user', { emailData });
-    const user = await createUser(emailData.sender);
-    console.log('created user', { user });
-};
-
-export const engageNonUser = async (emailData: EmailData) => {
-    console.log('egaging with a non-user', { emailData });
-    const inboxService = InboxService.getInstance();
-    console.log('saving email to db', { emailData });
-    await inboxService.saveEmail(emailData);
-    const emailService = EmailService.getInstance();
-    const sentEmail = await emailService.sendReplyToAll(emailData, 'Pong', 'Pong');
-    console.log('sent reply email', { sentEmail });
-    const savedEmail = await inboxService.saveEmail(sentEmail);
-    console.log('saved reply email', { savedEmail });
-};
-
-export const engageUser = async (emailData: EmailData, user: User) => {
-    console.log('egaging with an existing user', { emailData, user });
-    const inboxService = InboxService.getInstance();
-    console.log('saving email to db', { emailData });
-    await inboxService.saveEmail(emailData);
-    const emailService = EmailService.getInstance();
-    const sentEmail = await emailService.sendReplyToAll(emailData, 'Pong', 'Pong');
-    console.log('sent reply email', { sentEmail });
-    const savedEmail = await inboxService.saveEmail(sentEmail);
-    console.log('saved reply email', { savedEmail });
-};
-
-export const offboardNonUser = async (emailData: EmailData) => {
-    console.log('handling existing user', { emailData });
-};
-
-export const offboardUser = async (emailData: EmailData, user: User) => {
-    console.log('handling existing user', { emailData, user });
 };

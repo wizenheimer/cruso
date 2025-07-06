@@ -132,9 +132,9 @@ export class InboxService {
         return !previousMessageExists;
     }
 
-    // canBranchExchange function for checking if the email can branch the exchange
+    // isValidEngagement function for checking if the email is a valid engagement in the exchange
     // exchange can move only forward and cannot have branches from the past
-    async canBranchExchange(emailData: EmailData): Promise<boolean> {
+    async isValidEngagement(emailData: EmailData): Promise<boolean> {
         // Get the latest message in the exchange
         const latestMessage = await this.getLatestMessageInExchange(emailData.parentId);
         if (!latestMessage) {

@@ -42,12 +42,14 @@ export class EmailService {
      * @returns The email data of the sent email
      * @description This method is used to send an email to the recipients
      */
-    async sendEmail(
+    private async sendEmail(
         recipients: string[],
         subject: string,
         body: string,
         previousMessageId?: string,
         parentId?: string,
+        cc?: string[],
+        bcc?: string[],
     ): Promise<EmailData> {
         // Filter out duplicates and normalize email addresses
         const normalizedRecipients = [
@@ -72,6 +74,8 @@ export class EmailService {
                 to: filteredRecipients,
                 subject: subject,
                 text: body,
+                cc: cc,
+                bcc: bcc,
                 // Only include reply headers if we have a previousMessageId
                 ...(previousMessageId && {
                     'h:In-Reply-To': previousMessageId,
@@ -120,7 +124,7 @@ export class EmailService {
      * @returns The email data of the sent email
      * @description This method is used to send a reply email to the original sender only
      */
-    async sendReply(
+    async sendReplyToOriginalSender(
         originalEmail: EmailData,
         replyBody: string,
         replySubject?: string,
@@ -144,9 +148,9 @@ export class EmailService {
      * @param replyBody - The body of the reply email
      * @param replySubject - The subject of the reply email
      * @returns The email data of the sent email
-     * @description This method is used to send a reply email to all recipients of the original email
+     * @description This method is used to send a reply email to all recipients of the original email including the original sender
      */
-    async sendReplyToAll(
+    async sendReplyToAllIncludingSender(
         originalEmail: EmailData,
         replyBody: string,
         replySubject?: string,
@@ -159,7 +163,87 @@ export class EmailService {
             subject,
             replyBody,
             originalEmail.messageId, // Reference the original message
-            originalEmail.parentId, // Keep the same thread
+            originalEmail.parentId, // Keep the same exchange
+        );
+    }
+
+    /**
+     * Helper method to send a reply email to all recipients except the sender
+     * @param originalEmail - The original email to reply to
+     * @param replyBody - The body of the reply email
+     * @param replySubject - The subject of the reply email
+     * @returns The email data of the sent email
+     * @description This method is used to send a reply email to all recipients except the sender
+     */
+    async sendReplyToAllRecipientsExcludingSender(
+        originalEmail: EmailData,
+        replyBody: string,
+        replySubject?: string,
+    ): Promise<EmailData> {
+        const subject = replySubject || `Re: ${originalEmail.subject.replace(/^Re:\s*/, '')}`;
+        // Make a copy of the recipients
+        let recipients = [...originalEmail.recipients];
+        const sender = originalEmail.sender;
+
+        // Filter out the sender from the recipients
+        recipients = recipients.filter((recipient) => recipient !== sender);
+
+        return this.sendEmail(recipients, subject, replyBody);
+    }
+
+    /**
+     * Helper method to send a reply email to all recipients with a copy to the sender
+     * @param originalEmail - The original email to reply to
+     * @param replyBody - The body of the reply email
+     * @param replySubject - The subject of the reply email
+     * @returns The email data of the sent email
+     * @description This method is used to send a reply email to all recipients with a carbon copy to the sender
+     */
+    async sendReplyToAllRecipientsWithCopyToSender(
+        originalEmail: EmailData,
+        replyBody: string,
+        replySubject?: string,
+    ): Promise<EmailData> {
+        const subject = replySubject || `Re: ${originalEmail.subject.replace(/^Re:\s*/, '')}`;
+        // Make a copy of the recipients
+        let recipients = [...originalEmail.recipients];
+        const sender = originalEmail.sender;
+
+        // Filter out the sender from the recipients
+        recipients = recipients.filter((recipient) => recipient !== sender);
+
+        return this.sendEmail(
+            recipients,
+            subject,
+            replyBody,
+            originalEmail.messageId,
+            originalEmail.parentId,
+            [sender],
+        );
+    }
+
+    /**
+     * Helper method to send a reply email to the original sender
+     * @param originalEmail - The original email to reply to
+     * @param replyBody - The body of the reply email
+     * @param replySubject - The subject of the reply email
+     * @returns The email data of the sent email
+     * @description This method is used to send a reply email to the original sender only
+     */
+    async sendReplyOnlyToSender(
+        originalEmail: EmailData,
+        replyBody: string,
+        replySubject?: string,
+    ): Promise<EmailData> {
+        const subject = replySubject || `Re: ${originalEmail.subject.replace(/^Re:\s*/, '')}`;
+        const recipients = [originalEmail.sender];
+
+        return this.sendEmail(
+            recipients,
+            subject,
+            replyBody,
+            originalEmail.messageId, // Reference the original message
+            originalEmail.parentId, // Keep the same exchange
         );
     }
 
@@ -189,6 +273,24 @@ ${originalEmail.body}`;
             body,
             undefined, // No previous message ID for forwards
             uuidv4(), // New thread for forwarded emails
+        );
+    }
+
+    /**
+     * Helper method to send an email to a new thread
+     * @param recipients - The recipients of the email
+     * @param subject - The subject of the email
+     * @param body - The body of the email
+     * @returns The email data of the sent email
+     * @description This method is used to send an email to a new thread
+     */
+    async sendEmailToNewThread(recipients: string[], subject: string, body: string) {
+        return this.sendEmail(
+            recipients,
+            subject,
+            body,
+            undefined, // No previous message ID for new threads
+            uuidv4(), // New thread for new emails
         );
     }
 }
