@@ -13,8 +13,11 @@ export const handleInboxRequest = async (c: Context) => {
     const user = c.get('user');
 
     const inboxService = InboxService.getInstance();
-    // Note: we also need to check if the previousMessageID is logged in the database
+
+    // Check if the email is the first message in the exchange
     const isThreadOpener = await inboxService.isFirstMessageInExchange(emailData);
+
+    // Check if the email can branch the exchange
     const isAllowedToBranch = await inboxService.canBranchExchange(emailData);
 
     // Determine the action based on user status and thread conditions
@@ -23,6 +26,7 @@ export const handleInboxRequest = async (c: Context) => {
     // Execute the determined action
     await executeAction(action, emailData, user);
 
+    // Return the success response
     return c.json(
         {
             status: 'success',
