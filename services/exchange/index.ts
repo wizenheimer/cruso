@@ -25,115 +25,124 @@ export class ExchangeService {
      * @returns The email data of the sent onboarding email
      * @description This method is used to onboard a user
      */
-    async handleNewUser(emailData: EmailData) {
-        console.log('onboarding non-user', { emailData });
-        const user = await createUser(emailData.sender);
+    async handleNewUser(inboundEmailData: EmailData) {
+        console.log('onboarding non-user', { inboundEmailData });
+        const user = await createUser(inboundEmailData.sender);
 
         if (!user) {
             throw new Error('Failed to create user');
         }
 
-        const sentEmail = await this.emailService.sendEmailToNewThread(
-            [user.email],
-            'Welcome to Cruso',
-            `Hi,
+        const outboundEmailData = await this.emailService.sendEmail({
+            recipients: [user.email],
+            subject: 'Welcome to Cruso',
+            body: `Hi,
 
-            Looks like you're new here! Welcome to Cruso!
+            Welcome to Cruso! We're thrilled to have you on board.
 
-            We're excited to have you on board.
+            Quick auth, and we'll get you started.
 
-            You can find your account at https://app.cruso.ai/login
+            https://app.cruso.ai/login
 
             If you have any questions, please contact us at support@cruso.ai
 
             Best,
 
-            The Cruso Team
-            `,
-        );
+            The Cruso Team`,
+            newThread: true, // Force new thread for onboarding
+        });
 
-        console.log('sent onboarding email', { sentEmail });
+        console.log('sent onboarding email', { outboundEmailData });
+        return outboundEmailData;
     }
 
     /**
-     * Offboard a user
+     * Handle invalid engagement for existing user
      * @param emailData - The email data of the offboarding email
-     * @returns The email data of the sent offboarding email
-     * @description This method is used to offboard a user
+     * @param user - The user
+     * @returns The email data of the sent email
+     * @description This method is used when existing user tries to create branches from old threads
      */
-    async handleInvalidEngagementForExistingUser(emailData: EmailData, user: User) {
-        console.log('handling invalid engagement for existing user', { emailData, user });
+    async handleInvalidEngagementForExistingUser(inboundEmailData: EmailData, user: User) {
+        console.log('handling invalid engagement for existing user', { inboundEmailData, user });
 
-        // Send an email to let the user know they cannot create branches from old threads
-        const sentEmail = await this.emailService.sendReplyOnlyToSender(
-            emailData,
-            `Hi,
+        const outboundEmailData = await this.emailService.sendReply(inboundEmailData, {
+            type: 'sender-only',
+            body: `
+            Hi,
 
             Seems you're trying to reply to an older email in the thread. Instead, consider replying to the latest email in the thread, or creating a new thread altogether.
 
             Best,
 
-            The Cruso Team
-            `,
-        );
+            The Cruso Team`,
+        });
 
-        console.log('sent offboarding email', { sentEmail });
+        console.log('sent invalid engagement email', { outboundEmailData });
+        return outboundEmailData;
     }
 
     /**
-     * Offboard a user
-     * @param emailData - The email data of the offboarding email
-     * @returns The email data of the sent offboarding email
-     * @description This method is used to offboard a user
+     * Handle invalid engagement for non-user
+     * @param emailData - The email data of the email
+     * @returns The email data of the sent email
+     * @description This method is used when non-user tries to create branches from old threads
      */
-    async handleInvalidEngagementForNonUser(emailData: EmailData) {
-        console.log('handling invalid engagement for non-user', { emailData });
+    async handleInvalidEngagementForNonUser(inboundEmailData: EmailData) {
+        console.log('handling invalid engagement for non-user', { inboundEmailData });
 
-        // Send an email to let the user know they cannot create branches from old threads
-        const sentEmail = await this.emailService.sendReplyOnlyToSender(
-            emailData,
-            `Hi,
+        const outboundEmailData = await this.emailService.sendReply(inboundEmailData, {
+            type: 'sender-only',
+            body: `
+            Hi,
 
-            Hmm, it looks like you're trying to reply to an older email in the thread. Instead consider replying the latest email in the thread.
+            Seems you're trying to reply to an older email in the thread. Instead, consider replying to the latest email in the thread, or creating a new thread altogether.
 
             Best,
 
-            The Cruso Team
-            `,
-        );
+            The Cruso Team`,
+        });
 
-        console.log('sent offboarding email', { sentEmail });
+        console.log('sent invalid engagement email', { outboundEmailData });
+        return outboundEmailData;
     }
 
     /**
-     * Handle an existing user
+     * Handle engagement for non-user
      * @param emailData - The email data of the email
-     * @param user - The user
      * @returns The email data of the sent email
-     * @description This method is used to handle a non user exchange - this is triggered when cruso acts on behalf of a user and interacts with the recipients (such as in coordination flow or rescheduling flow)
+     * @description This method handles non-user exchanges - triggered when Cruso acts on behalf of a user
      */
     async handleEngagementForNonUser(emailData: EmailData) {
         console.log('handling engagement for non-user', { emailData });
         const inboxService = InboxService.getInstance();
         await inboxService.saveEmail(emailData);
 
-        // Send a reply to the user if they pinged us
-        let sentEmail: EmailData;
-
+        // Determine reply type based on email content
         const replyToMe = emailData.body.includes('reply to me');
-        if (replyToMe) {
-            sentEmail = await this.emailService.sendReplyToOriginalSender(emailData, 'Pong');
-        } else {
-            sentEmail = await this.emailService.sendReplyToAllIncludingSender(emailData, 'Pong');
-        }
+        const replyType = replyToMe ? 'sender-only' : 'all-including-sender';
+
+        // NOTE: sender-only mode might not be viable for real world use case tbh
+        const sentEmail = await this.emailService.sendReply(emailData, {
+            type: replyType,
+            body: 'You have been pinged!',
+        });
+
+        console.log('sent engagement email', { sentEmail });
+
+        // Save the sent email to the database
+        const savedEmail = await inboxService.saveEmail(sentEmail);
+        console.log('saved engagement email', { savedEmail });
+
+        return sentEmail;
     }
 
     /**
-     * Handle an existing user
+     * Handle engagement for existing user
      * @param emailData - The email data of the email
      * @param user - The user
      * @returns The email data of the sent email
-     * @description This method is used to handle an existing user - this is triggered when a user interacts with cruso
+     * @description This method handles existing user interactions with Cruso
      */
     async handleEngagementForExistingUser(emailData: EmailData, user: User) {
         console.log('handling engagement for existing user', { emailData, user });
@@ -141,23 +150,21 @@ export class ExchangeService {
         const inboxService = InboxService.getInstance();
         await inboxService.saveEmail(emailData);
 
-        // Send a reply to the user if they pinged us
-        let sentEmail: EmailData;
-
+        // Determine reply type based on email content
         const replyToMe = emailData.body.includes('ping me');
-        if (replyToMe) {
-            sentEmail = await this.emailService.sendReplyOnlyToSender(emailData, 'Pong');
-        } else {
-            sentEmail = await this.emailService.sendReplyToAllRecipientsExcludingSender(
-                emailData,
-                'Pong',
-            );
-        }
+        const replyType = replyToMe ? 'sender-only' : 'all-excluding-sender';
+
+        const sentEmail = await this.emailService.sendReply(emailData, {
+            type: replyType,
+            body: 'You have been pinged!',
+        });
 
         console.log('sent engagement email', { sentEmail });
 
         // Save the sent email to the database
         await inboxService.saveEmail(sentEmail);
         console.log('saved engagement email', { sentEmail });
+
+        return sentEmail;
     }
 }
