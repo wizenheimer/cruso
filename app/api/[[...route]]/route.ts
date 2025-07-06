@@ -28,8 +28,6 @@ app.use(
 // Mount health routes
 app.route('/health', health);
 
-// Unversioned routes are mounted at the root of the API
-
 // API versioning
 const v1 = new Hono();
 

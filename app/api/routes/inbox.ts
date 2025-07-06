@@ -1,10 +1,22 @@
 import { Hono } from 'hono';
-import { handleInboxWebhook } from '@/app/api/handlers/inbox';
+import {
+    parseEmailDataMiddleware,
+    parseUserFromEmailMiddleware,
+    rejectDisallowedDomainsMiddleware,
+} from '../middleware/inbox';
+import { handleInboxRequest } from '../handlers/inbox';
 
 const inbox = new Hono();
 
-const webhookPath = process.env.WEBHOOK_PATH || 'webhook';
+// Apply webhook middleware to all routes in this router
+inbox.use(
+    '*',
+    parseEmailDataMiddleware,
+    rejectDisallowedDomainsMiddleware,
+    parseUserFromEmailMiddleware,
+);
 
-inbox.post(webhookPath, handleInboxWebhook);
+// Inbox webhook endpoint
+inbox.post('/inbox', handleInboxRequest);
 
 export default inbox;
