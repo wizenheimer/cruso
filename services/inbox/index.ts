@@ -5,6 +5,7 @@ import {
 } from './inbound';
 import { EmailData } from './content';
 
+// InboxService class for handling the inbox
 export class InboxService {
     private static instance: InboxService | null = null;
 
@@ -41,6 +42,13 @@ export class InboxService {
         }
     }
 
+    // saveEmail function for saving the email to the database
+    // - it saves the email to the database
+    async saveEmail(emailData: EmailData): Promise<boolean> {
+        // TODO: implement this
+        return true;
+    }
+
     // exchangeExists function for checking if the exchange exists
     // - it checks if the exchange exists
     async exchangeExists(parentID: string): Promise<boolean> {
@@ -48,19 +56,21 @@ export class InboxService {
     }
 
     // messageExistsInExchange function for checking if the message exists in the exchange
-    // - it checks if the message exists in the exchange
     async messageExistsInExchange(messageID: string, parentID: string): Promise<boolean> {
         return true; // TODO: implement this
     }
 
     // getLatestMessageInExchange function for getting the latest message in the exchange
-    // - it returns the latest message in the exchange
     async getLatestMessageInExchange(parentID: string): Promise<EmailData | null> {
         return {} as EmailData; // TODO: implement this
     }
 
+    // getAllMessagesInExchange function for getting all the messages in the exchange
+    async getAllMessagesInExchange(parentID: string): Promise<EmailData[] | null> {
+        return null; // TODO: implement this
+    }
+
     // isFirstMessageInExchange function for checking if the email is the first message in the exchange
-    // - it checks if the exchange exists and if the previous message exists
     async isFirstMessageInExchange(emailData: EmailData): Promise<boolean> {
         const previousMessageExists = await this.messageExistsInExchange(
             emailData.previousMessageID,
@@ -70,7 +80,6 @@ export class InboxService {
     }
 
     // canBranchExchange function for checking if the email can branch the exchange
-    // - it checks if previous message ID matches the latest message ID
     async canBranchExchange(emailData: EmailData): Promise<boolean> {
         // Get the latest message in the exchange
         const latestMessage = await this.getLatestMessageInExchange(emailData.parentID);
