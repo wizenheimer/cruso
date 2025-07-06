@@ -9,7 +9,7 @@ import inbox from '../routes/inbox';
 import auth from '../routes/auth';
 import email from '../routes/email';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // Create the main app
 const app = new Hono().basePath('/api');

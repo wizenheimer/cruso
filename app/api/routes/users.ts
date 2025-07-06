@@ -47,6 +47,10 @@ users.post('/', auth, zValidator('json', createUserSchema), async (c) => {
     const body = await c.req.valid('json');
     const authenticatedUser = c.get('user');
 
+    if (!authenticatedUser) {
+        return c.json({ error: 'Unauthorized' }, 401);
+    }
+
     // Simulate user creation
     const newUser = {
         id: Math.floor(Math.random() * 1000),
