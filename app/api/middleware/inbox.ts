@@ -1,7 +1,7 @@
 import { Context, Next } from 'hono';
 import { InboxService } from '@/services/inbox/index';
 import { getUserByEmail } from '@/db/queries/users';
-import { isDisallowedDomain } from '@/lib/email';
+import { isDisallowedAddress, isDisallowedDomain } from '@/lib/email';
 
 // disallowedWebhookStatusCode is the status code to return when the webhook is disallowed
 const disallowedWebhookStatusCode = 426;
@@ -47,14 +47,17 @@ export const rejectDisallowedDomainsMiddleware = async (c: Context, next: Next) 
     const emailData = c.get('emailData');
 
     // Check if the sender is from a disallowed domain
-    const isDisallowed = isDisallowedDomain(emailData.sender);
+    const isDisallowedDomainFlag = isDisallowedDomain(emailData.sender);
+
+    // Check if the sender is from a disallowed address
+    const isDisallowedAddressFlag = isDisallowedAddress(emailData.sender);
 
     // If the sender is from a disallowed domain, return a disallowed status code
-    if (isDisallowed) {
+    if (isDisallowedDomainFlag || isDisallowedAddressFlag) {
         return c.json(
             {
                 status: 'error',
-                message: 'Disallowed domain',
+                message: 'disallowed domain or address',
             },
             disallowedWebhookStatusCode,
         );
