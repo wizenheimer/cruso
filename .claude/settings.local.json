@@ -11,7 +11,9 @@
             "Bash(node:*)",
             "Bash(rg:*)",
             "Bash(grep:*)",
-            "Bash(find:*)"
+            "Bash(find:*)",
+            "Bash(npm run lint)",
+            "Bash(npm run:*)"
         ],
         "deny": []
     }

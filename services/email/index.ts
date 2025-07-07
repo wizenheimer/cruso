@@ -117,13 +117,13 @@ export class EmailService {
     private getThreadContext(replyTo?: EmailData, newThread?: boolean) {
         if (newThread || !replyTo) {
             return {
-                parentId: randomUUID(),
+                exchangeId: randomUUID(),
                 previousMessageId: null,
             };
         }
 
         return {
-            parentId: replyTo.parentId,
+            exchangeId: replyTo.exchangeId,
             previousMessageId: replyTo.messageId,
         };
     }
@@ -184,10 +184,10 @@ export class EmailService {
         bcc: string[];
         subject: string;
         body: string;
-        parentId: string;
+        exchangeId: string;
         previousMessageId: string | null;
     }): Promise<EmailData> {
-        const { to, cc, bcc, subject, body, parentId, previousMessageId } = params;
+        const { to, cc, bcc, subject, body, exchangeId, previousMessageId } = params;
 
         try {
             const mg = this.mailgun.client({
@@ -220,7 +220,7 @@ export class EmailService {
 
             return {
                 id: randomUUID(),
-                parentId,
+                exchangeId,
                 messageId: response.id,
                 previousMessageId,
                 sender: this.senderEmail,

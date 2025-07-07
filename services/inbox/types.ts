@@ -13,7 +13,7 @@ export type RawEmailData = {
 export type EmailData = Omit<
     RawEmailData & {
         id: string; // UUID for the email
-        parentId: string; // UUID for the parent email
+        exchangeId: string; // UUID for the parent email
         subject: string; // Subject of the email - sanitized
         body: string; // Body of the email - sanitized
     },

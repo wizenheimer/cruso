@@ -54,7 +54,7 @@ export class InboxService {
     /**
      * Create an email without priors
      * @param rawEmailData - The raw email data
-     * @returns Promise<EmailData> - The email data with a new id and parentId
+     * @returns Promise<EmailData> - The email data with a new id and exchangeId
      */
     private async newEmailWithoutPriors(rawEmailData: RawEmailData): Promise<EmailData> {
         const bodyPrefix = generatePrefixForBody(
@@ -71,7 +71,7 @@ export class InboxService {
         const emailData = {
             ...rawEmailData,
             id: randomUUID(),
-            parentId: randomUUID(),
+            exchangeId: randomUUID(),
             subject: rawEmailData.rawSubject, // Left unaltered to support threading on Client
             body: bodyPrefix + cleanedBody,
         };
@@ -82,7 +82,7 @@ export class InboxService {
      * Create an email with priors
      * @param rawEmailData - The raw email data
      * @param priorEmail - The prior email
-     * @returns Promise<EmailData> - The email data with the prior email's parentId
+     * @returns Promise<EmailData> - The email data with the prior email's exchangeId
      */
     private async emailWithPriors(
         rawEmailData: RawEmailData,
@@ -102,7 +102,7 @@ export class InboxService {
         const emailData = {
             ...rawEmailData,
             id: randomUUID(),
-            parentId: priorEmail.parentId,
+            exchangeId: priorEmail.exchangeId,
             subject: rawEmailData.rawSubject, // Left unaltered to support threading on Client
             body: bodyPrefix + cleanedBody,
         };
@@ -121,42 +121,42 @@ export class InboxService {
     }
 
     /**
-     * Check if an exchange exists by parent ID
-     * @param parentID - The parent ID to check for
+     * Check if an exchange exists by exchange ID
+     * @param exchangeID - The exchange ID to check for
      * @returns Promise<boolean> - True if the exchange exists, false otherwise
      */
-    async exchangeExists(parentID: string): Promise<boolean> {
+    async exchangeExists(exchangeID: string): Promise<boolean> {
         const result = await this.db
             .select()
             .from(inboxData)
-            .where(eq(inboxData.parentId, parentID));
+            .where(eq(inboxData.exchangeId, exchangeID));
         return result.length > 0;
     }
 
     /**
      * Check if a message exists in a specific exchange
      * @param messageID - The message ID to check for
-     * @param parentID - The parent ID of the exchange
+     * @param exchangeID - The exchange ID of the exchange
      * @returns Promise<boolean> - True if the message exists in the exchange, false otherwise
      */
-    async messageExistsInExchange(messageID: string, parentID: string): Promise<boolean> {
+    async messageExistsInExchange(messageID: string, exchangeID: string): Promise<boolean> {
         const result = await this.db
             .select()
             .from(inboxData)
-            .where(and(eq(inboxData.messageId, messageID), eq(inboxData.parentId, parentID)));
+            .where(and(eq(inboxData.messageId, messageID), eq(inboxData.exchangeId, exchangeID)));
         return result.length > 0;
     }
 
     /**
      * Get the latest message in an exchange
-     * @param parentID - The parent ID of the exchange
+     * @param exchangeID - The exchange ID of the exchange
      * @returns Promise<EmailData | null> - The latest message or null if no messages exist
      */
-    async getLatestMessageInExchange(parentID: string): Promise<EmailData | null> {
+    async getLatestMessageInExchange(exchangeID: string): Promise<EmailData | null> {
         const result = await this.db
             .select()
             .from(inboxData)
-            .where(eq(inboxData.parentId, parentID))
+            .where(eq(inboxData.exchangeId, exchangeID))
             .orderBy(desc(inboxData.timestamp))
             .limit(1);
         return result.length > 0 ? result[0] : null;
@@ -164,14 +164,14 @@ export class InboxService {
 
     /**
      * Get all messages in an exchange
-     * @param parentID - The parent ID of the exchange
+     * @param exchangeID - The exchange ID of the exchange
      * @returns Promise<EmailData[] | null> - Array of all messages or null if no messages exist
      */
-    async getAllMessagesInExchange(parentID: string): Promise<EmailData[] | null> {
+    async getAllMessagesInExchange(exchangeID: string): Promise<EmailData[] | null> {
         const result = await this.db
             .select()
             .from(inboxData)
-            .where(eq(inboxData.parentId, parentID))
+            .where(eq(inboxData.exchangeId, exchangeID))
             .orderBy(asc(inboxData.timestamp));
         return result.length > 0 ? result : null;
     }
@@ -188,7 +188,7 @@ export class InboxService {
 
         const previousMessageExists = await this.messageExistsInExchange(
             emailData.previousMessageId,
-            emailData.parentId,
+            emailData.exchangeId,
         );
 
         return !previousMessageExists;
@@ -202,13 +202,13 @@ export class InboxService {
      */
     async isValidEngagement(emailData: EmailData): Promise<boolean> {
         // Check the total number of emails in the exchange
-        const totalEmails = await this.countEmailsInExchange(emailData.parentId);
+        const totalEmails = await this.countEmailsInExchange(emailData.exchangeId);
         if (totalEmails.length !== 0 && totalEmails[0].count > MAX_EMAILS_IN_EXCHANGE) {
             return false;
         }
 
         // Get the latest message in the exchange
-        const latestMessage = await this.getLatestMessageInExchange(emailData.parentId);
+        const latestMessage = await this.getLatestMessageInExchange(emailData.exchangeId);
         if (!latestMessage) {
             // If there is no latest message, we can branch the exchange
             return true;
@@ -219,18 +219,18 @@ export class InboxService {
     }
 
     /**
-     * Get all emails in a thread (by parentId) ordered by timestamp
-     * @param parentId - The parent ID of the thread
+     * Get all emails in a thread (by exchangeId) ordered by timestamp
+     * @param exchangeId - The exchange ID of the thread
      * @param ascending - Whether to order by ascending timestamp (default: true)
      * @returns Promise<EmailData[]> - Array of emails in the thread
      */
-    async getEmailsByParentId(parentId: string, ascending: boolean = true) {
+    async getEmailsByExchangeId(exchangeId: string, ascending: boolean = true) {
         const orderBy = ascending ? asc(inboxData.timestamp) : desc(inboxData.timestamp);
 
         return await this.db
             .select()
             .from(inboxData)
-            .where(eq(inboxData.parentId, parentId))
+            .where(eq(inboxData.exchangeId, exchangeId))
             .orderBy(orderBy);
     }
 
@@ -267,70 +267,70 @@ export class InboxService {
     }
 
     /**
-     * Get the last email in an exchange (by parentId)
-     * @param parentId - The parent ID of the exchange
+     * Get the last email in an exchange (by exchangeId)
+     * @param exchangeId - The exchange ID of the exchange
      * @returns Promise<EmailData[]> - Array containing the last email or empty array if none found
      */
-    async getLastEmailInExchange(parentId: string) {
+    async getLastEmailInExchange(exchangeId: string) {
         return await this.db
             .select()
             .from(inboxData)
-            .where(eq(inboxData.parentId, parentId))
+            .where(eq(inboxData.exchangeId, exchangeId))
             .orderBy(desc(inboxData.timestamp))
             .limit(1);
     }
 
     /**
-     * Get the last inbound email in an exchange (by parentId)
-     * @param parentId - The parent ID of the exchange
+     * Get the last inbound email in an exchange (by exchangeId)
+     * @param exchangeId - The exchange ID of the exchange
      * @returns Promise<EmailData[]> - Array containing the last inbound email or empty array if none found
      */
-    async getLastInboundEmailInExchange(parentId: string) {
+    async getLastInboundEmailInExchange(exchangeId: string) {
         return await this.db
             .select()
             .from(inboxData)
-            .where(and(eq(inboxData.parentId, parentId), eq(inboxData.type, 'inbound')))
+            .where(and(eq(inboxData.exchangeId, exchangeId), eq(inboxData.type, 'inbound')))
             .orderBy(desc(inboxData.timestamp))
             .limit(1);
     }
 
     /**
-     * Get the last outbound email in an exchange (by parentId)
-     * @param parentId - The parent ID of the exchange
+     * Get the last outbound email in an exchange (by exchangeId)
+     * @param exchangeId - The exchange ID of the exchange
      * @returns Promise<EmailData[]> - Array containing the last outbound email or empty array if none found
      */
-    async getLastOutboundEmailInExchange(parentId: string) {
+    async getLastOutboundEmailInExchange(exchangeId: string) {
         return await this.db
             .select()
             .from(inboxData)
-            .where(and(eq(inboxData.parentId, parentId), eq(inboxData.type, 'outbound')))
+            .where(and(eq(inboxData.exchangeId, exchangeId), eq(inboxData.type, 'outbound')))
             .orderBy(desc(inboxData.timestamp))
             .limit(1);
     }
 
     /**
-     * Count emails in an exchange (by parentId)
-     * @param parentId - The parent ID of the exchange
+     * Count emails in an exchange (by exchangeId)
+     * @param exchangeId - The exchange ID of the exchange
      * @returns Promise<{count: number}[]> - Array containing the count of emails
      */
-    async countEmailsInExchange(parentId: string): Promise<{ count: number }[]> {
+    async countEmailsInExchange(exchangeId: string): Promise<{ count: number }[]> {
         return await this.db
             .select({ count: count() })
             .from(inboxData)
-            .where(eq(inboxData.parentId, parentId));
+            .where(eq(inboxData.exchangeId, exchangeId));
     }
 
     /**
      * Count emails by type (inbound or outbound) in an exchange
-     * @param parentId - The parent ID of the exchange
+     * @param exchangeId - The exchange ID of the exchange
      * @param type - The type of emails to count ('inbound' or 'outbound')
      * @returns Promise<{count: number}[]> - Array containing the count of emails of the specified type
      */
-    async countEmailsInExchangeByType(parentId: string, type: 'inbound' | 'outbound') {
+    async countEmailsInExchangeByType(exchangeId: string, type: 'inbound' | 'outbound') {
         return await this.db
             .select({ count: count() })
             .from(inboxData)
-            .where(and(eq(inboxData.parentId, parentId), eq(inboxData.type, type)));
+            .where(and(eq(inboxData.exchangeId, exchangeId), eq(inboxData.type, type)));
     }
 
     /**
@@ -431,9 +431,12 @@ export class InboxService {
     async searchEmails(filters: InboxFilters) {
         let conditions = [];
 
-        if (filters.parentId) {
+        if (filters.exchangeId) {
             conditions.push(
-                or(eq(inboxData.id, filters.parentId), eq(inboxData.parentId, filters.parentId)),
+                or(
+                    eq(inboxData.id, filters.exchangeId),
+                    eq(inboxData.exchangeId, filters.exchangeId),
+                ),
             );
         }
 

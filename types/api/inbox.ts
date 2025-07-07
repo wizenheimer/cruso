@@ -7,7 +7,7 @@ import { inboxData } from '@/db/schema/inbox';
 // CreateInboxDataSchema is the schema for creating a new inbox data
 export const CreateInboxDataSchema = z.object({
     id: z.string().uuid(),
-    parentId: z.string().uuid(),
+    exchangeId: z.string().uuid(),
     messageId: z.string().max(500), // Matches varchar(500) in DB
     previousMessageId: z.string().max(500).nullable(), // Previous message ID is nullable for first message in exchange
     sender: z.string().max(255), // Matches varchar(255) in DB
@@ -24,7 +24,7 @@ export const CreateInboxDataSchema = z.object({
 
 // UpdateInboxDataSchema is the schema for updating an existing inbox data
 export const UpdateInboxDataSchema = z.object({
-    parentId: z.string().uuid(),
+    exchangeId: z.string().uuid(),
     previousMessageId: z.string().max(500).nullable(), // Previous message ID is nullable for first message in exchange
     sender: z.string().max(255).optional(),
     recipients: z.array(z.string().email()).min(1).optional(),
@@ -41,7 +41,7 @@ export const UpdateInboxDataSchema = z.object({
 
 // InboxFiltersSchema is the schema for filtering inbox data
 export const InboxFiltersSchema = z.object({
-    parentId: z.string().uuid().optional(),
+    exchangeId: z.string().uuid().optional(),
     type: z.enum(['inbound', 'outbound']).optional(),
     sender: z.string().optional(),
     recipient: z.string().email().optional(),

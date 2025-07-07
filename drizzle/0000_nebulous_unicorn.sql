@@ -27,8 +27,8 @@ CREATE TABLE "calendar_connections" (
 );
 --> statement-breakpoint
 CREATE TABLE "inbox_data" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"parent_id" uuid NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
+	"exchange_id" uuid NOT NULL,
 	"message_id" varchar(500) NOT NULL,
 	"previous_message_id" varchar(500),
 	"sender" varchar(255) NOT NULL,
@@ -40,6 +40,7 @@ CREATE TABLE "inbox_data" (
 	"metadata" jsonb DEFAULT '{}'::jsonb,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "inbox_data_id_unique" UNIQUE("id"),
 	CONSTRAINT "inbox_data_message_id_unique" UNIQUE("message_id")
 );
 --> statement-breakpoint
@@ -76,6 +77,14 @@ CREATE TABLE "user_emails" (
 	CONSTRAINT "user_emails_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
+CREATE TABLE "users" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
 ALTER TABLE "availability" ADD CONSTRAINT "availability_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "calendar_connections" ADD CONSTRAINT "calendar_connections_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "preferences" ADD CONSTRAINT "preferences_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -83,13 +92,13 @@ ALTER TABLE "user_emails" ADD CONSTRAINT "user_emails_user_id_users_id_fk" FOREI
 CREATE INDEX "idx_availability_user_days" ON "availability" USING btree ("user_id","days");--> statement-breakpoint
 CREATE INDEX "idx_availability_user_date" ON "availability" USING btree ("user_id","date");--> statement-breakpoint
 CREATE INDEX "idx_calendar_connections_user" ON "calendar_connections" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "idx_inbox_data_parent_timestamp" ON "inbox_data" USING btree ("parent_id","timestamp" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "idx_inbox_data_exchange_timestamp" ON "inbox_data" USING btree ("exchange_id","timestamp" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "idx_inbox_data_message_id" ON "inbox_data" USING btree ("message_id");--> statement-breakpoint
 CREATE INDEX "idx_inbox_data_previous_message_id" ON "inbox_data" USING btree ("previous_message_id");--> statement-breakpoint
 CREATE INDEX "idx_inbox_data_sender" ON "inbox_data" USING btree ("sender");--> statement-breakpoint
 CREATE INDEX "idx_inbox_data_type_timestamp" ON "inbox_data" USING btree ("type","timestamp" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "idx_inbox_data_timestamp" ON "inbox_data" USING btree ("timestamp" DESC NULLS LAST);--> statement-breakpoint
-CREATE INDEX "idx_inbox_data_parent_type_timestamp" ON "inbox_data" USING btree ("parent_id","type","timestamp" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "idx_inbox_data_exchange_type_timestamp" ON "inbox_data" USING btree ("exchange_id","type","timestamp" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "idx_preferences_user_active" ON "preferences" USING btree ("user_id","is_active");--> statement-breakpoint
 CREATE INDEX "idx_user_emails_email" ON "user_emails" USING btree ("email");--> statement-breakpoint
 CREATE INDEX "idx_user_emails_user" ON "user_emails" USING btree ("user_id");

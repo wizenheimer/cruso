@@ -20,7 +20,7 @@ export const inboxData = pgTable(
     'inbox_data',
     {
         id: uuid('id').primaryKey().notNull().unique(),
-        parentId: uuid('parent_id').notNull(), // For tracking exchanges - an exchange can span across threads
+        exchangeId: uuid('exchange_id').notNull(), // For tracking exchanges - an exchange can span across threads
         messageId: varchar('message_id', { length: 500 }).notNull().unique(),
         previousMessageId: varchar('previous_message_id', { length: 500 }),
         sender: varchar('sender', { length: 255 }).notNull(),
@@ -35,7 +35,7 @@ export const inboxData = pgTable(
     },
     (table) => [
         // Primary indexes for common queries
-        index('idx_inbox_data_parent_timestamp').on(table.parentId, table.timestamp.desc()),
+        index('idx_inbox_data_exchange_timestamp').on(table.exchangeId, table.timestamp.desc()),
         index('idx_inbox_data_message_id').on(table.messageId),
         index('idx_inbox_data_previous_message_id').on(table.previousMessageId),
         index('idx_inbox_data_sender').on(table.sender),
@@ -43,8 +43,8 @@ export const inboxData = pgTable(
         index('idx_inbox_data_timestamp').on(table.timestamp.desc()),
 
         // Composite indexes for complex queries
-        index('idx_inbox_data_parent_type_timestamp').on(
-            table.parentId,
+        index('idx_inbox_data_exchange_type_timestamp').on(
+            table.exchangeId,
             table.type,
             table.timestamp.desc(),
         ),
@@ -57,7 +57,7 @@ export const inboxData = pgTable(
 // Relations - simplified without user scoping
 export const inboxDataRelations = relations(inboxData, ({ one, many }) => ({
     parent: one(inboxData, {
-        fields: [inboxData.parentId],
+        fields: [inboxData.exchangeId],
         references: [inboxData.id],
         relationName: 'thread',
     }),
