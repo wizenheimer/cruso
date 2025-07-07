@@ -1,6 +1,6 @@
 {
-    "id": "4ce5a489-fc28-4968-aff5-24ba2527a201",
-    "prevId": "00000000-0000-0000-0000-000000000000",
+    "id": "7146c7ca-0a66-4fa2-8d90-5437ba9d29fa",
+    "prevId": "4ce5a489-fc28-4968-aff5-24ba2527a201",
     "version": "7",
     "dialect": "postgresql",
     "tables": {
@@ -241,6 +241,110 @@
                     "name": "calendar_connections_user_id_calendar_id_unique",
                     "nullsNotDistinct": false,
                     "columns": ["user_id", "calendar_id"]
+                }
+            },
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "public.exchange_owners": {
+            "name": "exchange_owners",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "uuid",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "default": "gen_random_uuid()"
+                },
+                "exchange_id": {
+                    "name": "exchange_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "exchange_type": {
+                    "name": "exchange_type",
+                    "type": "varchar(20)",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "default": "now()"
+                }
+            },
+            "indexes": {
+                "idx_exchange_owners_exchange_id": {
+                    "name": "idx_exchange_owners_exchange_id",
+                    "columns": [
+                        {
+                            "expression": "exchange_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "idx_exchange_owners_user_id": {
+                    "name": "idx_exchange_owners_user_id",
+                    "columns": [
+                        {
+                            "expression": "user_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                }
+            },
+            "foreignKeys": {
+                "exchange_owners_user_id_users_id_fk": {
+                    "name": "exchange_owners_user_id_users_id_fk",
+                    "tableFrom": "exchange_owners",
+                    "tableTo": "users",
+                    "columnsFrom": ["user_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {
+                "exchange_owners_id_unique": {
+                    "name": "exchange_owners_id_unique",
+                    "nullsNotDistinct": false,
+                    "columns": ["id"]
+                },
+                "unique_exchange_user": {
+                    "name": "unique_exchange_user",
+                    "nullsNotDistinct": false,
+                    "columns": ["exchange_id", "user_id"]
                 }
             },
             "policies": {},
