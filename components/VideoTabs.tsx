@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import FadeIn from './ui/fade-in';
 
 export default function VideoTabs() {
     const [activeTab, setActiveTab] = useState(0);
@@ -30,22 +31,24 @@ export default function VideoTabs() {
 
     return (
         <div className="w-full max-w-5xl">
-            {/* Tab Navigation */}
-            <div className="flex flex-wrap justify-center gap-4 mb-8">
-                {tabs.map((tab, index) => (
-                    <button
-                        key={index}
-                        onClick={() => setActiveTab(index)}
-                        className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                            activeTab === index
-                                ? 'bg-black text-white shadow-lg'
-                                : 'bg-white text-black border border-gray-300 hover:bg-gray-50'
-                        }`}
-                    >
-                        {tab.title}
-                    </button>
-                ))}
-            </div>
+            <FadeIn delay={0.6}>
+                {/* Tab Navigation */}
+                <div className="flex flex-wrap justify-center gap-4 mb-8">
+                    {tabs.map((tab, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setActiveTab(index)}
+                            className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                                activeTab === index
+                                    ? 'bg-black text-white shadow-lg'
+                                    : 'bg-white text-black border border-gray-300 hover:bg-gray-50'
+                            }`}
+                        >
+                            {tab.title}
+                        </button>
+                    ))}
+                </div>
+            </FadeIn>
 
             {/* Tab Content - Fixed all edges and corners */}
             <div className="w-full rounded-lg overflow-hidden shadow-xl bg-white">

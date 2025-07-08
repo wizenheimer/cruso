@@ -7,7 +7,7 @@ export default function Navigation() {
                 Cruso
             </Link>
             <nav className="hidden md:flex space-x-8"></nav>
-            <a href="https://cal.com/nayann/cruso" target="_blank" rel="noopener noreferrer">
+            <a href="/get-started">
                 <button className="bg-black text-white px-4 py-2 rounded-md font-medium hover:opacity-90 transition-opacity">
                     Get Started
                 </button>

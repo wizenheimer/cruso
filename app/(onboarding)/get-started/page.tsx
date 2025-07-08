@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Testimonials } from '@/components/onboarding/Testimonials';
+import { motion } from 'framer-motion';
 
 // Replace with actual testimonials from users
 const testimonials = [
@@ -46,8 +47,18 @@ const GetStartedPage = () => {
                     </Link>
                 </nav>
                 {/* Centered onboarding card */}
-                <div className="flex flex-1 flex-col items-center justify-center min-h-screen">
-                    <div className="w-full max-w-xs flex flex-col items-center">
+                <motion.div
+                    className="flex flex-1 flex-col items-center justify-center min-h-screen"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                >
+                    <motion.div
+                        className="w-full max-w-xs flex flex-col items-center"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+                    >
                         <h1 className="text-2xl font-semibold mb-2 text-center">
                             We&apos;re almost there
                         </h1>
@@ -89,13 +100,18 @@ const GetStartedPage = () => {
                                 </div>
                             )}
                         </Button>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             </div>
 
             {/* Right side - Testimonial and Image */}
             <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex-col justify-start rounded-l-2xl">
-                <div className="px-8 xl:px-16 pt-8 xl:pt-16 pb-4 w-full">
+                <motion.div
+                    className="px-8 xl:px-16 pt-8 xl:pt-16 pb-4 w-full"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.5, ease: 'easeOut' }}
+                >
                     {/* Testimonials Section - Add testimonials */}
                     <Testimonials
                         testimonials={testimonials}
@@ -104,11 +120,16 @@ const GetStartedPage = () => {
                         showNavigation={true}
                         className="w-full"
                     />
-                </div>
+                </motion.div>
 
                 {/* Image Section - clean sneak peek effect */}
                 <div className="absolute bottom-0 right-0 w-full h-full flex items-end justify-end">
-                    <div className="relative w-[75%] h-[60%] transform translate-x-[8%] translate-y-[8%]">
+                    <motion.div
+                        className="relative w-[75%] h-[60%] transform translate-x-[8%] translate-y-[8%]"
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 1, delay: 0.8, ease: 'easeOut' }}
+                    >
                         <Image
                             src="/images/assets/onboarding/preview.png"
                             alt="Cruso Preview"
@@ -117,7 +138,7 @@ const GetStartedPage = () => {
                             priority
                             sizes="(max-width: 1024px) 50vw, 40vw"
                         />
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </div>
