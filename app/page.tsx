@@ -1,7 +1,7 @@
-import Navigation from './components/Navigation';
-import Hero from './components/Hero';
-import Integrations from './components/Integrations';
-import Footer from './components/Footer';
+import Navigation from '../components/Navigation';
+import Hero from '../components/Hero';
+import Integrations from '../components/Integrations';
+import Footer from '../components/Footer';
 
 export default function Page() {
     return (

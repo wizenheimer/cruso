@@ -3,8 +3,8 @@ import { getPostBySlug } from '@/lib/blog';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Navigation from '@/app/components/Navigation';
-import Footer from '@/app/components/Footer';
+import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 
 interface BlogPostPageProps {
     params: Promise<{
