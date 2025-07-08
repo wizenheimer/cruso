@@ -1,10 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FadeIn from './ui/fade-in';
 
 export default function VideoTabs() {
     const [activeTab, setActiveTab] = useState(0);
+
+    // Handle keyboard shortcuts for tab switching
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Check for Cmd (Mac) or Ctrl (Windows/Linux) + number keys
+            if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '9') {
+                e.preventDefault();
+                const tabIndex = parseInt(e.key) - 1;
+                if (tabIndex < tabs.length) {
+                    setActiveTab(tabIndex);
+                }
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const tabs = [
         {
@@ -44,7 +61,8 @@ export default function VideoTabs() {
                                     : 'bg-white text-black border border-gray-300 hover:bg-gray-50'
                             }`}
                         >
-                            {tab.title}
+                            <span>{tab.title}</span>
+                            <span className="ml-2 text-xs opacity-60">⌘{index + 1}</span>
                         </button>
                     ))}
                 </div>
