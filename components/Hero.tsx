@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import VideoTabs from './VideoTabs';
-import AnimatedUnderline from './AnimatedUnderline';
 import FadeIn from './ui/fade-in';
 import Cursor from './ui/cursor';
 
@@ -19,7 +18,6 @@ export default function Hero() {
             if (!isFocused) return;
 
             let displayKey = '';
-            let shouldUpdateText = false;
 
             if (e.key === 'Backspace') {
                 e.preventDefault();
@@ -29,7 +27,6 @@ export default function Hero() {
                 e.preventDefault();
                 setText('Email');
                 displayKey = 'Space';
-                shouldUpdateText = true;
             } else if (e.key === 'Enter') {
                 e.preventDefault();
                 displayKey = 'Enter';
@@ -55,7 +52,6 @@ export default function Hero() {
                 e.preventDefault();
                 setText('Email');
                 displayKey = e.key.toUpperCase();
-                shouldUpdateText = true;
             }
 
             // Only show overlay if we have a display key

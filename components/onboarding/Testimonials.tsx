@@ -36,7 +36,7 @@ export const Testimonials = ({
         }, interval);
 
         return () => clearInterval(timer);
-    }, [autoPlay, interval, isHovered]);
+    }, [autoPlay, interval, isHovered, testimonials.length]);
 
     const goToNext = () => {
         console.log('Next clicked, current:', currentIndex);
