@@ -89,15 +89,10 @@ export default function VideoTabs() {
     }, [isMuted]);
 
     const handleFullscreen = useCallback(() => {
-        const container = document.querySelector('.video-container');
-        if (container && document.fullscreenEnabled) {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                container.requestFullscreen();
-            }
-        }
-    }, []);
+        const currentVideoId = tabs[activeTab].videoId;
+        const youtubeUrl = `https://www.youtube.com/watch?v=${currentVideoId}`;
+        window.open(youtubeUrl, '_blank');
+    }, [activeTab]);
 
     // Handle keyboard shortcuts
     useEffect(() => {
@@ -128,31 +123,16 @@ export default function VideoTabs() {
                     e.preventDefault();
                     handleVolumeChange(Math.max(0, volume - 10));
                     break;
-                case 'm':
-                    e.preventDefault();
-                    handleMuteToggle();
-                    break;
                 case 'r':
                     e.preventDefault();
                     handleReplay();
-                    break;
-                case 'f':
-                    e.preventDefault();
-                    handleFullscreen();
                     break;
             }
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [
-        volume,
-        handlePlayPause,
-        handleReplay,
-        handleVolumeChange,
-        handleMuteToggle,
-        handleFullscreen,
-    ]);
+    }, [volume, handlePlayPause, handleReplay, handleVolumeChange]);
 
     // Show/hide controls on mouse movement
     const handleMouseMove = () => {
@@ -385,12 +365,6 @@ export default function VideoTabs() {
                     </span>
                     <span className="flex items-center gap-1">
                         <kbd className="px-2 py-1 bg-gray-100 rounded">↑/↓</kbd> Volume
-                    </span>
-                    <span className="flex items-center gap-1">
-                        <kbd className="px-2 py-1 bg-gray-100 rounded">M</kbd> Mute
-                    </span>
-                    <span className="flex items-center gap-1">
-                        <kbd className="px-2 py-1 bg-gray-100 rounded">F</kbd> Fullscreen
                     </span>
                 </div>
             </div>
