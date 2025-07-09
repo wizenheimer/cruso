@@ -1,16 +1,25 @@
 import { db } from '@/db';
-import { users } from '@/db/schema/users';
+import { user } from '@/db/schema/auth';
 import { User } from '@/types/api/users';
 import { eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    const [userRecord] = await db.select().from(user).where(eq(user.email, email));
+    return userRecord;
 };
 
-export const createUser = async (email: string): Promise<User | null> => {
+export const createUserWithEmail = async (email: string): Promise<User | null> => {
     console.log('attempting to create user', { email });
-    const [user] = await db.insert(users).values({ email }).returning();
-    console.log('created user in db', { user });
-    return user;
+    const [userRecord] = await db
+        .insert(user)
+        .values({
+            id: randomUUID(),
+            // Use email prefix as name, fallback to full email
+            name: email.includes('@') ? email.split('@')[0] : email,
+            email,
+        })
+        .returning();
+    console.log('created user in db', { userRecord });
+    return userRecord;
 };

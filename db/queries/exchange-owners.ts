@@ -1,18 +1,18 @@
 import { db } from '@/db';
 import { exchangeOwners } from '@/db/schema/exchange-owners';
-import { users } from '@/db/schema/users';
-import { eq, and } from 'drizzle-orm';
+import { user } from '@/db/schema/auth';
+import { eq } from 'drizzle-orm';
 
 export const getExchangeOwner = async (exchangeId: string) => {
     const [result] = await db
         .select({
             exchangeId: exchangeOwners.exchangeId,
             userId: exchangeOwners.userId,
-            userEmail: users.email,
+            userEmail: user.email,
             exchangeType: exchangeOwners.exchangeType,
         })
         .from(exchangeOwners)
-        .innerJoin(users, eq(exchangeOwners.userId, users.id))
+        .innerJoin(user, eq(exchangeOwners.userId, user.id))
         .where(eq(exchangeOwners.exchangeId, exchangeId));
 
     return result || null;
@@ -27,7 +27,7 @@ export const getExchangeById = async (exchangeId: string) => {
     return result || null;
 };
 
-export const createExchangeOwner = async (exchangeId: string, userId: number) => {
+export const createExchangeOwner = async (exchangeId: string, userId: string) => {
     const [result] = await db.insert(exchangeOwners).values({ exchangeId, userId }).returning();
 
     return result;

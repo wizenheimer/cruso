@@ -1,7 +1,6 @@
 import {
     pgTable,
     uuid,
-    integer,
     varchar,
     text,
     timestamp,
@@ -12,10 +11,14 @@ import { sql } from 'drizzle-orm';
 import { relations } from 'drizzle-orm/relations';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
-// An exchange is a thread of emails that are related to each other
-// A thread is a single email and its replies
+/**
+ * An exchange is a thread of emails that are related to each other
+ * A thread is a single email and its replies
+ */
 
-// Inbox data table - global email storage without user scoping
+/**
+ * Inbox data table - global email storage without user scoping
+ */
 export const inboxData = pgTable(
     'inbox_data',
     {
@@ -54,7 +57,9 @@ export const inboxData = pgTable(
     ],
 );
 
-// Relations - simplified without user scoping
+/**
+ * Relations - simplified without user scoping
+ */
 export const inboxDataRelations = relations(inboxData, ({ one, many }) => ({
     parent: one(inboxData, {
         fields: [inboxData.exchangeId],
@@ -66,6 +71,8 @@ export const inboxDataRelations = relations(inboxData, ({ one, many }) => ({
     }),
 }));
 
-// Zod schemas - auto-generated from Drizzle
+/**
+ * Zod schemas - auto-generated from Drizzle
+ */
 export const insertInboxDataSchema = createInsertSchema(inboxData);
 export const selectInboxDataSchema = createSelectSchema(inboxData);

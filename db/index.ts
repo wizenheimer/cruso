@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { schema } from './schema';
 
 const connectionString =
     process.env['DATABASE_URL'] || 'postgresql://postgres:password@localhost:5432/cruso';
@@ -8,4 +9,4 @@ const connectionString =
 const sql = postgres(connectionString);
 
 // Create the database instance
-export const db = drizzle(sql);
+export const db = drizzle(sql, { schema: schema });

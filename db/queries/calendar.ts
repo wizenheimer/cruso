@@ -1,80 +1,93 @@
-import { googleAuth } from '@/services/auth/google';
 import { db } from '@/db';
 import { calendarConnections } from '@/db/schema/calendars';
+import { account } from '@/db/schema/auth';
 import { eq, and, desc, sql, isNull, gt, or } from 'drizzle-orm';
+import { GoogleAuthManager } from '@/services/calendar/manager';
+
+const authManager = new GoogleAuthManager();
 
 export async function getUserGoogleAuth(
-    userId: number,
-): Promise<{ success: boolean; error?: string }> {
+    userId: string,
+): Promise<{ success: boolean; error?: string; accountId?: string }> {
     try {
-        // Get the most recent valid token for this user
+        // Get the most recent active calendar connection for this user
         const [connection] = await db
-            .select()
+            .select({
+                connection: calendarConnections,
+                account: account,
+            })
             .from(calendarConnections)
+            .leftJoin(account, eq(calendarConnections.accountId, account.id))
             .where(
-                and(
-                    eq(calendarConnections.userId, userId),
-                    and(
-                        or(
-                            isNull(calendarConnections.tokenExpiresAt),
-                            gt(calendarConnections.tokenExpiresAt, new Date()),
-                        ),
-                    ),
-                ),
+                and(eq(calendarConnections.userId, userId), eq(calendarConnections.isActive, true)),
             )
             .orderBy(desc(calendarConnections.updatedAt))
             .limit(1);
 
-        if (!connection || !connection.accessToken) {
+        if (!connection || !connection.account) {
+            return { success: false, error: 'No active calendar connection found for user' };
+        }
+
+        // Verify the account has valid tokens
+        if (!connection.account.accessToken || !connection.account.refreshToken) {
             return { success: false, error: 'No valid tokens found for user' };
         }
 
-        await googleAuth.initializeOAuth2Client();
-        googleAuth.setUserCredentials(
-            connection.accessToken,
-            connection.refreshToken || undefined,
-            connection.tokenExpiresAt || undefined,
-        );
-
-        return { success: true };
+        // Test authentication by getting an authenticated client
+        try {
+            await authManager.getAuthenticatedClient(connection.account.id);
+            return { success: true, accountId: connection.account.id };
+        } catch (error) {
+            return { success: false, error: 'Failed to authenticate with Google' };
+        }
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
 }
 
 export async function refreshUserTokens(
-    userId: number,
+    userId: string,
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const authResult = await getUserGoogleAuth(userId);
-        if (!authResult.success) {
+        if (!authResult.success || !authResult.accountId) {
             return authResult;
         }
 
-        const isValid = await googleAuth.validateTokens();
-
-        if (isValid) {
-            // Update tokens in database if they were refreshed
-            const newCredentials = googleAuth.getCurrentCredentials();
-            if (newCredentials.access_token) {
-                await db
-                    .update(calendarConnections)
-                    .set({
-                        accessToken: newCredentials.access_token,
-                        refreshToken: newCredentials.refresh_token || null,
-                        tokenExpiresAt: newCredentials.expiry_date
-                            ? new Date(newCredentials.expiry_date)
-                            : null,
-                        updatedAt: sql`NOW()`,
-                    })
-                    .where(eq(calendarConnections.userId, userId));
-            }
-
+        // The GoogleAuthManager automatically handles token refresh
+        // Just try to get an authenticated client to trigger refresh if needed
+        try {
+            await authManager.getAuthenticatedClient(authResult.accountId);
             return { success: true };
-        } else {
+        } catch (error) {
             return { success: false, error: 'Failed to refresh tokens' };
         }
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
+}
+
+export async function getActiveCalendarConnections(userId: string) {
+    return await db
+        .select({
+            connection: calendarConnections,
+            account: account,
+        })
+        .from(calendarConnections)
+        .leftJoin(account, eq(calendarConnections.accountId, account.id))
+        .where(and(eq(calendarConnections.userId, userId), eq(calendarConnections.isActive, true)));
+}
+
+export async function getCalendarConnectionById(connectionId: string) {
+    const [connection] = await db
+        .select({
+            connection: calendarConnections,
+            account: account,
+        })
+        .from(calendarConnections)
+        .leftJoin(account, eq(calendarConnections.accountId, account.id))
+        .where(eq(calendarConnections.id, connectionId))
+        .limit(1);
+
+    return connection || null;
 }

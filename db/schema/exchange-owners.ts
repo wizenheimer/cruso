@@ -1,18 +1,19 @@
-import { pgTable, uuid, integer, timestamp, index, unique, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, index, unique, varchar, text } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from './users';
-import { inboxData } from './inbox';
+import { user } from '@/db/schema/auth';
 
-// Exchange ownership table - associates exchanges with users
+/**
+ * Exchange ownership table - associates exchanges with users
+ */
 export const exchangeOwners = pgTable(
     'exchange_owners',
     {
         id: uuid('id').primaryKey().notNull().unique().defaultRandom(),
         exchangeId: uuid('exchange_id').notNull(),
-        userId: integer('user_id')
-            .notNull()
-            .references(() => users.id),
+        userId: text('user_id').references(() => user.id, {
+            onDelete: 'cascade',
+        }),
         exchangeType: varchar('exchange_type', { length: 20 }).$type<
             | 'scheduling'
             | 'scheduled'
@@ -37,14 +38,18 @@ export const exchangeOwners = pgTable(
     ],
 );
 
-// Relations
+/**
+ * Relations
+ */
 export const exchangeOwnersRelations = relations(exchangeOwners, ({ one }) => ({
-    user: one(users, {
+    user: one(user, {
         fields: [exchangeOwners.userId],
-        references: [users.id],
+        references: [user.id],
     }),
 }));
 
-// Zod schemas
+/**
+ * Zod schemas
+ */
 export const insertExchangeOwnerSchema = createInsertSchema(exchangeOwners);
 export const selectExchangeOwnerSchema = createSelectSchema(exchangeOwners);
