@@ -1,7 +1,7 @@
 import { EmailService } from '../email';
 import { EmailData } from '../inbox/types';
 import { User } from '@/types/api/users';
-import { createUser } from '@/db/queries/users';
+import { createUserWithEmail } from '@/db/queries/users';
 import { InboxService } from '@/services/inbox';
 import {
     getExchangeOwner,
@@ -69,7 +69,7 @@ export class ExchangeService {
      */
     async handleNewUser(inboundEmailData: EmailData) {
         console.log('onboarding non-user', { inboundEmailData });
-        const user = await createUser(inboundEmailData.sender);
+        const user = await createUserWithEmail(inboundEmailData.sender);
 
         if (!user) {
             throw new Error('failed to create user');
