@@ -1,14 +1,6 @@
-import { insertUserSchema, users } from '@/db/schema/users';
-import z from 'zod';
+import { user } from '@/db/schema/auth';
 
-export const CreateUserSchema = insertUserSchema
-    .pick({
-        email: true,
-    })
-    .extend({
-        displayName: z.string().optional(),
-        nickname: z.string().optional(),
-    });
-
-export type User = typeof users.$inferSelect;
-export type InsertUser = typeof users.$inferInsert;
+export type User = typeof user.$inferSelect;
+export type InsertUser = typeof user.$inferInsert;
+export type UpdateUser = typeof user.$inferSelect;
+export type DeleteUser = typeof user.$inferSelect;
