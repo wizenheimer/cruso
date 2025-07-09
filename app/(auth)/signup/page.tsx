@@ -35,11 +35,9 @@ const testimonials = [
 
 const SignupPage = () => {
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     const signUpWithGoogle = async () => {
         setLoading(true);
-        setError(null);
 
         try {
             const response = await authClient.signIn.social({
@@ -59,10 +57,10 @@ const SignupPage = () => {
             }
 
             // If no URL is returned, something went wrong
-            setError('Failed to get Google OAuth URL. Please try again.');
+            console.error('Failed to get Google OAuth URL. Please try again.');
             setLoading(false);
         } catch (error) {
-            setError(
+            console.error(
                 error instanceof Error
                     ? error.message
                     : 'Failed to sign up with Google. Please try again.',
