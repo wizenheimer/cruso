@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Testimonials } from '@/components/onboarding/Testimonials';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { authClient } from '@/lib/auth-client';
 
 // Replace with actual testimonials from users
 const testimonials = [
@@ -31,10 +33,56 @@ const testimonials = [
     },
 ];
 
-const GetStartedPage = () => {
-    const handleGoogleLogin = async () => {};
+const LoginPage = () => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const isDisabled = false;
+    const signUpWithGoogle = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await authClient.signIn.social({
+                provider: 'google',
+                callbackURL: '/dashboard',
+            });
+
+            // Check for error in response
+            if (response?.error) {
+                throw new Error(response.error.message || 'Authentication failed');
+            }
+
+            // Check for URL in data property
+            if (response?.data?.url) {
+                window.location.href = response.data.url;
+                return;
+            }
+
+            // If no URL is returned, something went wrong
+            setError('Failed to get Google OAuth URL. Please try again.');
+            setLoading(false);
+        } catch (error) {
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to sign up with Google. Please try again.',
+            );
+            setLoading(false);
+        }
+    };
+
+    // Add keyboard shortcut for Cmd+Enter
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter' && !loading) {
+                event.preventDefault();
+                signUpWithGoogle();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [loading]);
 
     return (
         <div className="flex min-h-screen">
@@ -66,12 +114,12 @@ const GetStartedPage = () => {
                             Quick auth and we make this official
                         </p>
                         <Button
-                            onClick={handleGoogleLogin}
-                            disabled={isDisabled}
+                            onClick={signUpWithGoogle}
+                            disabled={loading}
                             className="w-full h-10 text-base font-normal justify-center mt-2"
                             variant="outline"
                         >
-                            {isDisabled ? (
+                            {loading ? (
                                 <div className="flex items-center gap-2">
                                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                     Connecting...
@@ -96,11 +144,35 @@ const GetStartedPage = () => {
                                             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                         />
                                     </svg>
-                                    Continue with Google
+                                    Login with Google
                                 </div>
                             )}
                         </Button>
+
+                        {/* Keyboard shortcut guide */}
+                        <div className="mt-4 text-center">
+                            <div className="flex justify-center gap-4 text-xs text-gray-500">
+                                <span className="flex items-center gap-1">
+                                    <kbd className="px-2 py-1 bg-gray-100 rounded">⌘</kbd>
+                                    <span>+</span>
+                                    <kbd className="px-2 py-1 bg-gray-100 rounded">↵</kbd>
+                                </span>
+                            </div>
+                        </div>
                     </motion.div>
+
+                    {/* Sign up link - Footer */}
+                    <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 text-center px-4">
+                        <p className="text-sm text-muted-foreground">
+                            New user?{' '}
+                            <Link
+                                href="/signup"
+                                className="text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                                Sign up
+                            </Link>
+                        </p>
+                    </div>
                 </motion.div>
             </div>
 
@@ -145,4 +217,4 @@ const GetStartedPage = () => {
     );
 };
 
-export default GetStartedPage;
+export default LoginPage;

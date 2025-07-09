@@ -4,6 +4,10 @@ import { db } from '@/db'; // your drizzle instance
 import { user, account, session, verification } from '@/db/schema/auth';
 import { eq } from 'drizzle-orm';
 import { ConnectionManager } from '@/services/calendar/connection';
+import { authCookiePrefix } from './auth-constants';
+
+// Re-export for backward compatibility
+export { authCookiePrefix };
 
 /**
  * Google OAuth scopes
@@ -56,12 +60,17 @@ export const auth = betterAuth({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
             scope: googleScopes,
+            // Request offline access to get refresh tokens
+            authorizationParams: {
+                access_type: 'offline',
+                prompt: 'consent',
+            },
         },
     },
 
     /**
      * Account linking
-     * https://better-auth.com/docs/reference/configuration/account
+     * https://www.better-auth.com/docs/concepts/users-accounts#account-linking
      * Allows users to associate more than one calendars to their account
      */
     account: {
@@ -80,6 +89,13 @@ export const auth = betterAuth({
     session: {
         expiresIn: 60 * 60 * 24 * 30, // 30 days
         updateAge: 60 * 60 * 24, // 1 day
+    },
+
+    /**
+     * Cookie Prefix
+     */
+    advanced: {
+        cookiePrefix: authCookiePrefix,
     },
 
     /**

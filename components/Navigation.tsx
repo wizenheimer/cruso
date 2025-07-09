@@ -4,6 +4,15 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Signup route
+ */
+const signupRoute = '/signup';
+
+/**
+ * Navigation component
+ * @returns The navigation component
+ */
 export default function Navigation() {
     const router = useRouter();
 
@@ -12,7 +21,7 @@ export default function Navigation() {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
                 e.preventDefault();
-                router.push('/get-started');
+                router.push(signupRoute);
             }
         };
 
@@ -27,7 +36,7 @@ export default function Navigation() {
             </Link>
             <nav className="hidden md:flex space-x-8"></nav>
             <button
-                onClick={() => router.push('/get-started')}
+                onClick={() => router.push(signupRoute)}
                 className="bg-black text-white px-4 py-2 rounded-md font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
             >
                 <span>Get Started</span>

@@ -8,6 +8,7 @@
         "start": "next start",
         "lint": "next lint",
         "format": "prettier --write .",
+        "fmt": "prettier --write .",
         "typecheck": "tsc --noEmit",
         "db:generate": "pnpm drizzle-kit generate --config drizzle.config.ts",
         "db:migrate": "pnpm drizzle-kit migrate --config drizzle.config.ts",
