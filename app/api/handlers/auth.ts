@@ -1,202 +1,96 @@
-import { googleAuth } from '@/services/auth/google';
-import { Context } from 'hono';
-import { users } from '@/db/schema/users';
-import { calendarConnections } from '@/db/schema/calendars';
-import { sql } from 'drizzle-orm';
 import { db } from '@/db';
+import { calendarConnections } from '@/db/schema/calendars';
+import { account } from '@/db/schema/auth';
+import { eq, and } from 'drizzle-orm';
+import { Context } from 'hono';
+import { ConnectionManager } from '@/services/calendar/connection';
+import { getUser } from './calendar';
 
-/*
- * Google OAuth 2.0 Authorization Code Flow
- *
- * Flow Diagram:
- *
- *    Frontend                    Backend API                 Google OAuth Server
- *       |                           |                              |
- *       |  1. GET /auth/url         |                              |
- *       |-------------------------->|                              |
- *       |  2. { authUrl }           |                              |
- *       |<--------------------------|                              |
- *       |                           |                              |
- *       |  3. Redirect user to authUrl                             |
- *       |--------------------------------------------------------->|
- *       |                           |                              |
- *       |                           |  4. User authenticates       |
- *       |                           |     with Google               |
- *       |                           |                              |
- *       |  5. Redirect back with code & state                      |
- *       |<---------------------------------------------------------|
- *       |     (to frontend callback URL)                          |
- *       |                           |                              |
- *       |  6. POST /auth/exchange   |                              |
- *       |     { code, userEmail }   |                              |
- *       |-------------------------->|                              |
- *       |                           |  7. Exchange code for tokens |
- *       |                           |----------------------------->|
- *       |                           |  8. { access_token, refresh_token }
- *       |                           |<-----------------------------|
- *       |                           |                              |
- *       |                           |  9. Get user info & calendars|
- *       |                           |----------------------------->|
- *       |                           | 10. User data & calendar list|
- *       |                           |<-----------------------------|
- *       |                           |                              |
- *       | 11. { user, calendars }   | 12. Store in database        |
- *       |<--------------------------|                              |
- *       |                           |                              |
- *
- * Step Details:
- * 1. Frontend requests Google OAuth URL
- * 2. Backend returns authorization URL with state parameter
- * 3. Frontend redirects user to Google's authorization server
- * 4. User completes authentication with Google
- * 5. Google redirects user back to frontend with authorization code
- * 6. Frontend extracts code from URL and sends to backend with user email
- * 7. Backend exchanges authorization code for access/refresh tokens
- * 8. Google returns tokens to backend
- * 9. Backend uses tokens to fetch user info and calendar list
- * 10. Google returns user data and calendars
- * 11. Backend responds with user info and calendar count
- * 12. Backend stores user and calendar connections in database
+/**
+ * Handle the post-OAuth sync request
+ * @param c - The context object
+ * @returns The response object
  */
-
-// authURLHandler is called by the frontend to get the Google OAuth URL
-export const authURLHandler = async (c: Context) => {
+export async function handlePostOAuthSync(c: Context) {
     try {
-        await googleAuth.initializeOAuth2Client();
-        const authUrl = googleAuth.generateAuthUrl();
+        const user = getUser(c);
+        console.log('Post-OAuth sync requested for user:', user.id);
 
-        return c.json({
-            authUrl,
-            message: 'Visit this URL to authenticate with Google',
-        });
-    } catch (error) {
-        return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500);
-    }
-};
+        // Get all Google accounts for the user that don't have calendar connections yet
+        const googleAccounts = await db
+            .select()
+            .from(account)
+            .where(and(eq(account.userId, user.id), eq(account.providerId, 'google')));
 
-// authCallbackHandler is called by Google's authorization server after the user has authenticated
-// It receives the authorization code and returns it to be exchanged for tokens
-export const authCallbackHandler = async (c: Context) => {
-    const code = c.req.query('code');
-    const state = c.req.query('state');
-    const error = c.req.query('error');
+        console.log('Found Google accounts:', googleAccounts.length);
 
-    if (error) {
-        return c.json({ error: `OAuth error: ${error}` }, 400);
-    }
+        let syncedAccounts = 0;
+        let totalCalendars = 0;
 
-    if (!code) {
-        return c.json({ error: 'No authorization code received from Google' }, 400);
-    }
+        for (const accountData of googleAccounts) {
+            // Check if this account already has calendar connections
+            const existingConnections = await db
+                .select()
+                .from(calendarConnections)
+                .where(eq(calendarConnections.accountId, accountData.id))
+                .limit(1);
 
-    // For now, return the code to the frontend
-    // The frontend should then call /api/auth/google/exchange with this code
-    return c.json({
-        code,
-        state: state || '',
-        message:
-            'Authorization code received. Please exchange it for tokens using /api/auth/google/exchange',
-    });
-};
+            if (existingConnections.length > 0) {
+                console.log(`Account ${accountData.id} already has calendar connections, skipping`);
+                continue;
+            }
 
-// authExchangeHandler is called by the frontend after the user has authenticated with Google
-// and has been redirected back to the frontend with the authorization code
-export const authExchangeHandler = async (c: Context) => {
-    const { code, userEmail } = await c.req.json();
+            console.log('Syncing new account:', accountData.id);
 
-    try {
-        console.log('Starting OAuth exchange for:', userEmail);
-        console.log('Authorization code received:', code.substring(0, 20) + '...');
+            if (!accountData.accessToken) {
+                console.error('No access token for account:', accountData.id);
+                continue;
+            }
 
-        await googleAuth.initializeOAuth2Client();
-        console.log('OAuth client initialized');
+            if (!accountData.accountId) {
+                console.error('No Google account ID for account:', accountData.id);
+                continue;
+            }
 
-        const tokens = await googleAuth.getTokensFromCode(code);
-        console.log('Tokens received:', {
-            hasAccessToken: !!tokens.access_token,
-            hasRefreshToken: !!tokens.refresh_token,
-            expiryDate: tokens.expiry_date,
-        });
-
-        // Set tokens immediately after getting them
-        console.log('Setting user credentials...');
-        googleAuth.setUserCredentials(
-            tokens.access_token!,
-            tokens.refresh_token || undefined,
-            tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
-        );
-
-        // Get user info from Google
-        console.log('Getting user info from Google...');
-        const userInfo = await googleAuth.getUserInfo();
-        console.log('User info received:', userInfo.email);
-
-        // Create or update user in database
-        console.log('Creating/updating user in database...');
-        const [user] = await db
-            .insert(users)
-            .values({
-                email: userEmail,
-            })
-            .onConflictDoUpdate({
-                target: users.email,
-                set: {
-                    updatedAt: sql`NOW()`,
-                },
-            })
-            .returning();
-
-        if (!user) throw new Error('Failed to create or update user');
-
-        // Get user's Google calendars using the configured auth
-        console.log("Fetching user's Google calendars...");
-        const calendarAPI = googleAuth.getCalendarAPI();
-        const calendarResponse = await calendarAPI.calendarList.list();
-        const calendars = calendarResponse.data.items || [];
-        console.log('Found', calendars.length, 'calendars');
-
-        // Store calendar connections
-        console.log('Storing calendar connections...');
-        for (const cal of calendars) {
-            await db
-                .insert(calendarConnections)
-                .values({
+            try {
+                // Use the ConnectionManager to sync calendars
+                const connectionManager = new ConnectionManager({
                     userId: user.id,
-                    calendarId: cal.id!,
-                    calendarName: cal.summary!,
-                    accessToken: tokens.access_token || null,
-                    refreshToken: tokens.refresh_token || null,
-                    tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
-                    isPrimary: cal.primary || false,
-                    includeInAvailability: true,
-                })
-                .onConflictDoUpdate({
-                    target: [calendarConnections.userId, calendarConnections.calendarId],
-                    set: {
-                        accessToken: tokens.access_token || null,
-                        refreshToken: tokens.refresh_token || null,
-                        tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
-                        updatedAt: sql`NOW()`,
-                    },
+                    accountId: accountData.id,
+                    googleAccountId: accountData.accountId,
+                    googleEmail: accountData.accountId, // Use account ID as email fallback
                 });
+
+                await connectionManager.syncUserCalendars();
+
+                // Count the calendars that were synced
+                const syncedConnections = await db
+                    .select()
+                    .from(calendarConnections)
+                    .where(eq(calendarConnections.accountId, accountData.id));
+
+                totalCalendars += syncedConnections.length;
+                syncedAccounts++;
+
+                console.log(
+                    `Successfully synced ${syncedConnections.length} calendars for account ${accountData.id}`,
+                );
+            } catch (error) {
+                console.error('Error syncing calendars for account:', accountData.id, error);
+            }
         }
 
-        console.log('OAuth exchange completed successfully!');
+        console.log(
+            `Post-OAuth sync completed. Synced ${syncedAccounts} accounts with ${totalCalendars} calendars`,
+        );
+
         return c.json({
-            message: 'Authentication successful',
-            user: user,
-            googleUser: userInfo,
-            calendarsFound: calendars.length,
+            success: true,
+            accountsSynced: syncedAccounts,
+            calendarsSynced: totalCalendars,
         });
     } catch (error) {
-        console.error('OAuth exchange failed:', error);
-        return c.json(
-            {
-                error: `Authentication failed: ${
-                    error instanceof Error ? error.message : 'Unknown error'
-                }`,
-            },
-            400,
-        );
+        console.error('Error in post-OAuth sync:', error);
+        return c.json({ error: 'Failed to sync calendars' }, 500);
     }
-};
+}

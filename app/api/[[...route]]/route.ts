@@ -4,16 +4,23 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
 import health from '../routes/health';
-import users from '../routes/users';
 import inbox from '../routes/inbox';
 import auth from '../routes/auth';
+import calendar from '../routes/calendar';
 
+/**
+ * The runtime
+ */
 export const runtime = 'nodejs';
 
-// Create the main app
+/**
+ * The main app
+ */
 const app = new Hono().basePath('/api');
 
-// Global middleware
+/**
+ * Global middleware
+ */
 app.use('*', logger());
 app.use(
     '*',
@@ -24,21 +31,32 @@ app.use(
     }),
 );
 
-// Mount health routes
+/**
+ * Stable Routes (no versioning)
+ */
 app.route('/health', health);
 
-// API versioning
+/**
+ * Stable Routes (requires no backwards compatibility)
+ */
+app.route('/auth', auth);
+
+/**
+ * API versioning
+ */
 const v1 = new Hono();
 
-// Mount route modules
-v1.route('/users', users);
+/**
+ * Versioned Routes (requires backwards compatibility)
+ */
 v1.route('/inbox', inbox);
-v1.route('/auth', auth);
+v1.route('/calendar', calendar);
 
-// Mount versioned routes
 app.route('/v1', v1);
 
-// Error handling
+/**
+ * Error handling
+ */
 app.onError((err, c) => {
     console.error('API Error:', err);
     return c.json(
@@ -52,7 +70,9 @@ app.onError((err, c) => {
     );
 });
 
-// 404 handler
+/**
+ * 404 handler
+ */
 app.notFound((c) => {
     return c.json(
         {
@@ -65,6 +85,9 @@ app.notFound((c) => {
     );
 });
 
+/**
+ * Export the app
+ */
 export const GET = handle(app);
 export const POST = handle(app);
 export const PUT = handle(app);

@@ -4,17 +4,25 @@ import { User } from '@/types/api/users';
 import { InboxService } from '@/services/inbox/index';
 import { ExchangeService } from '@/services/exchange';
 
-// allowedWebhookStatusCode is the status code to return for allowed webhook requests
+/**
+ * The status code to return for allowed webhook requests
+ */
 const allowedWebhookStatusCode = 200;
 
-// handleInboxRequest function for processing inbox requests
+/**
+ * Handle the inbox request
+ * @param c - The context object
+ * @returns The response object
+ */
 export const handleInboxRequest = async (c: Context) => {
     // The webhook middleware has already processed the webhook
     // and stored emailData in the context
     const emailData = c.get('emailData');
     const user = c.get('user');
 
-    console.log('handling inbox request', { emailData, user });
+    if (!emailData) {
+        throw new Error('Email data not found in context');
+    }
 
     const inboxService = InboxService.getInstance();
 
@@ -43,8 +51,13 @@ export const handleInboxRequest = async (c: Context) => {
     );
 };
 
-// determineAction function for determining the appropriate action
-// - it determines the action based on the user status and thread conditions
+/**
+ * Determine the appropriate action
+ * @param user - The user object
+ * @param isThreadOpener - Whether the email is the first message in the exchange
+ * @param isValidEngagement - Whether the email is a valid reply to the exchange
+ * @returns The action to take
+ */
 const determineAction = (
     user: User | null,
     isThreadOpener: boolean,
@@ -66,8 +79,12 @@ const determineAction = (
     return isValidEngagement ? 'engage' : 'offboard';
 };
 
-// executeAction function for executing the determined action
-// - it executes the action based on the action type
+/**
+ * Execute the determined action
+ * @param action - The action to take
+ * @param emailData - The email data
+ * @param user - The user object
+ */
 const executeAction = async (
     action: 'onboard' | 'engage' | 'offboard',
     emailData: EmailData,

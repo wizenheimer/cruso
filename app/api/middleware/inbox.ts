@@ -3,13 +3,21 @@ import { InboxService } from '@/services/inbox/index';
 import { getUserByEmail } from '@/db/queries/users';
 import { isDisallowedAddress, isDisallowedDomain } from '@/lib/email';
 
-// disallowedWebhookStatusCode is the status code to return when the webhook is disallowed
+/**
+ * The status code to return when the webhook is disallowed
+ */
 const disallowedWebhookStatusCode = 426;
 
-// rejectDisallowedDomainFlag is the flag to return when the webhook is disallowed
+/**
+ * The flag to return when the webhook is disallowed
+ */
 const rejectDisallowedDomainFlag = process.env.NODE_ENV === 'production';
 
-// Parse email data from the webhook - this is the first middleware to run
+/**
+ * Parse email data from the webhook - this is the first middleware to run
+ * @param c - The context object
+ * @param next - The next middleware function
+ */
 export const parseEmailDataMiddleware = async (c: Context, next: Next) => {
     console.log('parsing email data');
     try {
@@ -34,7 +42,11 @@ export const parseEmailDataMiddleware = async (c: Context, next: Next) => {
     }
 };
 
-// Reject emails from disallowed domains - this is the second middleware to run
+/**
+ * Reject emails from disallowed domains - this is the second middleware to run
+ * @param c - The context object
+ * @param next - The next middleware function
+ */
 export const rejectDisallowedDomainsMiddleware = async (c: Context, next: Next) => {
     // If the reject disallowed domain flag is false, continue to the next middleware
     if (!rejectDisallowedDomainFlag) {
@@ -45,6 +57,16 @@ export const rejectDisallowedDomainsMiddleware = async (c: Context, next: Next) 
 
     // Get the email data from the context
     const emailData = c.get('emailData');
+
+    if (!emailData) {
+        return c.json(
+            {
+                status: 'error',
+                message: 'No email data found',
+            },
+            disallowedWebhookStatusCode,
+        );
+    }
 
     // Check if the sender is from a disallowed domain
     const isDisallowedDomainFlag = isDisallowedDomain(emailData.sender);
@@ -67,11 +89,25 @@ export const rejectDisallowedDomainsMiddleware = async (c: Context, next: Next) 
     await next();
 };
 
-// Parse user from email - this is the third middleware to run
+/**
+ * Parse user from email - this is the third middleware to run
+ * @param c - The context object
+ * @param next - The next middleware function
+ */
 export const parseUserFromEmailMiddleware = async (c: Context, next: Next) => {
     console.log('parsing user from email');
     // Get the email data from the context
     const emailData = c.get('emailData');
+
+    if (!emailData) {
+        return c.json(
+            {
+                status: 'error',
+                message: 'No email data found',
+            },
+            disallowedWebhookStatusCode,
+        );
+    }
 
     // Get the user from the email
     const user = await getUserByEmail(emailData.sender);
