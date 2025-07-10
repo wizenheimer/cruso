@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import BoringAvatar from 'boring-avatars';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';

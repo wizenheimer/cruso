@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface GoogleCalendarIconProps {
     className?: string;
@@ -6,6 +7,12 @@ interface GoogleCalendarIconProps {
 
 export const GoogleCalendarIcon: React.FC<GoogleCalendarIconProps> = ({ className = '' }) => {
     return (
-        <img src="/images/icons/google-calendar.svg" alt="Google Calendar" className={className} />
+        <Image
+            src="/images/icons/google-calendar.svg"
+            alt="Google Calendar"
+            className={className}
+            width={24}
+            height={24}
+        />
     );
 };
