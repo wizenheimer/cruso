@@ -3,7 +3,6 @@ import {
     serial,
     integer,
     varchar,
-    date,
     time,
     timestamp,
     index,
@@ -24,18 +23,13 @@ export const availability = pgTable(
             onDelete: 'cascade',
         }),
         days: integer('days').array(), // [1,2,3,4,5] for Mon-Fri
-        date: date('date'), // For date-specific overrides
         startTime: time('start_time').notNull(),
         endTime: time('end_time').notNull(),
         timezone: varchar('timezone', { length: 100 }).notNull(),
-        label: varchar('label', { length: 255 }), // "Work", "Personal", etc.
         createdAt: timestamp('created_at').defaultNow(),
         updatedAt: timestamp('updated_at').defaultNow(),
     },
-    (table) => [
-        index('idx_availability_user_days').on(table.userId, table.days),
-        index('idx_availability_user_date').on(table.userId, table.date),
-    ],
+    (table) => [index('idx_availability_user_days').on(table.userId, table.days)],
 );
 
 /**

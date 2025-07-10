@@ -28,11 +28,10 @@ const OnboardingPage = () => {
         { id: '3', email: 'doodle.fang@gmail.com', provider: 'google' },
     ]);
     const [buffers, setBuffers] = useState<BufferSetting[]>([
-        { id: 'general', label: 'Meeting Buffer', value: '25', isPrimary: true },
-        { id: 'virtual', label: 'Virtual Meetings', value: '25' },
-        { id: 'inperson', label: 'In-person Meetings', value: '25' },
-        { id: 'backtoback', label: 'Back to Back Meetings', value: '25' },
-        { id: 'flight', label: 'Flight Schedules', value: '25' },
+        { id: 'virtual', label: 'Virtual Meetings', value: '0', isPrimary: true },
+        { id: 'inperson', label: 'In-person Meetings', value: '15' },
+        { id: 'backtoback', label: 'Back to Back Meetings', value: '0' },
+        { id: 'flight', label: 'Flight Schedules', value: '0' },
     ]);
     const [fields, setFields] = useState<PersonalizationField[]>([
         {

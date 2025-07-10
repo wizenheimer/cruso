@@ -55,20 +55,20 @@ export function PreferencesView({
             </div>
             <div className="space-y-4">
                 <Textarea
-                    placeholder="Type your message here."
-                    value={preferences.message}
+                    placeholder="Type your preference document here."
+                    value={preferences.document}
                     onChange={(e) =>
                         onPreferencesChange({
                             ...preferences,
-                            message: e.target.value,
+                            document: e.target.value,
                         })
                     }
                     className="min-h-[300px] md:min-h-[400px] resize-none border-0 bg-gray-50 shadow-none focus-visible:ring-1 text-base"
                 />
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 space-y-1 sm:space-y-0">
-                    <span>{preferences.message.length} characters</span>
+                    <span>{preferences.document.length} characters</span>
                     <span>
-                        {preferences.message.split(/\s+/).filter((word) => word.length > 0).length}{' '}
+                        {preferences.document.split(/\s+/).filter((word) => word.length > 0).length}{' '}
                         words
                     </span>
                 </div>

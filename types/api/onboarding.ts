@@ -5,23 +5,17 @@ export const OnboardingSchema = z.object({
     // Step 1: Personal Info (from preferences)
     displayName: z.string().min(1, 'Display name is required'),
     nickname: z.string().optional(),
+    signature: z.string().optional(),
     timezone: z.string().min(1, 'Timezone is required'),
 
     // Step 2: Basic Preferences
     defaultMeetingDurationMinutes: z.number().min(5).max(480).default(30),
     minNoticeMinutes: z.number().min(5).max(1440).default(120),
     maxDaysAhead: z.number().min(1).max(365).default(60),
-    bufferBeforeMinutes: z.number().min(0).max(60).default(0),
-    bufferAfterMinutes: z.number().min(0).max(60).default(0),
-    inPersonBufferBeforeMinutes: z.number().min(0).max(120).default(15),
-    inPersonBufferAfterMinutes: z.number().min(0).max(120).default(15),
-
-    // Step 3: Advanced Preferences (optional)
-    backToBackLimitMinutes: z.number().min(0).max(480).optional(),
-    backToBackBufferMinutes: z.number().min(0).max(60).optional(),
-    clusterMeetings: z.boolean().default(false),
-    meetingNamingConvention: z.string().optional(),
-    refinement: z.string().optional(),
+    virtualBufferMinutes: z.number().min(0).max(60).default(0),
+    inPersonBufferMinutes: z.number().min(0).max(120).default(15),
+    backToBackBufferMinutes: z.number().min(0).max(60).default(0),
+    flightBufferMinutes: z.number().min(0).max(60).default(0),
 
     // Step 4: Availability blocks (using base availability schema)
     availability: z

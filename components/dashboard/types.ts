@@ -17,5 +17,21 @@ export interface EmailAccount {
 }
 
 export interface Preferences {
-    message: string;
+    id: number;
+    userId: string;
+    document: string;
+    displayName?: string;
+    nickname?: string;
+    signature?: string;
+    timezone?: string;
+    minNoticeMinutes: number;
+    maxDaysAhead: number;
+    defaultMeetingDurationMinutes: number;
+    virtualBufferMinutes: number;
+    inPersonBufferMinutes: number;
+    backToBackBufferMinutes: number;
+    flightBufferMinutes: number;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
 }

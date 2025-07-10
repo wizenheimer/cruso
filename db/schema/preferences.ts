@@ -22,11 +22,16 @@ export const preferences = pgTable(
         userId: text('user_id').references(() => user.id, {
             onDelete: 'cascade',
         }),
-        document: text('document').notNull(), // Full natural language doc for LLM
 
-        // UI display (rarely changes, avoid LLM lookup)
+        // Preference document for handling availability/scheduling
+        document: text('document').notNull(),
+
+        // Display name is used for the user's display name in the UI
         displayName: varchar('display_name', { length: 255 }),
+        // Nickname is used for the user's display name in the email
         nickname: varchar('nickname', { length: 255 }),
+        // Signature is used for the user's signature in the email
+        signature: text('signature'),
 
         // Fast availability/scheduling lookups
         timezone: varchar('timezone', { length: 100 }),
@@ -36,23 +41,20 @@ export const preferences = pgTable(
         // Default meeting settings
         defaultMeetingDurationMinutes: integer('default_meeting_duration_minutes').default(30),
 
-        // Buffer settings (virtual vs in-person)
-        bufferBeforeMinutes: integer('buffer_before_minutes').default(0),
-        bufferAfterMinutes: integer('buffer_after_minutes').default(0),
-        inPersonBufferBeforeMinutes: integer('in_person_buffer_before_minutes').default(15),
-        inPersonBufferAfterMinutes: integer('in_person_buffer_after_minutes').default(15),
+        // Buffer settings
+        // Virtual Meetings
+        virtualBufferMinutes: integer('virtual_buffer_minutes').default(0),
 
-        // Advanced buffers
-        backToBackLimitMinutes: integer('back_to_back_limit_minutes'),
-        backToBackBufferMinutes: integer('back_to_back_buffer_minutes'),
+        // In-person Meetings
+        inPersonBufferMinutes: integer('in_person_buffer_minutes').default(15),
 
-        // Meeting clustering
-        clusterMeetings: boolean('cluster_meetings').default(false),
+        // Back to Back Meetings
+        backToBackBufferMinutes: integer('back_to_back_buffer_minutes').default(0),
 
-        // New fields
-        meetingNamingConvention: text('meeting_naming_convention'),
-        refinement: text('refinement'),
+        // Flight Schedules
+        flightBufferMinutes: integer('flight_buffer_minutes').default(0),
 
+        // Active flag - used for soft deletes
         isActive: boolean('is_active').default(true),
         createdAt: timestamp('created_at').defaultNow(),
         updatedAt: timestamp('updated_at').defaultNow(),

@@ -93,19 +93,51 @@ export default function DashboardPage() {
     ]);
 
     const [preferences, setPreferences] = useState<Preferences>({
-        message: '',
+        id: 0,
+        userId: '',
+        document: '',
+        displayName: '',
+        nickname: '',
+        signature: '',
+        timezone: 'America/New_York',
+        minNoticeMinutes: 120,
+        maxDaysAhead: 60,
+        defaultMeetingDurationMinutes: 30,
+        virtualBufferMinutes: 0,
+        inPersonBufferMinutes: 15,
+        backToBackBufferMinutes: 0,
+        flightBufferMinutes: 0,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
     });
     const [originalPreferences, setOriginalPreferences] = useState<Preferences>({
-        message: '',
+        id: 0,
+        userId: '',
+        document: '',
+        displayName: '',
+        nickname: '',
+        signature: '',
+        timezone: 'America/New_York',
+        minNoticeMinutes: 120,
+        maxDaysAhead: 60,
+        defaultMeetingDurationMinutes: 30,
+        virtualBufferMinutes: 0,
+        inPersonBufferMinutes: 15,
+        backToBackBufferMinutes: 0,
+        flightBufferMinutes: 0,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
     });
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     // Check for unsaved changes
     useEffect(() => {
-        const hasChanges = preferences.message !== originalPreferences.message;
+        const hasChanges = preferences.document !== originalPreferences.document;
         setHasUnsavedChanges(hasChanges);
-    }, [preferences.message, originalPreferences.message]);
+    }, [preferences.document, originalPreferences.document]);
 
     const handleMakePrimaryCalendar = (accountId: string) => {
         setCalendarAccounts((accounts) =>

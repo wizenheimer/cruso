@@ -3,11 +3,9 @@ import z from 'zod';
 
 export const CreateAvailabilitySchema = z.object({
     days: z.array(z.number()).nullable().optional(),
-    date: z.string().nullable().optional(),
     startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Invalid time format'),
     endTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Invalid time format'),
     timezone: z.string().min(1),
-    label: z.string().optional(),
 });
 
 export const AvailabilityCheckSchema = z.object({
