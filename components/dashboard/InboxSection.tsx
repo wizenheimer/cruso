@@ -105,99 +105,103 @@ export function InboxSection({
             </div>
 
             {showAddEmail && (
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 p-4 bg-gray-50 rounded-lg mb-6">
                     <Input
                         placeholder="Enter email address"
                         value={newEmail}
                         onChange={(e) => setNewEmail(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleAddEmail()}
-                        className="border-0 bg-white shadow-none focus-visible:ring-1"
+                        className="border-0 bg-white shadow-none focus-visible:ring-1 flex-1"
                     />
-                    <Button
-                        onClick={handleAddEmail}
-                        size="sm"
-                        variant="ghost"
-                        className="text-blue-600 hover:text-blue-700"
-                    >
-                        Add
-                    </Button>
-                    <Button
-                        onClick={() => {
-                            setShowAddEmail(false);
-                            setNewEmail('');
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-500 hover:text-gray-700"
-                    >
-                        Cancel
-                    </Button>
+                    <div className="flex space-x-2">
+                        <Button
+                            onClick={handleAddEmail}
+                            size="sm"
+                            variant="ghost"
+                            className="text-blue-600 hover:text-blue-700"
+                        >
+                            Add
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setShowAddEmail(false);
+                                setNewEmail('');
+                            }}
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-500 hover:text-gray-700"
+                        >
+                            Cancel
+                        </Button>
+                    </div>
                 </div>
             )}
 
             {/* Paginated Email Layout */}
             <div className="overflow-hidden">
                 <div
-                    className="flex space-x-8 transition-transform duration-300 ease-in-out"
+                    className="flex space-x-4 sm:space-x-6 lg:space-x-8 transition-transform duration-300 ease-in-out"
                     style={{ transform: `translateX(0)` }}
                 >
                     {paginatedEmailAccounts.map((account) => (
-                        <div key={account.id} className="flex-shrink-0 w-80 min-w-80">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                                    <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                                        <EmailIcon className="w-8 h-8" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="font-semibold text-gray-900 truncate">
-                                            {account.email}
+                        <div key={account.id} className="flex-shrink-0 w-full sm:w-80 sm:min-w-80">
+                            <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+                                <div className="flex items-center justify-between space-y-3 sm:space-y-0">
+                                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                                            <EmailIcon className="w-8 h-8" />
                                         </div>
-                                        <div className="text-sm text-gray-500">
-                                            {account.provider}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-semibold text-gray-900 truncate">
+                                                {account.email}
+                                            </div>
+                                            <div className="text-sm text-gray-500">
+                                                {account.provider}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex items-start space-x-3 flex-shrink-0 ml-4">
-                                    {account.isPrimary && (
-                                        <Badge
-                                            variant="secondary"
-                                            className="bg-gray-100 text-gray-700 border-0 whitespace-nowrap"
-                                        >
-                                            Primary
-                                        </Badge>
-                                    )}
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 w-8 p-0 flex-shrink-0"
+                                    <div className="flex items-center space-x-3 flex-shrink-0">
+                                        {account.isPrimary && (
+                                            <Badge
+                                                variant="secondary"
+                                                className="bg-gray-100 text-gray-700 border-0 whitespace-nowrap"
                                             >
-                                                <MoreVertical className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent
-                                            align="end"
-                                            className="bg-white border border-gray-200 shadow-lg"
-                                        >
-                                            {!account.isPrimary && (
-                                                <DropdownMenuItem
-                                                    onClick={() => onMakePrimary(account.id)}
-                                                    className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer"
+                                                Primary
+                                            </Badge>
+                                        )}
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 flex-shrink-0"
                                                 >
-                                                    <Star className="h-4 w-4 mr-2" />
-                                                    Make Primary
-                                                </DropdownMenuItem>
-                                            )}
-                                            <DropdownMenuItem
-                                                onClick={() => onRemove(account.id)}
-                                                className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent
+                                                align="end"
+                                                className="bg-white border border-gray-200 shadow-lg"
                                             >
-                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                Remove
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                                {!account.isPrimary && (
+                                                    <DropdownMenuItem
+                                                        onClick={() => onMakePrimary(account.id)}
+                                                        className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer"
+                                                    >
+                                                        <Star className="h-4 w-4 mr-2" />
+                                                        Make Primary
+                                                    </DropdownMenuItem>
+                                                )}
+                                                <DropdownMenuItem
+                                                    onClick={() => onRemove(account.id)}
+                                                    className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    Remove
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -24,13 +24,13 @@ export function PreferencesView({
     onReset,
 }: PreferencesViewProps) {
     return (
-        <div className="mt-6">
-            <div className="flex items-center justify-between mb-6">
+        <div className="mt-4 md:mt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
                 <div>
                     <h2 className="text-xl font-semibold text-gray-900">Preference</h2>
                     <p className="text-sm text-gray-600 mt-1">Manage your scheduling preference</p>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                     {hasUnsavedChanges && (
                         <Button
                             variant="ghost"
@@ -63,9 +63,9 @@ export function PreferencesView({
                             message: e.target.value,
                         })
                     }
-                    className="min-h-[400px] resize-none border-0 bg-gray-50 shadow-none focus-visible:ring-1 text-base"
+                    className="min-h-[300px] md:min-h-[400px] resize-none border-0 bg-gray-50 shadow-none focus-visible:ring-1 text-base"
                 />
-                <div className="flex items-center justify-between text-sm text-gray-500">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 space-y-1 sm:space-y-0">
                     <span>{preferences.message.length} characters</span>
                     <span>
                         {preferences.message.split(/\s+/).filter((word) => word.length > 0).length}{' '}

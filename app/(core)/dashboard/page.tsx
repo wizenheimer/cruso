@@ -1,8 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Sidebar,
+    MobileAvatar,
     PreferencesView,
     CalendarSection,
     InboxSection,
@@ -164,48 +172,91 @@ export default function DashboardPage() {
         );
     };
 
+    const getViewLabel = (view: 'preferences' | 'accounts') => {
+        return view === 'preferences' ? 'Preferences' : 'Accounts';
+    };
+
     return (
         <div className="min-h-screen bg-white flex">
-            <div className="flex max-w-7xl mx-auto w-full">
+            {/* Desktop Sidebar */}
+            <div className="hidden md:block">
                 <Sidebar activeView={activeView} onViewChange={setActiveView} />
+            </div>
 
-                {/* Main Content */}
-                <div className="flex-1 max-w-6xl">
-                    {/* Header */}
-                    <div className="bg-white px-6 py-6">
-                        {/* Header content can be added here if needed */}
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Mobile Header */}
+                <div className="md:hidden bg-white px-4 py-3 flex items-center justify-between">
+                    <h1 className="text-lg font-semibold text-gray-900">Cruso</h1>
+
+                    <div className="flex items-center space-x-3">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 px-2 py-1 rounded-md hover:bg-gray-100">
+                                    <span>{getViewLabel(activeView)}</span>
+                                    <ChevronDown className="h-4 w-4" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="bg-white border border-gray-200 shadow-lg w-40"
+                            >
+                                <DropdownMenuItem
+                                    onClick={() => setActiveView('accounts')}
+                                    className={`cursor-pointer ${
+                                        activeView === 'accounts'
+                                            ? 'bg-gray-50 text-gray-900'
+                                            : 'text-gray-600'
+                                    }`}
+                                >
+                                    Accounts
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setActiveView('preferences')}
+                                    className={`cursor-pointer ${
+                                        activeView === 'preferences'
+                                            ? 'bg-gray-50 text-gray-900'
+                                            : 'text-gray-600'
+                                    }`}
+                                >
+                                    Preferences
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <MobileAvatar />
                     </div>
+                </div>
 
-                    {/* Content */}
-                    <div className="px-6 pb-8 max-w-5xl">
-                        {activeView === 'accounts' && (
-                            <div className="space-y-12 mt-6">
-                                <CalendarSection
-                                    calendarAccounts={calendarAccounts}
-                                    onMakePrimary={handleMakePrimaryCalendar}
-                                    onRemove={handleRemoveCalendar}
-                                    onCalendarToggle={handleCalendarToggle}
-                                />
-                                <InboxSection
-                                    emailAccounts={emailAccounts}
-                                    onMakePrimary={handleMakePrimaryEmail}
-                                    onRemove={handleRemoveEmail}
-                                    onAddEmail={handleAddEmail}
-                                />
-                            </div>
-                        )}
-
-                        {activeView === 'preferences' && (
-                            <PreferencesView
-                                preferences={preferences}
-                                isSaving={isSaving}
-                                hasUnsavedChanges={hasUnsavedChanges}
-                                onPreferencesChange={setPreferences}
-                                onSave={handleSavePreferences}
-                                onReset={handleResetPreferences}
+                {/* Content */}
+                <div className="flex-1 px-4 md:px-6 pb-8 max-w-6xl mx-auto w-full">
+                    {activeView === 'accounts' && (
+                        <div className="space-y-8 md:space-y-12 mt-4 md:mt-6">
+                            <CalendarSection
+                                calendarAccounts={calendarAccounts}
+                                onMakePrimary={handleMakePrimaryCalendar}
+                                onRemove={handleRemoveCalendar}
+                                onCalendarToggle={handleCalendarToggle}
                             />
-                        )}
-                    </div>
+                            <InboxSection
+                                emailAccounts={emailAccounts}
+                                onMakePrimary={handleMakePrimaryEmail}
+                                onRemove={handleRemoveEmail}
+                                onAddEmail={handleAddEmail}
+                            />
+                        </div>
+                    )}
+
+                    {activeView === 'preferences' && (
+                        <PreferencesView
+                            preferences={preferences}
+                            isSaving={isSaving}
+                            hasUnsavedChanges={hasUnsavedChanges}
+                            onPreferencesChange={setPreferences}
+                            onSave={handleSavePreferences}
+                            onReset={handleResetPreferences}
+                        />
+                    )}
                 </div>
             </div>
         </div>

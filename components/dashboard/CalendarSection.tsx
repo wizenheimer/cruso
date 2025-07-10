@@ -38,7 +38,18 @@ export function CalendarSection({
         const calculateItemsPerPage = () => {
             if (calendarContainerRef.current) {
                 const containerWidth = calendarContainerRef.current.offsetWidth;
-                const itemWidth = 320; // Approximate width of each item including gap
+                // Responsive item width calculation
+                let itemWidth = 320; // Desktop default
+                if (containerWidth < 640) {
+                    // sm breakpoint
+                    itemWidth = containerWidth - 32; // Full width minus padding
+                } else if (containerWidth < 768) {
+                    // md breakpoint
+                    itemWidth = 280;
+                } else if (containerWidth < 1024) {
+                    // lg breakpoint
+                    itemWidth = 300;
+                }
                 const calculatedItems = Math.floor(containerWidth / itemWidth);
                 setItemsPerPage(Math.max(1, calculatedItems));
             }
@@ -112,89 +123,94 @@ export function CalendarSection({
             {/* Paginated Calendar Layout */}
             <div ref={calendarContainerRef} className="overflow-hidden">
                 <div
-                    className="flex space-x-8 transition-transform duration-300 ease-in-out"
+                    className="flex space-x-4 sm:space-x-6 lg:space-x-8 transition-transform duration-300 ease-in-out"
                     style={{ transform: `translateX(0)` }}
                 >
                     {paginatedCalendarAccounts.map((account) => (
-                        <div key={account.id} className="flex-shrink-0 w-80 min-w-80 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                                    <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                                        <GoogleCalendarIcon className="w-8 h-8" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="font-semibold text-gray-900 truncate">
-                                            {account.email}
+                        <div
+                            key={account.id}
+                            className="flex-shrink-0 w-full sm:w-80 sm:min-w-80 space-y-4"
+                        >
+                            <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+                                <div className="flex items-center justify-between space-y-3 sm:space-y-0">
+                                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                                            <GoogleCalendarIcon className="w-8 h-8" />
                                         </div>
-                                        <div className="text-sm text-gray-500">
-                                            {account.provider}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-semibold text-gray-900 truncate">
+                                                {account.email}
+                                            </div>
+                                            <div className="text-sm text-gray-500">
+                                                {account.provider}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex items-start space-x-3 flex-shrink-0 ml-4">
-                                    {account.isPrimary && (
-                                        <Badge
-                                            variant="secondary"
-                                            className="bg-gray-100 text-gray-700 border-0 whitespace-nowrap"
-                                        >
-                                            Primary
-                                        </Badge>
-                                    )}
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 w-8 p-0 flex-shrink-0"
+                                    <div className="flex items-center space-x-3 flex-shrink-0">
+                                        {account.isPrimary && (
+                                            <Badge
+                                                variant="secondary"
+                                                className="bg-gray-100 text-gray-700 border-0 whitespace-nowrap"
                                             >
-                                                <MoreVertical className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent
-                                            align="end"
-                                            className="bg-white border border-gray-200 shadow-lg"
-                                        >
-                                            {!account.isPrimary && (
-                                                <DropdownMenuItem
-                                                    onClick={() => onMakePrimary(account.id)}
-                                                    className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer"
+                                                Primary
+                                            </Badge>
+                                        )}
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 flex-shrink-0"
                                                 >
-                                                    <Star className="h-4 w-4 mr-2" />
-                                                    Make Primary
-                                                </DropdownMenuItem>
-                                            )}
-                                            <DropdownMenuItem
-                                                onClick={() => onRemove(account.id)}
-                                                className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent
+                                                align="end"
+                                                className="bg-white border border-gray-200 shadow-lg"
                                             >
-                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                Remove
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                {account.calendars.map((calendar) => (
-                                    <div
-                                        key={calendar.name}
-                                        className="flex items-center space-x-3"
-                                    >
-                                        <Checkbox
-                                            id={`${account.id}-${calendar.name}`}
-                                            checked={calendar.enabled}
-                                            onCheckedChange={() =>
-                                                onCalendarToggle(account.id, calendar.name)
-                                            }
-                                        />
-                                        <Label
-                                            htmlFor={`${account.id}-${calendar.name}`}
-                                            className="text-sm font-medium text-gray-700 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                        >
-                                            {calendar.name}
-                                        </Label>
+                                                {!account.isPrimary && (
+                                                    <DropdownMenuItem
+                                                        onClick={() => onMakePrimary(account.id)}
+                                                        className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer"
+                                                    >
+                                                        <Star className="h-4 w-4 mr-2" />
+                                                        Make Primary
+                                                    </DropdownMenuItem>
+                                                )}
+                                                <DropdownMenuItem
+                                                    onClick={() => onRemove(account.id)}
+                                                    className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    Remove
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
-                                ))}
+                                </div>
+                                <div className="space-y-3 mt-4">
+                                    {account.calendars.map((calendar) => (
+                                        <div
+                                            key={calendar.name}
+                                            className="flex items-center space-x-3"
+                                        >
+                                            <Checkbox
+                                                id={`${account.id}-${calendar.name}`}
+                                                checked={calendar.enabled}
+                                                onCheckedChange={() =>
+                                                    onCalendarToggle(account.id, calendar.name)
+                                                }
+                                            />
+                                            <Label
+                                                htmlFor={`${account.id}-${calendar.name}`}
+                                                className="text-sm font-medium text-gray-700 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                {calendar.name}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     ))}
