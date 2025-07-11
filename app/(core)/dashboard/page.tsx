@@ -25,6 +25,7 @@ interface ApiCalendarAccount {
     accountId: string;
     email: string;
     calendars: Array<{
+        id: string;
         name: string;
         isPrimary: boolean;
         includeInAvailability: boolean;
@@ -133,6 +134,7 @@ export default function DashboardPage() {
                     provider: 'Google Calendar' as const,
                     isPrimary: account.calendars.some((cal) => cal.isPrimary),
                     calendars: account.calendars.map((cal) => ({
+                        id: cal.id,
                         name: cal.name,
                         enabled: cal.includeInAvailability,
                     })),
@@ -419,9 +421,14 @@ export default function DashboardPage() {
             const account = calendarAccounts.find((acc) => acc.id === accountId);
             const calendar = account?.calendars.find((cal) => cal.name === calendarName);
 
-            if (account && calendar) {
-                // Update the calendar connection via API
-                const response = await apiClient.updateCalendarConnection(accountId, {
+            console.log('├─ [DEBUG] Account found:', account);
+            console.log('├─ [DEBUG] Calendar found:', calendar);
+            console.log('├─ [DEBUG] Calendar ID:', calendar?.id);
+            console.log('├─ [DEBUG] All calendars in account:', account?.calendars);
+
+            if (account && calendar && calendar.id) {
+                // Update the calendar connection via API using the calendar connection ID
+                const response = await apiClient.updateCalendarConnection(calendar.id, {
                     includeInAvailability: !calendar.enabled,
                 });
                 console.log('├─ [API] Toggle calendar response:', {

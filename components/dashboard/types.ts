@@ -4,6 +4,7 @@ export interface CalendarAccount {
     provider: string;
     isPrimary: boolean;
     calendars: {
+        id: string;
         name: string;
         enabled: boolean;
     }[];

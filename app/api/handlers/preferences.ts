@@ -6,8 +6,10 @@ import { eq } from 'drizzle-orm';
 export const getUser = (c: Context) => {
     const user = c.get('user');
     if (!user) {
+        console.log('[HANDLER] User not found in context');
         throw new Error('User not found in context');
     }
+    console.log('[HANDLER] User found:', user.id);
     return user;
 };
 
@@ -17,6 +19,7 @@ export const getUser = (c: Context) => {
  * @returns The response object
  */
 export async function handleGetPreferences(c: Context) {
+    console.log('[HANDLER] Getting preferences for user');
     try {
         const user = getUser(c);
 
@@ -27,12 +30,42 @@ export async function handleGetPreferences(c: Context) {
             .limit(1);
 
         if (userPreferences.length === 0) {
-            return c.json({ error: 'Preferences not found' }, 404);
+            console.log(
+                '[HANDLER] No preferences found for user:',
+                user.id,
+                'creating default preferences',
+            );
+            // Create default preferences if none exist
+            const defaultPreferences = await db
+                .insert(preferences)
+                .values({
+                    userId: user.id,
+                    document: '',
+                    displayName: '',
+                    nickname: '',
+                    signature: '',
+                    timezone: 'America/New_York',
+                    minNoticeMinutes: 120,
+                    maxDaysAhead: 60,
+                    defaultMeetingDurationMinutes: 30,
+                    virtualBufferMinutes: 0,
+                    inPersonBufferMinutes: 15,
+                    backToBackBufferMinutes: 0,
+                    flightBufferMinutes: 0,
+                    isActive: true,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                })
+                .returning();
+
+            console.log('[HANDLER] Default preferences created successfully');
+            return c.json(defaultPreferences[0]);
         }
 
+        console.log('[HANDLER] Existing preferences found and returned');
         return c.json(userPreferences[0]);
     } catch (error) {
-        console.error('Error fetching preferences:', error);
+        console.error('[HANDLER] Error fetching preferences:', error);
         return c.json({ error: 'Failed to fetch preferences' }, 500);
     }
 }
@@ -43,6 +76,7 @@ export async function handleGetPreferences(c: Context) {
  * @returns The response object
  */
 export async function handleCreatePreferences(c: Context) {
+    console.log('[HANDLER] Creating preferences for user');
     try {
         const user = getUser(c);
         const body = await c.req.json();
@@ -55,6 +89,7 @@ export async function handleCreatePreferences(c: Context) {
             .limit(1);
 
         if (existingPreferences.length > 0) {
+            console.log('[HANDLER] Preferences already exist for user:', user.id);
             return c.json({ error: 'Preferences already exist' }, 400);
         }
 
@@ -80,6 +115,7 @@ export async function handleCreatePreferences(c: Context) {
             })
             .returning();
 
+        console.log('[HANDLER] Preferences created successfully for user:', user.id);
         return c.json(newPreferences[0], 201);
     } catch (error) {
         console.error('Error creating preferences:', error);
@@ -93,6 +129,7 @@ export async function handleCreatePreferences(c: Context) {
  * @returns The response object
  */
 export async function handleUpdatePreferences(c: Context) {
+    console.log('[HANDLER] Updating preferences for user');
     try {
         const user = getUser(c);
         const body = await c.req.json();
@@ -105,6 +142,7 @@ export async function handleUpdatePreferences(c: Context) {
             .limit(1);
 
         if (existingPreferences.length === 0) {
+            console.log('[HANDLER] Preferences not found for user:', user.id);
             return c.json({ error: 'Preferences not found' }, 404);
         }
 
@@ -128,6 +166,7 @@ export async function handleUpdatePreferences(c: Context) {
             .where(eq(preferences.userId, user.id))
             .returning();
 
+        console.log('[HANDLER] Preferences updated successfully for user:', user.id);
         return c.json(updatedPreferences[0]);
     } catch (error) {
         console.error('Error updating preferences:', error);
@@ -141,6 +180,7 @@ export async function handleUpdatePreferences(c: Context) {
  * @returns The response object
  */
 export async function handleDeletePreferences(c: Context) {
+    console.log('[HANDLER] Deleting preferences for user');
     try {
         const user = getUser(c);
 
@@ -152,6 +192,7 @@ export async function handleDeletePreferences(c: Context) {
             .limit(1);
 
         if (existingPreferences.length === 0) {
+            console.log('[HANDLER] Preferences not found for user:', user.id);
             return c.json({ error: 'Preferences not found' }, 404);
         }
 
