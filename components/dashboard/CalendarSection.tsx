@@ -21,6 +21,7 @@ interface CalendarSectionProps {
     onMakePrimary: (accountId: string) => void;
     onRemove: (accountId: string) => void;
     onCalendarToggle: (accountId: string, calendarName: string) => void;
+    onAddCalendar: () => void;
 }
 
 export function CalendarSection({
@@ -28,6 +29,7 @@ export function CalendarSection({
     onMakePrimary,
     onRemove,
     onCalendarToggle,
+    onAddCalendar,
 }: CalendarSectionProps) {
     const [calendarPage, setCalendarPage] = useState(0);
     const [itemsPerPage, setItemsPerPage] = useState(2);
@@ -111,7 +113,10 @@ export function CalendarSection({
                             align="end"
                             className="bg-white border border-gray-200 shadow-lg"
                         >
-                            <DropdownMenuItem className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer">
+                            <DropdownMenuItem
+                                className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer"
+                                onClick={onAddCalendar}
+                            >
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Calendar
                             </DropdownMenuItem>

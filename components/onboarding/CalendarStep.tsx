@@ -11,12 +11,24 @@ import { ConnectedCalendar } from './types';
 interface CalendarStepProps {
     connectedCalendars: ConnectedCalendar[];
     onUpdateCalendars: (calendars: ConnectedCalendar[]) => void;
+    onAddCalendar?: () => void;
 }
 
-const CalendarStep = ({ connectedCalendars, onUpdateCalendars }: CalendarStepProps) => {
+const CalendarStep = ({
+    connectedCalendars,
+    onUpdateCalendars,
+    onAddCalendar,
+}: CalendarStepProps) => {
     const [addingCalendar, setAddingCalendar] = useState(false);
 
     const addMoreCalendar = async () => {
+        // If onAddCalendar prop is provided, use it instead of internal logic
+        if (onAddCalendar) {
+            onAddCalendar();
+            return;
+        }
+
+        // Fallback to internal logic for backward compatibility
         setAddingCalendar(true);
         try {
             const response = await authClient.signIn.social({
@@ -112,11 +124,11 @@ const CalendarStep = ({ connectedCalendars, onUpdateCalendars }: CalendarStepPro
             {/* Add More Button */}
             <Button
                 onClick={addMoreCalendar}
-                disabled={addingCalendar}
+                disabled={addingCalendar && !onAddCalendar}
                 variant="ghost"
                 className="w-full h-12 text-base font-normal justify-center border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50"
             >
-                {addingCalendar ? (
+                {addingCalendar && !onAddCalendar ? (
                     <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                         Connecting...

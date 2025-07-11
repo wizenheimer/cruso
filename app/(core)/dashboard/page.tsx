@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
+import { authClient } from '@/lib/auth-client';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,194 +21,503 @@ import {
     Preferences,
 } from '@/components/dashboard';
 
+interface ApiCalendarAccount {
+    accountId: string;
+    email: string;
+    calendars: Array<{
+        name: string;
+        isPrimary: boolean;
+        includeInAvailability: boolean;
+    }>;
+}
+
+interface ApiEmailAccount {
+    id: string;
+    email: string;
+    isPrimary: boolean;
+}
+
 export default function DashboardPage() {
     const [activeView, setActiveView] = useState<'preferences' | 'accounts'>('accounts');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const [calendarAccounts, setCalendarAccounts] = useState<CalendarAccount[]>([
-        {
-            id: '1',
-            email: 'byrdhq.dev@gmail.com',
-            provider: 'Google Calendar',
-            isPrimary: true,
-            calendars: [
-                { name: 'Primary', enabled: true },
-                { name: 'Holidays in the United States', enabled: true },
-            ],
-        },
-        {
-            id: '2',
-            email: 'xnayankumar@gmail.com',
-            provider: 'Google Calendar',
-            isPrimary: false,
-            calendars: [
-                { name: 'Primary', enabled: true },
-                { name: 'Holidays in the United States', enabled: true },
-            ],
-        },
-        {
-            id: '3',
-            email: 'john.doe@gmail.com',
-            provider: 'Google Calendar',
-            isPrimary: false,
-            calendars: [
-                { name: 'Primary', enabled: true },
-                { name: 'Holidays in the United States', enabled: false },
-            ],
-        },
-        {
-            id: '4',
-            email: 'jane.smith@gmail.com',
-            provider: 'Google Calendar',
-            isPrimary: false,
-            calendars: [
-                { name: 'Primary', enabled: true },
-                { name: 'Holidays in the United States', enabled: true },
-            ],
-        },
-    ]);
+    const [calendarAccounts, setCalendarAccounts] = useState<CalendarAccount[]>([]);
+    const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>([]);
 
-    const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>([
-        {
-            id: '1',
-            email: 'byrdhq.dev@gmail.com',
-            provider: 'Gmail',
-            isPrimary: true,
-        },
-        {
-            id: '2',
-            email: 'xnayankumar@gmail.com',
-            provider: 'Gmail',
-            isPrimary: false,
-        },
-        {
-            id: '3',
-            email: 'john.doe@gmail.com',
-            provider: 'Gmail',
-            isPrimary: false,
-        },
-        {
-            id: '4',
-            email: 'jane.smith@gmail.com',
-            provider: 'Gmail',
-            isPrimary: false,
-        },
-    ]);
-
-    const [preferences, setPreferences] = useState<Preferences>({
-        id: 0,
-        userId: '',
-        document: '',
-        displayName: '',
-        nickname: '',
-        signature: '',
-        timezone: 'America/New_York',
-        minNoticeMinutes: 120,
-        maxDaysAhead: 60,
-        defaultMeetingDurationMinutes: 30,
-        virtualBufferMinutes: 0,
-        inPersonBufferMinutes: 15,
-        backToBackBufferMinutes: 0,
-        flightBufferMinutes: 0,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    });
-    const [originalPreferences, setOriginalPreferences] = useState<Preferences>({
-        id: 0,
-        userId: '',
-        document: '',
-        displayName: '',
-        nickname: '',
-        signature: '',
-        timezone: 'America/New_York',
-        minNoticeMinutes: 120,
-        maxDaysAhead: 60,
-        defaultMeetingDurationMinutes: 30,
-        virtualBufferMinutes: 0,
-        inPersonBufferMinutes: 15,
-        backToBackBufferMinutes: 0,
-        flightBufferMinutes: 0,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    });
+    const [preferences, setPreferences] = useState<Preferences | null>(null);
+    const [originalPreferences, setOriginalPreferences] = useState<Preferences | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+    const autoSyncPostOAuth = useCallback(async () => {
+        try {
+            console.log('[FRONTEND] Running automatic post-OAuth calendar sync...');
+
+            const response = await fetch('/api/auth/post-oauth-sync', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log('[FRONTEND] Post-OAuth sync response status:', response.status);
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('[FRONTEND] Auto-sync result:', result);
+
+                if (result.calendarsSynced > 0) {
+                    console.log('[FRONTEND] Calendars were synced, refreshing dashboard data...');
+                    // Refresh the data to show the new calendars
+                    await loadDashboardData();
+                } else {
+                    console.log('[FRONTEND] No new calendars were synced');
+                }
+            } else {
+                console.error('[FRONTEND] Auto-sync failed:', response.statusText);
+            }
+        } catch (error) {
+            console.error('[FRONTEND] Error in auto-sync:', error);
+            // Don't show error to user for auto-sync, it's a background operation
+        }
+    }, []);
+
+    // Load initial data
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    // Handle OAuth callback
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+
+        if (action === 'linked') {
+            // Auto-sync calendars after OAuth linking
+            autoSyncPostOAuth();
+
+            // Clean up URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+        }
+    }, [autoSyncPostOAuth]);
+
     // Check for unsaved changes
     useEffect(() => {
-        const hasChanges = preferences.document !== originalPreferences.document;
-        setHasUnsavedChanges(hasChanges);
-    }, [preferences.document, originalPreferences.document]);
+        if (preferences && originalPreferences) {
+            const hasChanges = preferences.document !== originalPreferences.document;
+            setHasUnsavedChanges(hasChanges);
+        }
+    }, [preferences?.document, originalPreferences?.document, preferences, originalPreferences]);
 
-    const handleMakePrimaryCalendar = (accountId: string) => {
-        setCalendarAccounts((accounts) =>
-            accounts.map((account) => ({
-                ...account,
-                isPrimary: account.id === accountId,
-            })),
-        );
+    const loadDashboardData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Load calendar accounts
+            console.log('┌─ [API] Loading calendar accounts...');
+            const calendarResponse = await apiClient.getCalendarAccounts();
+            console.log('├─ [API] Calendar accounts response:', {
+                success: calendarResponse.success,
+                dataLength: Array.isArray(calendarResponse.data) ? calendarResponse.data.length : 0,
+                error: calendarResponse.error,
+            });
+            if (calendarResponse.success && calendarResponse.data) {
+                const apiData = calendarResponse.data as ApiCalendarAccount[];
+                const transformedCalendarAccounts = apiData.map((account) => ({
+                    id: account.accountId,
+                    email: account.email,
+                    provider: 'Google Calendar' as const,
+                    isPrimary: account.calendars.some((cal) => cal.isPrimary),
+                    calendars: account.calendars.map((cal) => ({
+                        name: cal.name,
+                        enabled: cal.includeInAvailability,
+                    })),
+                }));
+                setCalendarAccounts(transformedCalendarAccounts);
+                console.log(
+                    '└─ [API] Successfully loaded',
+                    transformedCalendarAccounts.length,
+                    'calendar accounts',
+                );
+            } else {
+                console.log('└─ [API] Failed to load calendar accounts');
+            }
+
+            // Load email accounts
+            console.log('┌─ [API] Loading email accounts...');
+            const emailResponse = await apiClient.getUserEmails();
+            console.log('├─ [API] Email accounts response:', {
+                success: emailResponse.success,
+                dataLength: Array.isArray(emailResponse.data) ? emailResponse.data.length : 0,
+                error: emailResponse.error,
+            });
+            if (emailResponse.success && emailResponse.data) {
+                const apiData = emailResponse.data as ApiEmailAccount[];
+                const transformedEmailAccounts = apiData.map((email) => ({
+                    id: email.id,
+                    email: email.email,
+                    provider: 'Gmail' as const,
+                    isPrimary: email.isPrimary,
+                }));
+                setEmailAccounts(transformedEmailAccounts);
+                console.log(
+                    '└─ [API] Successfully loaded',
+                    transformedEmailAccounts.length,
+                    'email accounts',
+                );
+            } else {
+                console.log('└─ [API] Failed to load email accounts');
+            }
+
+            // Load preferences
+            console.log('┌─ [API] Loading preferences...');
+            const preferencesResponse = await apiClient.getPreferences();
+            console.log('├─ [API] Preferences response:', {
+                success: preferencesResponse.success,
+                hasData: !!preferencesResponse.data,
+                error: preferencesResponse.error,
+            });
+            if (preferencesResponse.success && preferencesResponse.data) {
+                const prefsData = preferencesResponse.data as Preferences;
+                setPreferences(prefsData);
+                setOriginalPreferences(prefsData);
+                console.log('└─ [API] Successfully loaded preferences');
+            } else {
+                // Create default preferences if none exist
+                const defaultPreferences: Preferences = {
+                    id: 0,
+                    userId: '',
+                    document: '',
+                    displayName: '',
+                    nickname: '',
+                    signature: '',
+                    timezone: 'America/New_York',
+                    minNoticeMinutes: 120,
+                    maxDaysAhead: 60,
+                    defaultMeetingDurationMinutes: 30,
+                    virtualBufferMinutes: 0,
+                    inPersonBufferMinutes: 15,
+                    backToBackBufferMinutes: 0,
+                    flightBufferMinutes: 0,
+                    isActive: true,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                };
+                setPreferences(defaultPreferences);
+                setOriginalPreferences(defaultPreferences);
+            }
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+            setError('Failed to load dashboard data');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleRemoveCalendar = (accountId: string) => {
-        setCalendarAccounts((accounts) => accounts.filter((account) => account.id !== accountId));
+    const handleMakePrimaryCalendar = async (accountId: string) => {
+        try {
+            console.log('┌─ [API] Making calendar primary...', { accountId });
+            // For calendar accounts, we need to make all calendars of this account primary
+            const response = await apiClient.updateCalendarConnection(accountId, {
+                isPrimary: true,
+            });
+            console.log('├─ [API] Make primary response:', {
+                success: response.success,
+                error: response.error,
+            });
+            if (response.success) {
+                // Update local state
+                setCalendarAccounts((accounts) =>
+                    accounts.map((account) => ({
+                        ...account,
+                        isPrimary: account.id === accountId,
+                    })),
+                );
+                console.log('└─ [API] Successfully updated primary calendar');
+            } else {
+                console.log('└─ [API] Failed to update primary calendar');
+                setError('Failed to update primary calendar');
+            }
+        } catch (error) {
+            console.error('Error updating primary calendar:', error);
+            setError('Failed to update primary calendar');
+        }
     };
 
-    const handleMakePrimaryEmail = (accountId: string) => {
-        setEmailAccounts((accounts) =>
-            accounts.map((account) => ({
-                ...account,
-                isPrimary: account.id === accountId,
-            })),
-        );
+    const handleRemoveCalendar = async (accountId: string) => {
+        try {
+            console.log('┌─ [API] Removing calendar...', { accountId });
+            const response = await apiClient.deleteCalendarConnection(accountId);
+            console.log('├─ [API] Remove calendar response:', {
+                success: response.success,
+                error: response.error,
+            });
+            if (response.success) {
+                // Update local state
+                setCalendarAccounts((accounts) =>
+                    accounts.filter((account) => account.id !== accountId),
+                );
+                console.log('└─ [API] Successfully removed calendar');
+            } else {
+                console.log('└─ [API] Failed to remove calendar');
+                setError('Failed to remove calendar');
+            }
+        } catch (error) {
+            console.error('Error removing calendar:', error);
+            setError('Failed to remove calendar');
+        }
     };
 
-    const handleRemoveEmail = (accountId: string) => {
-        setEmailAccounts((accounts) => accounts.filter((account) => account.id !== accountId));
+    const handleMakePrimaryEmail = async (accountId: string) => {
+        try {
+            console.log('┌─ [API] Making email primary...', { accountId });
+            const response = await apiClient.updateUserEmail(accountId, { isPrimary: true });
+            console.log('├─ [API] Make primary email response:', {
+                success: response.success,
+                error: response.error,
+            });
+            if (response.success) {
+                // Update local state
+                setEmailAccounts((accounts) =>
+                    accounts.map((account) => ({
+                        ...account,
+                        isPrimary: account.id === accountId,
+                    })),
+                );
+                console.log('└─ [API] Successfully updated primary email');
+            } else {
+                console.log('└─ [API] Failed to update primary email');
+                setError('Failed to update primary email');
+            }
+        } catch (error) {
+            console.error('Error updating primary email:', error);
+            setError('Failed to update primary email');
+        }
     };
 
-    const handleAddEmail = (email: string) => {
-        const newAccount: EmailAccount = {
-            id: Date.now().toString(),
-            email,
-            provider: 'Gmail',
-            isPrimary: false,
-        };
-        setEmailAccounts((accounts) => [...accounts, newAccount]);
+    const handleRemoveEmail = async (accountId: string) => {
+        try {
+            console.log('┌─ [API] Removing email...', { accountId });
+            const response = await apiClient.deleteUserEmail(accountId);
+            console.log('├─ [API] Remove email response:', {
+                success: response.success,
+                error: response.error,
+            });
+            if (response.success) {
+                // Update local state
+                setEmailAccounts((accounts) =>
+                    accounts.filter((account) => account.id !== accountId),
+                );
+                console.log('└─ [API] Successfully removed email');
+            } else {
+                console.log('└─ [API] Failed to remove email');
+                setError('Failed to remove email');
+            }
+        } catch (error) {
+            console.error('Error removing email:', error);
+            setError('Failed to remove email');
+        }
+    };
+
+    const handleAddEmail = async (email: string) => {
+        try {
+            console.log('┌─ [API] Adding email...', { email });
+            const response = await apiClient.addUserEmail({ email });
+            console.log('├─ [API] Add email response:', {
+                success: response.success,
+                error: response.error,
+            });
+            if (response.success && response.data) {
+                const apiData = response.data as ApiEmailAccount;
+                const newAccount: EmailAccount = {
+                    id: apiData.id,
+                    email: apiData.email,
+                    provider: 'Gmail',
+                    isPrimary: apiData.isPrimary,
+                };
+                setEmailAccounts((accounts) => [...accounts, newAccount]);
+                console.log('└─ [API] Successfully added email');
+            } else {
+                console.log('└─ [API] Failed to add email');
+                setError('Failed to add email');
+            }
+        } catch (error) {
+            console.error('Error adding email:', error);
+            setError('Failed to add email');
+        }
     };
 
     const handleSavePreferences = async () => {
+        if (!preferences) return;
+
         setIsSaving(true);
-        // Mock saving delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setOriginalPreferences({ ...preferences });
-        setHasUnsavedChanges(false);
-        setIsSaving(false);
+        try {
+            let response;
+            // Convert Preferences to a plain object for API
+            const prefsData = {
+                document: preferences.document,
+                displayName: preferences.displayName,
+                nickname: preferences.nickname,
+                signature: preferences.signature,
+                timezone: preferences.timezone,
+                minNoticeMinutes: preferences.minNoticeMinutes,
+                maxDaysAhead: preferences.maxDaysAhead,
+                defaultMeetingDurationMinutes: preferences.defaultMeetingDurationMinutes,
+                virtualBufferMinutes: preferences.virtualBufferMinutes,
+                inPersonBufferMinutes: preferences.inPersonBufferMinutes,
+                backToBackBufferMinutes: preferences.backToBackBufferMinutes,
+                flightBufferMinutes: preferences.flightBufferMinutes,
+                isActive: preferences.isActive,
+            };
+
+            console.log('┌─ [API] Saving preferences...', { isCreate: preferences.id === 0 });
+            if (preferences.id === 0) {
+                // Create new preferences
+                response = await apiClient.createPreferences(prefsData);
+            } else {
+                // Update existing preferences
+                response = await apiClient.updatePreferences(prefsData);
+            }
+            console.log('├─ [API] Save preferences response:', {
+                success: response.success,
+                error: response.error,
+            });
+
+            if (response.success && response.data) {
+                const updatedPrefs = response.data as Preferences;
+                setPreferences(updatedPrefs);
+                setOriginalPreferences(updatedPrefs);
+                setHasUnsavedChanges(false);
+                console.log('└─ [API] Successfully saved preferences');
+            } else {
+                console.log('└─ [API] Failed to save preferences');
+                setError('Failed to save preferences');
+            }
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+            setError('Failed to save preferences');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleResetPreferences = () => {
-        setPreferences({ ...originalPreferences });
-        setHasUnsavedChanges(false);
+        if (originalPreferences) {
+            setPreferences({ ...originalPreferences });
+            setHasUnsavedChanges(false);
+        }
     };
 
-    const handleCalendarToggle = (accountId: string, calendarName: string) => {
-        setCalendarAccounts((accounts) =>
-            accounts.map((account) =>
-                account.id === accountId
-                    ? {
-                          ...account,
-                          calendars: account.calendars.map((cal) =>
-                              cal.name === calendarName ? { ...cal, enabled: !cal.enabled } : cal,
-                          ),
-                      }
-                    : account,
-            ),
-        );
+    const handleCalendarToggle = async (accountId: string, calendarName: string) => {
+        try {
+            console.log('┌─ [API] Toggling calendar...', { accountId, calendarName });
+            // Find the calendar connection to toggle
+            const account = calendarAccounts.find((acc) => acc.id === accountId);
+            const calendar = account?.calendars.find((cal) => cal.name === calendarName);
+
+            if (account && calendar) {
+                // Update the calendar connection via API
+                const response = await apiClient.updateCalendarConnection(accountId, {
+                    includeInAvailability: !calendar.enabled,
+                });
+                console.log('├─ [API] Toggle calendar response:', {
+                    success: response.success,
+                    error: response.error,
+                    newState: !calendar.enabled,
+                });
+
+                if (response.success) {
+                    // Update local state
+                    setCalendarAccounts((accounts) =>
+                        accounts.map((acc) =>
+                            acc.id === accountId
+                                ? {
+                                      ...acc,
+                                      calendars: acc.calendars.map((cal) =>
+                                          cal.name === calendarName
+                                              ? { ...cal, enabled: !cal.enabled }
+                                              : cal,
+                                      ),
+                                  }
+                                : acc,
+                        ),
+                    );
+                    console.log('└─ [API] Successfully toggled calendar');
+                } else {
+                    console.log('└─ [API] Failed to toggle calendar');
+                    setError('Failed to update calendar settings');
+                }
+            }
+        } catch (error) {
+            console.error('Error updating calendar:', error);
+            setError('Failed to update calendar settings');
+        }
+    };
+
+    const handleAddCalendar = async () => {
+        try {
+            console.log('[FRONTEND] Starting Google account linking process...');
+            setError(null);
+
+            console.log('[FRONTEND] Calling authClient.linkSocial...');
+            const response = await authClient.linkSocial({
+                provider: 'google',
+                callbackURL: '/dashboard?action=linked',
+            });
+
+            console.log('[FRONTEND] linkSocial response:', response);
+
+            if (response.error) {
+                console.error('[FRONTEND] Error in linkSocial response:', response.error);
+                throw new Error(response.error.message || 'Failed to link account');
+            }
+
+            if (response.data?.url) {
+                console.log('[FRONTEND] Redirecting to OAuth URL:', response.data.url);
+                window.location.href = response.data.url;
+            } else {
+                console.warn('[FRONTEND] No redirect URL received from linkSocial');
+            }
+        } catch (error) {
+            console.error('[FRONTEND] Error linking additional Google account:', error);
+            setError(error instanceof Error ? error.message : 'Failed to link account');
+        }
     };
 
     const getViewLabel = (view: 'preferences' | 'accounts') => {
         return view === 'preferences' ? 'Preferences' : 'Accounts';
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <button
+                        onClick={loadDashboardData}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-white flex">
@@ -269,6 +580,7 @@ export default function DashboardPage() {
                                 onMakePrimary={handleMakePrimaryCalendar}
                                 onRemove={handleRemoveCalendar}
                                 onCalendarToggle={handleCalendarToggle}
+                                onAddCalendar={handleAddCalendar}
                             />
                             <InboxSection
                                 emailAccounts={emailAccounts}
@@ -279,7 +591,7 @@ export default function DashboardPage() {
                         </div>
                     )}
 
-                    {activeView === 'preferences' && (
+                    {activeView === 'preferences' && preferences && (
                         <PreferencesView
                             preferences={preferences}
                             isSaving={isSaving}

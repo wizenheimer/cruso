@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback } from 'react';
 import { NextButton } from '@/components/onboarding/NextButton';
+import { apiClient } from '@/lib/api-client';
+import { authClient } from '@/lib/auth-client';
 import {
     CalendarStep,
     BufferStep,
@@ -22,11 +24,9 @@ const totalSteps = 5;
 const OnboardingPage = () => {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(currentStep);
-    const [connectedCalendars, setConnectedCalendars] = useState<ConnectedCalendar[]>([
-        { id: '1', email: 'byrdhq.dev@gmail.com', provider: 'google' },
-        { id: '2', email: 'nayan.kumar@gmail.com', provider: 'google' },
-        { id: '3', email: 'doodle.fang@gmail.com', provider: 'google' },
-    ]);
+    const [connectedCalendars, setConnectedCalendars] = useState<ConnectedCalendar[]>([]);
+    const [dataLoading, setDataLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [buffers, setBuffers] = useState<BufferSetting[]>([
         { id: 'virtual', label: 'Virtual Meetings', value: '0', isPrimary: true },
         { id: 'inperson', label: 'In-person Meetings', value: '15' },
@@ -37,26 +37,26 @@ const OnboardingPage = () => {
         {
             id: 'nickname',
             label: 'Nickname',
-            value: 'Sarah',
+            value: '',
             placeholder: 'What should we call you?',
             isPrimary: true,
         },
         {
             id: 'displayName',
             label: 'Display Name',
-            value: 'Sarah',
+            value: '',
             placeholder: 'Your display name',
         },
         {
             id: 'signature',
             label: 'Signature',
-            value: "Sarah's AI Assistant",
+            value: '',
             placeholder: 'Your AI assistant signature',
         },
     ]);
     const [timezone, setTimezone] = useState('America/New_York');
-    const [userName] = useState('Sarah');
-    const [userEmail] = useState('sarah@example.com');
+    const [userName, setUserName] = useState('');
+    const [userEmail] = useState('');
     const [schedule, setSchedule] = useState<WeeklySchedule>({
         Monday: { enabled: true, timeSlots: [{ id: '1', startTime: '09:00', endTime: '17:00' }] },
         Tuesday: { enabled: true, timeSlots: [{ id: '2', startTime: '09:00', endTime: '17:00' }] },
@@ -73,12 +73,383 @@ const OnboardingPage = () => {
         Sunday: { enabled: false, timeSlots: [{ id: '7', startTime: '09:00', endTime: '17:00' }] },
     });
 
+    // Load existing data from APIs
+    const loadOnboardingData = useCallback(async () => {
+        try {
+            setDataLoading(true);
+            setError(null);
+
+            // Load calendar connections
+            console.log('┌─ [API] Loading calendar connections...');
+            const calendarResponse = await apiClient.getCalendarAccounts();
+            console.log('├─ [API] Calendar connections response:', {
+                success: calendarResponse.success,
+                dataLength: Array.isArray(calendarResponse.data) ? calendarResponse.data.length : 0,
+                error: calendarResponse.error,
+            });
+            if (calendarResponse.success && calendarResponse.data) {
+                const calendars = (
+                    calendarResponse.data as Array<{ accountId: string; email: string }>
+                ).map((account) => ({
+                    id: account.accountId,
+                    email: account.email,
+                    provider: 'google' as const,
+                }));
+                setConnectedCalendars(calendars);
+                console.log(
+                    '└─ [API] Successfully loaded',
+                    calendars.length,
+                    'calendar connections',
+                );
+            } else {
+                console.log('└─ [API] Failed to load calendar connections');
+            }
+
+            // Load existing preferences
+            console.log('┌─ [API] Loading existing preferences...');
+            const preferencesResponse = await apiClient.getPreferences();
+            console.log('├─ [API] Preferences response:', {
+                success: preferencesResponse.success,
+                hasData: !!preferencesResponse.data,
+                error: preferencesResponse.error,
+            });
+            if (preferencesResponse.success && preferencesResponse.data) {
+                const prefs = preferencesResponse.data as Record<string, unknown>;
+
+                // Update buffer settings from preferences
+                setBuffers((prev) =>
+                    prev.map((buffer) => {
+                        switch (buffer.id) {
+                            case 'virtual':
+                                return {
+                                    ...buffer,
+                                    value:
+                                        (prefs.virtualBufferMinutes as number)?.toString() || '0',
+                                };
+                            case 'inperson':
+                                return {
+                                    ...buffer,
+                                    value:
+                                        (prefs.inPersonBufferMinutes as number)?.toString() || '15',
+                                };
+                            case 'backtoback':
+                                return {
+                                    ...buffer,
+                                    value:
+                                        (prefs.backToBackBufferMinutes as number)?.toString() ||
+                                        '0',
+                                };
+                            case 'flight':
+                                return {
+                                    ...buffer,
+                                    value: (prefs.flightBufferMinutes as number)?.toString() || '0',
+                                };
+                            default:
+                                return buffer;
+                        }
+                    }),
+                );
+
+                // Update personalization fields
+                setFields((prev) =>
+                    prev.map((field) => {
+                        switch (field.id) {
+                            case 'nickname':
+                                return { ...field, value: (prefs.nickname as string) || '' };
+                            case 'displayName':
+                                return { ...field, value: (prefs.displayName as string) || '' };
+                            case 'signature':
+                                return { ...field, value: (prefs.signature as string) || '' };
+                            default:
+                                return field;
+                        }
+                    }),
+                );
+
+                setTimezone((prefs.timezone as string) || 'America/New_York');
+                setUserName((prefs.displayName as string) || (prefs.nickname as string) || '');
+                console.log('└─ [API] Successfully loaded existing preferences');
+            } else {
+                console.log('└─ [API] No existing preferences found');
+            }
+
+            // Load availability schedule
+            console.log('┌─ [API] Loading availability schedule...');
+            const availabilityResponse = await apiClient.getAvailability();
+            console.log('├─ [API] Availability response:', {
+                success: availabilityResponse.success,
+                dataLength: Array.isArray(availabilityResponse.data)
+                    ? availabilityResponse.data.length
+                    : 0,
+                error: availabilityResponse.error,
+            });
+            if (availabilityResponse.success && availabilityResponse.data) {
+                const availability = availabilityResponse.data as Array<{
+                    id: string;
+                    days: number[] | null;
+                    startTime: string;
+                    endTime: string;
+                    timezone: string;
+                }>;
+
+                // Convert availability data to schedule format
+                const newSchedule: WeeklySchedule = {
+                    Monday: { enabled: false, timeSlots: [] },
+                    Tuesday: { enabled: false, timeSlots: [] },
+                    Wednesday: { enabled: false, timeSlots: [] },
+                    Thursday: { enabled: false, timeSlots: [] },
+                    Friday: { enabled: false, timeSlots: [] },
+                    Saturday: { enabled: false, timeSlots: [] },
+                    Sunday: { enabled: false, timeSlots: [] },
+                };
+
+                const dayNames = [
+                    'Sunday',
+                    'Monday',
+                    'Tuesday',
+                    'Wednesday',
+                    'Thursday',
+                    'Friday',
+                    'Saturday',
+                ];
+
+                availability.forEach((avail, index) => {
+                    if (avail.days && avail.days.length > 0) {
+                        avail.days.forEach((dayNum: number) => {
+                            const dayName = dayNames[dayNum] as keyof WeeklySchedule;
+                            if (newSchedule[dayName]) {
+                                newSchedule[dayName].enabled = true;
+                                newSchedule[dayName].timeSlots.push({
+                                    id: `${index}-${dayNum}`,
+                                    startTime: avail.startTime,
+                                    endTime: avail.endTime,
+                                });
+                            }
+                        });
+                    }
+                });
+
+                setSchedule(newSchedule);
+                console.log('└─ [API] Successfully loaded availability schedule');
+            } else {
+                console.log('└─ [API] No existing availability schedule found');
+            }
+        } catch (error) {
+            console.error('Error loading onboarding data:', error);
+            setError('Failed to load onboarding data');
+        } finally {
+            setDataLoading(false);
+        }
+    }, []);
+
+    // Auto-sync calendars after OAuth
+    const autoSyncPostOAuth = useCallback(async () => {
+        try {
+            console.log('[FRONTEND] Running automatic post-OAuth calendar sync...');
+            const response = await fetch('/api/auth/post-oauth-sync', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log('[FRONTEND] Post-OAuth sync response status:', response.status);
+            if (response.ok) {
+                const result = await response.json();
+                console.log('[FRONTEND] Auto-sync result:', result);
+                if (result.calendarsSynced > 0) {
+                    console.log('[FRONTEND] Calendars were synced, refreshing onboarding data...');
+                    // Refresh calendar data
+                    await loadOnboardingData();
+                } else {
+                    console.log('[FRONTEND] No new calendars were synced');
+                }
+            } else {
+                console.error('[FRONTEND] Auto-sync failed:', response.statusText);
+            }
+        } catch (error) {
+            console.error('[FRONTEND] Error in auto-sync:', error);
+        }
+    }, [loadOnboardingData]);
+
+    // Load data on component mount
+    useEffect(() => {
+        loadOnboardingData();
+    }, [loadOnboardingData]);
+
+    const saveBufferSettings = useCallback(async () => {
+        const prefsData = {
+            virtualBufferMinutes: parseInt(buffers.find((b) => b.id === 'virtual')?.value || '0'),
+            inPersonBufferMinutes: parseInt(
+                buffers.find((b) => b.id === 'inperson')?.value || '15',
+            ),
+            backToBackBufferMinutes: parseInt(
+                buffers.find((b) => b.id === 'backtoback')?.value || '0',
+            ),
+            flightBufferMinutes: parseInt(buffers.find((b) => b.id === 'flight')?.value || '0'),
+            timezone: timezone,
+            minNoticeMinutes: 120,
+            maxDaysAhead: 60,
+            defaultMeetingDurationMinutes: 30,
+            isActive: true,
+        };
+
+        // Try to update existing preferences, if not found create new ones
+        console.log('┌─ [API] Saving buffer settings...');
+        const response = await apiClient.updatePreferences(prefsData);
+        console.log('├─ [API] Update preferences response:', {
+            success: response.success,
+            error: response.error,
+        });
+        if (!response.success) {
+            console.log('├─ [API] Update failed, creating new preferences...');
+            const createResponse = await apiClient.createPreferences(prefsData);
+            console.log('└─ [API] Create preferences response:', {
+                success: createResponse.success,
+                error: createResponse.error,
+            });
+        } else {
+            console.log('└─ [API] Successfully saved buffer settings');
+        }
+    }, [buffers, timezone]);
+
+    const savePersonalizationData = useCallback(async () => {
+        const prefsData = {
+            displayName: fields.find((f) => f.id === 'displayName')?.value || '',
+            nickname: fields.find((f) => f.id === 'nickname')?.value || '',
+            signature: fields.find((f) => f.id === 'signature')?.value || '',
+            timezone: timezone,
+        };
+
+        console.log('┌─ [API] Saving personalization data...');
+        const response = await apiClient.updatePreferences(prefsData);
+        console.log('├─ [API] Update preferences response:', {
+            success: response.success,
+            error: response.error,
+        });
+        if (!response.success) {
+            console.log('├─ [API] Update failed, creating new preferences...');
+            const createResponse = await apiClient.createPreferences(prefsData);
+            console.log('└─ [API] Create preferences response:', {
+                success: createResponse.success,
+                error: createResponse.error,
+            });
+        } else {
+            console.log('└─ [API] Successfully saved personalization data');
+        }
+    }, [fields, timezone]);
+
+    const saveScheduleData = useCallback(async () => {
+        const dayNames = [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+        ];
+
+        // Clear existing availability first
+        console.log('┌─ [API] Saving schedule data...');
+        console.log('├─ [API] Getting existing availability...');
+        const existingAvailability = await apiClient.getAvailability();
+        console.log('├─ [API] Existing availability response:', {
+            success: existingAvailability.success,
+            dataLength: Array.isArray(existingAvailability.data)
+                ? existingAvailability.data.length
+                : 0,
+        });
+        if (existingAvailability.success && existingAvailability.data) {
+            const existing = existingAvailability.data as Array<{ id: string }>;
+            console.log('├─ [API] Deleting', existing.length, 'existing availability records...');
+            for (const avail of existing) {
+                await apiClient.deleteAvailability(avail.id);
+            }
+            console.log('├─ [API] Deleted existing availability records');
+        }
+
+        // Create new availability records
+        console.log('├─ [API] Creating new availability records...');
+        let createdCount = 0;
+        for (const [dayName, dayData] of Object.entries(schedule)) {
+            if (dayData.enabled && dayData.timeSlots.length > 0) {
+                const dayIndex = dayNames.indexOf(dayName);
+
+                for (const timeSlot of dayData.timeSlots) {
+                    await apiClient.createAvailability({
+                        days: [dayIndex],
+                        startTime: timeSlot.startTime,
+                        endTime: timeSlot.endTime,
+                        timezone: timezone,
+                        isActive: true,
+                    });
+                    createdCount++;
+                }
+            }
+        }
+        console.log('└─ [API] Created', createdCount, 'new availability records');
+    }, [schedule, timezone]);
+
+    const finalizeOnboarding = useCallback(async () => {
+        // Mark onboarding as complete in preferences
+        console.log('┌─ [API] Finalizing onboarding...');
+        const prefsData = {
+            document: 'onboarding_completed',
+            isActive: true,
+        };
+
+        const response = await apiClient.updatePreferences(prefsData);
+        console.log('├─ [API] Update preferences response:', {
+            success: response.success,
+            error: response.error,
+        });
+        if (!response.success) {
+            console.log('├─ [API] Update failed, creating new preferences...');
+            const createResponse = await apiClient.createPreferences(prefsData);
+            console.log('└─ [API] Create preferences response:', {
+                success: createResponse.success,
+                error: createResponse.error,
+            });
+        } else {
+            console.log('└─ [API] Successfully finalized onboarding');
+        }
+    }, []);
+
+    // Save current step data to API
+    const saveCurrentStepData = useCallback(async () => {
+        switch (step) {
+            case 1:
+                // Calendar step - no additional saving needed (OAuth handles this)
+                break;
+            case 2:
+                // Buffer step - save preferences
+                await saveBufferSettings();
+                break;
+            case 3:
+                // Personalization step - save preferences
+                await savePersonalizationData();
+                break;
+            case 4:
+                // Schedule step - save availability
+                await saveScheduleData();
+                break;
+            case 5:
+                // Completion step - finalize onboarding
+                await finalizeOnboarding();
+                break;
+        }
+    }, [step, saveBufferSettings, savePersonalizationData, saveScheduleData, finalizeOnboarding]);
+
     // Handle next step for the onboarding flow
     const handleNext = useCallback(async () => {
         setLoading(true);
 
         try {
-            // TODO: Implement next step
+            // Save current step data before proceeding
+            await saveCurrentStepData();
+
             if (step < totalSteps) {
                 setStep(step + 1);
             } else {
@@ -92,9 +463,48 @@ const OnboardingPage = () => {
                     ? error.message
                     : 'Failed to proceed to next step. Please try again.',
             );
+            setError(error instanceof Error ? error.message : 'Failed to save step data');
             setLoading(false);
         }
-    }, [step]);
+    }, [step, saveCurrentStepData]);
+
+    // Handle adding calendar during onboarding
+    const handleAddCalendar = async () => {
+        try {
+            const response = await authClient.linkSocial({
+                provider: 'google',
+                callbackURL: '/get-started?action=linked&step=1',
+            });
+
+            if (response.error) {
+                throw new Error(response.error.message || 'Failed to link account');
+            }
+
+            if (response.data?.url) {
+                window.location.href = response.data.url;
+            }
+        } catch (error) {
+            console.error('Error linking Google account:', error);
+            setError(error instanceof Error ? error.message : 'Failed to link account');
+        }
+    };
+
+    // Handle OAuth callback
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+        const stepParam = urlParams.get('step');
+
+        if (action === 'linked' && stepParam) {
+            // Auto-sync calendars after OAuth linking
+            autoSyncPostOAuth();
+
+            // Clean up URL and reload data
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+            loadOnboardingData();
+        }
+    }, [autoSyncPostOAuth, loadOnboardingData]);
 
     // Handle step navigation
     const handleStepClick = (stepNumber: number) => {
@@ -121,6 +531,7 @@ const OnboardingPage = () => {
                     <CalendarStep
                         connectedCalendars={connectedCalendars}
                         onUpdateCalendars={setConnectedCalendars}
+                        onAddCalendar={handleAddCalendar}
                     />
                 );
             case 2:
@@ -143,6 +554,17 @@ const OnboardingPage = () => {
         }
     };
 
+    if (dataLoading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-white">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading onboarding data...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex min-h-screen">
             {/* Left side - Nav and centered card */}
@@ -158,6 +580,19 @@ const OnboardingPage = () => {
                         isLastStep={step === totalSteps}
                     />
                 </nav>
+
+                {/* Error Message */}
+                {error && (
+                    <div className="absolute top-20 left-0 right-0 mx-8 bg-red-50 border border-red-200 rounded-lg p-4">
+                        <p className="text-red-600 text-sm">{error}</p>
+                        <button
+                            onClick={() => setError(null)}
+                            className="text-red-600 hover:text-red-800 text-sm underline mt-2"
+                        >
+                            Dismiss
+                        </button>
+                    </div>
+                )}
                 {/* Centered onboarding card */}
                 <motion.div
                     className="flex flex-1 flex-col items-center justify-center min-h-screen"
