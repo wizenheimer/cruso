@@ -7,6 +7,9 @@ import health from '../routes/health';
 import inbox from '../routes/inbox';
 import auth from '../routes/auth';
 import calendar from '../routes/calendar';
+import preferences from '../routes/preferences';
+import userEmails from '../routes/user-emails';
+import availability from '../routes/availability';
 
 /**
  * The runtime
@@ -51,6 +54,9 @@ const v1 = new Hono();
  */
 v1.route('/inbox', inbox);
 v1.route('/calendar', calendar);
+v1.route('/preferences', preferences);
+v1.route('/user-emails', userEmails);
+v1.route('/availability', availability);
 
 app.route('/v1', v1);
 

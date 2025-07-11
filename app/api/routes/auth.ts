@@ -6,6 +6,13 @@ import { handlePostOAuthSync } from '@/app/api/handlers/auth';
 const auth = new Hono();
 
 /**
+ * POST /api/auth/post-oauth-sync
+ * @param c - The context object
+ * @returns The response object
+ */
+auth.post('/post-oauth-sync', requireAuth, handlePostOAuthSync);
+
+/**
  * Auth routes - proxy to better-auth
  * @param c - The context object
  * @returns The response object
@@ -15,12 +22,5 @@ auth.all('/*', async (c) => {
     const response = await authLib.handler(request);
     return response;
 });
-
-/**
- * POST /api/auth/post-oauth-sync
- * @param c - The context object
- * @returns The response object
- */
-auth.post('/post-oauth-sync', requireAuth, handlePostOAuthSync);
 
 export default auth;
