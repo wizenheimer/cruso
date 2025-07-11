@@ -6,6 +6,34 @@ import { eq } from 'drizzle-orm';
 import { ConnectionManager } from '@/services/calendar/connection';
 import { authCookiePrefix } from './auth-constants';
 
+/**
+ * Extract email from Google ID token
+ */
+function extractEmailFromGoogleToken(idToken?: string | null): string | null {
+    console.log('[TOKEN] Extracting email from Google ID token...');
+    console.log('[TOKEN] ID token exists:', !!idToken);
+
+    if (!idToken) {
+        console.log('[TOKEN] No ID token provided');
+        return null;
+    }
+
+    try {
+        // Decode the JWT payload (base64 decode the middle part)
+        const payload = idToken.split('.')[1];
+        const decodedPayload = JSON.parse(atob(payload));
+        const email = decodedPayload.email || null;
+
+        console.log('[TOKEN] Successfully extracted email:', email);
+        console.log('[TOKEN] Full token payload keys:', Object.keys(decodedPayload));
+
+        return email;
+    } catch (error) {
+        console.error('[TOKEN] Error extracting email from ID token:', error);
+        return null;
+    }
+}
+
 // Re-export for backward compatibility
 export { authCookiePrefix };
 
@@ -60,11 +88,8 @@ export const auth = betterAuth({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
             scope: googleScopes,
-            // Request offline access to get refresh tokens
-            authorizationParams: {
-                access_type: 'offline',
-                prompt: 'consent',
-            },
+            accessType: 'offline',
+            prompt: 'consent',
         },
     },
 
@@ -77,7 +102,6 @@ export const auth = betterAuth({
         accountLinking: {
             enabled: true,
             allowDifferentEmails: true,
-            updateUserInfoOnLink: false,
             trustedProviders: ['google'],
         },
     },
@@ -109,38 +133,75 @@ export const auth = betterAuth({
         account: {
             create: {
                 after: async (account) => {
-                    console.log('Database hook: Account created!');
-                    console.log('Account:', account);
+                    console.log('\n[DB_HOOK] Database hook: Account created!');
+                    console.log('[DB_HOOK] Account details:', {
+                        id: account.id,
+                        userId: account.userId,
+                        providerId: account.providerId,
+                        accountId: account.accountId,
+                        hasAccessToken: !!account.accessToken,
+                        hasIdToken: !!account.idToken,
+                        hasRefreshToken: !!account.refreshToken,
+                    });
 
                     if (account.providerId === 'google') {
-                        console.log('Processing Google account calendar sync...');
+                        console.log('[DB_HOOK] Processing Google account calendar sync...');
                         try {
                             // Get the user info
+                            console.log('[DB_HOOK] Fetching user data for userId:', account.userId);
                             const userData = await db.query.user.findFirst({
                                 where: eq(user.id, account.userId),
                             });
 
+                            console.log('[DB_HOOK] User data found:', {
+                                exists: !!userData,
+                                email: userData?.email,
+                                name: userData?.name,
+                            });
+
                             if (userData && account.accessToken) {
+                                console.log('[DB_HOOK] Starting Google email extraction...');
+                                // Extract Google email from ID token
+                                const googleEmail = extractEmailFromGoogleToken(account.idToken);
+
+                                console.log('[DB_HOOK] Email comparison:', {
+                                    originalUserEmail: userData.email,
+                                    extractedGoogleEmail: googleEmail,
+                                    willUse: googleEmail || userData.email,
+                                });
+
+                                console.log(
+                                    '[DB_HOOK] Calling ConnectionManager.handleGoogleCalendarConnection...',
+                                );
                                 await ConnectionManager.handleGoogleCalendarConnection({
                                     userId: account.userId,
                                     account,
                                     profile: {
-                                        email: userData.email,
+                                        email: googleEmail || userData.email, // Use Google email or fallback to user email
                                         name: userData.name,
                                     },
                                 });
-                                console.log('Database hook calendar sync completed successfully');
+                                console.log(
+                                    '[DB_HOOK] Database hook calendar sync completed successfully',
+                                );
                             } else {
-                                console.log('Missing user data or access token for calendar sync');
-                                console.log('UserData exists:', !!userData);
-                                console.log('Access token exists:', !!account.accessToken);
+                                console.log(
+                                    '[DB_HOOK] Missing user data or access token for calendar sync',
+                                );
+                                console.log('[DB_HOOK] UserData exists:', !!userData);
+                                console.log(
+                                    '[DB_HOOK] Access token exists:',
+                                    !!account.accessToken,
+                                );
                             }
                         } catch (error) {
-                            console.error('Error in database hook calendar sync:', error);
-                            console.error('Full error stack:', error);
+                            console.error('[DB_HOOK] Error in database hook calendar sync:', error);
+                            console.error('[DB_HOOK] Full error stack:', error);
                         }
                     } else {
-                        console.log(`Skipping calendar sync for provider: ${account.providerId}`);
+                        console.log(
+                            `[DB_HOOK] Skipping calendar sync for provider: ${account.providerId}`,
+                        );
                     }
                 },
             },

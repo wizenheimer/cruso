@@ -99,24 +99,31 @@ export class GoogleCalendarService {
     private calendarCache: Map<string, calendar_v3.Calendar> = new Map();
 
     constructor(userId: string) {
+        console.log('┌─ [CALENDAR_SERVICE] Initializing service...', { userId });
         this.userId = userId;
         this.authManager = new GoogleAuthManager();
+        console.log('└─ [CALENDAR_SERVICE] Service initialized');
     }
 
     /**
      * Get calendar API instance for a specific account
      */
     private async getCalendarApi(accountId: string): Promise<calendar_v3.Calendar> {
+        console.log('┌─ [CALENDAR_SERVICE] Getting calendar API instance...', { accountId });
+
         // Check cache first
         if (this.calendarCache.has(accountId)) {
+            console.log('└─ [CALENDAR_SERVICE] Using cached calendar API instance');
             return this.calendarCache.get(accountId)!;
         }
 
+        console.log('├─ [CALENDAR_SERVICE] Creating new calendar API instance...');
         const authClient = await this.authManager.getAuthenticatedClient(accountId);
         const calendar = google.calendar({ version: 'v3', auth: authClient });
 
         // Cache the instance
         this.calendarCache.set(accountId, calendar);
+        console.log('└─ [CALENDAR_SERVICE] Calendar API instance created and cached');
 
         return calendar;
     }
@@ -171,8 +178,11 @@ export class GoogleCalendarService {
      * List all calendars for the user
      */
     async listCalendars(): Promise<CalendarInfo[]> {
+        console.log('┌─ [CALENDAR_SERVICE] Listing calendars for user...', { userId: this.userId });
         try {
+            console.log('├─ [CALENDAR_SERVICE] Getting active connections...');
             const connections = await this.getActiveConnections();
+            console.log('├─ [CALENDAR_SERVICE] Found connections:', { count: connections.length });
             const calendars: CalendarInfo[] = [];
 
             for (const { connection, account } of connections) {
@@ -247,8 +257,12 @@ export class GoogleCalendarService {
                 }
             }
 
+            console.log('└─ [CALENDAR_SERVICE] Successfully listed calendars:', {
+                count: calendars.length,
+            });
             return calendars;
         } catch (error) {
+            console.log('└─ [CALENDAR_SERVICE] Failed to list calendars:', error);
             throw new Error(
                 `Failed to list calendars: ${
                     error instanceof Error ? error.message : 'Unknown error'
@@ -317,14 +331,22 @@ export class GoogleCalendarService {
             conferenceDataVersion?: number;
         },
     ): Promise<CalendarEvent> {
+        console.log('┌─ [CALENDAR_SERVICE] Creating event...', {
+            calendarId,
+            summary: event.summary,
+        });
         try {
+            console.log('├─ [CALENDAR_SERVICE] Getting calendar connection...');
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
+                console.log('└─ [CALENDAR_SERVICE] No account found for calendar connection');
                 throw new Error('No account found for calendar connection');
             }
+            console.log('├─ [CALENDAR_SERVICE] Account found, getting calendar API...');
 
             const calendar = await this.getCalendarApi(connectionData.account.id);
 
+            console.log('├─ [CALENDAR_SERVICE] Inserting event into calendar...');
             const response = await calendar.events.insert({
                 calendarId,
                 requestBody: event as calendar_v3.Schema$Event,
@@ -332,8 +354,12 @@ export class GoogleCalendarService {
                 conferenceDataVersion: options?.conferenceDataVersion,
             });
 
+            console.log('└─ [CALENDAR_SERVICE] Event created successfully:', {
+                eventId: response.data.id,
+            });
             return this.transformGoogleEvent(response.data);
         } catch (error) {
+            console.log('└─ [CALENDAR_SERVICE] Failed to create event:', error);
             throw new Error(
                 `Failed to create event: ${
                     error instanceof Error ? error.message : 'Unknown error'

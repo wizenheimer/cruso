@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
         cookiePrefix: authCookiePrefix,
     });
 
-    const protectedRoutes = ['/remove-me']; // ['/dashboard'];
+    const protectedRoutes = ['/dashboard'];
     const authRoutes = ['/login', '/signup'];
 
     const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));

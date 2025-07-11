@@ -7,7 +7,9 @@ export class AvailabilityChecker {
     private userId: string;
 
     constructor(userId: string) {
+        console.log('┌─ [AVAILABILITY] Initializing availability checker...', { userId });
         this.userId = userId;
+        console.log('└─ [AVAILABILITY] Availability checker initialized');
     }
 
     /**
@@ -17,16 +19,26 @@ export class AvailabilityChecker {
      * @returns True if the user is available, false otherwise
      */
     async isAvailable(startTime: Date, endTime: Date): Promise<boolean> {
+        console.log('┌─ [AVAILABILITY] Checking availability...', {
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+        });
         try {
+            console.log('├─ [AVAILABILITY] Creating calendar service...');
             const calendarService = createCalendarService(this.userId);
+
+            console.log('├─ [AVAILABILITY] Calling calendar service checkAvailability...');
             const result = await calendarService.checkAvailability(
                 startTime.toISOString(),
                 endTime.toISOString(),
             );
 
+            console.log('└─ [AVAILABILITY] Availability check result:', {
+                isAvailable: result.isAvailable,
+            });
             return result.isAvailable;
         } catch (error) {
-            console.error('Error checking availability:', error);
+            console.log('└─ [AVAILABILITY] Error checking availability:', error);
             return false;
         }
     }

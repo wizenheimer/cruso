@@ -30,23 +30,37 @@ export class EmailService {
     private senderEmail: string;
 
     private constructor() {
+        console.log('┌─ [EMAIL_SERVICE] Initializing email service...');
         this.apiKey = process.env.MAILGUN_API_KEY || '';
         this.domain = process.env.MAILGUN_DOMAIN || '';
         this.senderEmail = process.env.MAIN_EMAIL_ADDRESS || 'cruso@crusolabs.com';
 
+        console.log('├─ [EMAIL_SERVICE] Configuration:', {
+            hasDomain: !!this.domain,
+            hasApiKey: !!this.apiKey,
+            senderEmail: this.senderEmail,
+        });
+
         if (!this.apiKey || !this.domain) {
+            console.log('└─ [EMAIL_SERVICE] Missing required environment variables');
             throw new Error(
                 'MAILGUN_API_KEY and MAILGUN_DOMAIN environment variables are required',
             );
         }
 
         this.mailgun = new Mailgun(formData);
+        console.log('└─ [EMAIL_SERVICE] Email service initialized successfully');
     }
 
     public static getInstance(): EmailService {
+        console.log('┌─ [EMAIL_SERVICE] Getting email service instance...');
         if (!EmailService.instance) {
+            console.log('├─ [EMAIL_SERVICE] Creating new instance...');
             EmailService.instance = new EmailService();
+        } else {
+            console.log('├─ [EMAIL_SERVICE] Using existing instance...');
         }
+        console.log('└─ [EMAIL_SERVICE] Instance retrieved');
         return EmailService.instance;
     }
 
@@ -56,6 +70,12 @@ export class EmailService {
      * @description This method is used to send an email with flexible configuration
      */
     async sendEmail(config: SendEmailConfig): Promise<EmailData> {
+        console.log('┌─ [EMAIL_SERVICE] Sending email...', {
+            recipients: config.recipients.length,
+            subject: config.subject,
+            hasReplyTo: !!config.replyTo,
+        });
+
         const {
             recipients,
             subject,

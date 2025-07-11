@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, timestamp, index, text } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp, index, text, boolean } from 'drizzle-orm/pg-core';
 import { user } from '@/db/schema/auth';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
@@ -14,8 +14,10 @@ export const userEmails = pgTable(
             onDelete: 'cascade',
         }),
         email: varchar('email', { length: 255 }).notNull().unique(),
+        isPrimary: boolean('is_primary').default(false),
         verifiedAt: timestamp('verified_at'),
         createdAt: timestamp('created_at').defaultNow(),
+        updatedAt: timestamp('updated_at').defaultNow(),
     },
     (table) => [
         index('idx_user_emails_email').on(table.email),
