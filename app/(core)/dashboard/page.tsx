@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
+import { PREFERENCES_DEFAULTS } from '@/lib/preferences-constants';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,6 +20,7 @@ import {
     CalendarAccount,
     EmailAccount,
     Preferences,
+    PreferencesWithPrimaries,
 } from '@/components/dashboard';
 
 interface ApiCalendarAccount {
@@ -184,27 +186,28 @@ export default function DashboardPage() {
                 error: preferencesResponse.error,
             });
             if (preferencesResponse.success && preferencesResponse.data) {
-                const prefsData = preferencesResponse.data as Preferences;
-                setPreferences(prefsData);
-                setOriginalPreferences(prefsData);
+                const prefsData = preferencesResponse.data as PreferencesWithPrimaries;
+                setPreferences(prefsData.preferences);
+                setOriginalPreferences(prefsData.preferences);
                 console.log('└─ [API] Successfully loaded preferences');
             } else {
                 // Create default preferences if none exist
                 const defaultPreferences: Preferences = {
                     id: 0,
                     userId: '',
-                    document: '',
-                    displayName: '',
-                    nickname: '',
-                    signature: '',
-                    timezone: 'America/New_York',
-                    minNoticeMinutes: 120,
-                    maxDaysAhead: 60,
-                    defaultMeetingDurationMinutes: 30,
-                    virtualBufferMinutes: 0,
-                    inPersonBufferMinutes: 15,
-                    backToBackBufferMinutes: 0,
-                    flightBufferMinutes: 0,
+                    document: PREFERENCES_DEFAULTS.DOCUMENT,
+                    displayName: PREFERENCES_DEFAULTS.DISPLAY_NAME,
+                    nickname: PREFERENCES_DEFAULTS.NICKNAME,
+                    signature: PREFERENCES_DEFAULTS.SIGNATURE,
+                    timezone: PREFERENCES_DEFAULTS.TIMEZONE,
+                    minNoticeMinutes: PREFERENCES_DEFAULTS.MIN_NOTICE_MINUTES,
+                    maxDaysAhead: PREFERENCES_DEFAULTS.MAX_DAYS_AHEAD,
+                    defaultMeetingDurationMinutes:
+                        PREFERENCES_DEFAULTS.DEFAULT_MEETING_DURATION_MINUTES,
+                    virtualBufferMinutes: PREFERENCES_DEFAULTS.VIRTUAL_BUFFER_MINUTES,
+                    inPersonBufferMinutes: PREFERENCES_DEFAULTS.IN_PERSON_BUFFER_MINUTES,
+                    backToBackBufferMinutes: PREFERENCES_DEFAULTS.BACK_TO_BACK_BUFFER_MINUTES,
+                    flightBufferMinutes: PREFERENCES_DEFAULTS.FLIGHT_BUFFER_MINUTES,
                     isActive: true,
                     createdAt: new Date(),
                     updatedAt: new Date(),

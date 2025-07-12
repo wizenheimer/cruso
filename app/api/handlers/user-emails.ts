@@ -2,6 +2,7 @@ import { Context } from 'hono';
 import { db } from '@/db';
 import { userEmails } from '@/db/schema/user-emails';
 import { eq, and, ne } from 'drizzle-orm';
+import { updatePrimaryUserEmail } from '@/db/queries/preferences';
 
 export const getUser = (c: Context) => {
     const user = c.get('user');
@@ -156,6 +157,16 @@ export async function handleUpdateUserEmail(c: Context) {
                 ),
             )
             .returning();
+
+        // If setting as primary, update preferences to reference this email
+        if (body.isPrimary === true) {
+            try {
+                await updatePrimaryUserEmail(user.id, parseInt(emailId));
+            } catch (error) {
+                console.error('Error updating preferences primary email:', error);
+                // Don't fail the request if preferences update fails
+            }
+        }
 
         return c.json(updatedEmail[0]);
     } catch (error) {

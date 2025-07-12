@@ -27,8 +27,8 @@ export function PreferencesView({
         <div className="mt-4 md:mt-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Preference</h2>
-                    <p className="text-sm text-gray-600 mt-1">Manage your scheduling preference</p>
+                    <h2 className="text-xl font-semibold text-gray-900">Preferences</h2>
+                    <p className="text-sm text-gray-600 mt-1">Manage your scheduling preferences</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                     {hasUnsavedChanges && (
@@ -55,7 +55,7 @@ export function PreferencesView({
             </div>
             <div className="space-y-4">
                 <Textarea
-                    placeholder="Type your preference document here."
+                    placeholder="Type your preference document here. This will be used to guide scheduling decisions and communicate your preferences to others."
                     value={preferences.document}
                     onChange={(e) =>
                         onPreferencesChange({

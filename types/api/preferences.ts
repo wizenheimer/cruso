@@ -1,4 +1,6 @@
 import { insertPreferencesSchema, preferences } from '@/db/schema/preferences';
+import { userEmails } from '@/db/schema/user-emails';
+import { account } from '@/db/schema/auth';
 
 export const UpdatePreferencesSchema = insertPreferencesSchema
     .omit({
@@ -10,5 +12,42 @@ export const UpdatePreferencesSchema = insertPreferencesSchema
     })
     .partial();
 
+export const UpdatePrimaryEmailSchema = insertPreferencesSchema
+    .pick({ primaryUserEmailId: true })
+    .partial();
+
+export const UpdatePrimaryAccountSchema = insertPreferencesSchema
+    .pick({ primaryAccountId: true })
+    .partial();
+
 export type Preferences = typeof preferences.$inferSelect;
 export type InsertPreferences = typeof preferences.$inferInsert;
+export type UpdatePreferences = typeof UpdatePreferencesSchema._type;
+export type UpdatePrimaryEmail = typeof UpdatePrimaryEmailSchema._type;
+export type UpdatePrimaryAccount = typeof UpdatePrimaryAccountSchema._type;
+
+// Types for API responses
+export interface PreferencesWithPrimaries {
+    preferences: Preferences;
+    primaryUserEmail: typeof userEmails.$inferSelect | null;
+    primaryAccount: typeof account.$inferSelect | null;
+}
+
+export interface PrimaryEmailOption {
+    id: number;
+    email: string;
+    isPrimary: boolean;
+}
+
+export interface PrimaryAccountOption {
+    id: string;
+    accountId: string;
+    googleEmail: string;
+    calendarName: string | null;
+    isPrimary: boolean;
+}
+
+export interface PrimaryOptions {
+    emails: PrimaryEmailOption[];
+    accounts: PrimaryAccountOption[];
+}

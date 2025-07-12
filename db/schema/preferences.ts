@@ -10,7 +10,9 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { user } from '@/db/schema/auth';
+import { user, account } from '@/db/schema/auth';
+import { userEmails } from '@/db/schema/user-emails';
+import { calendarConnections } from '@/db/schema/calendars';
 
 /**
  * Preferences Table - ONLY fast lookup stuff that impacts availability/scheduling
@@ -22,6 +24,17 @@ export const preferences = pgTable(
         userId: text('user_id').references(() => user.id, {
             onDelete: 'cascade',
         }),
+
+        // Primary email and account references
+        primaryUserEmailId: integer('primary_user_email_id').references(() => userEmails.id, {
+            onDelete: 'set null',
+        }),
+        primaryAccountId: varchar('primary_account_id', { length: 255 }).references(
+            () => account.id,
+            {
+                onDelete: 'set null',
+            },
+        ),
 
         // Preference document for handling availability/scheduling
         document: text('document').notNull(),
@@ -59,7 +72,11 @@ export const preferences = pgTable(
         createdAt: timestamp('created_at').defaultNow(),
         updatedAt: timestamp('updated_at').defaultNow(),
     },
-    (table) => [index('idx_preferences_user_active').on(table.userId, table.isActive)],
+    (table) => [
+        index('idx_preferences_user_active').on(table.userId, table.isActive),
+        index('idx_preferences_primary_email').on(table.primaryUserEmailId),
+        index('idx_preferences_primary_account').on(table.primaryAccountId),
+    ],
 );
 
 /**
@@ -69,6 +86,14 @@ export const preferencesRelations = relations(preferences, ({ one }) => ({
     user: one(user, {
         fields: [preferences.userId],
         references: [user.id],
+    }),
+    primaryUserEmail: one(userEmails, {
+        fields: [preferences.primaryUserEmailId],
+        references: [userEmails.id],
+    }),
+    primaryAccount: one(account, {
+        fields: [preferences.primaryAccountId],
+        references: [account.id],
     }),
 }));
 

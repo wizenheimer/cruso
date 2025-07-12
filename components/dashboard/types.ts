@@ -20,6 +20,8 @@ export interface EmailAccount {
 export interface Preferences {
     id: number;
     userId: string;
+    primaryUserEmailId?: number | null;
+    primaryAccountId?: string | null;
     document: string;
     displayName?: string;
     nickname?: string;
@@ -35,4 +37,39 @@ export interface Preferences {
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface PreferencesWithPrimaries {
+    preferences: Preferences;
+    primaryUserEmail: {
+        id: number;
+        email: string;
+        isPrimary: boolean;
+    } | null;
+    primaryAccount: {
+        id: string;
+        accountId: string;
+        googleEmail: string;
+        calendarName: string | null;
+        isPrimary: boolean;
+    } | null;
+}
+
+export interface PrimaryEmailOption {
+    id: number;
+    email: string;
+    isPrimary: boolean;
+}
+
+export interface PrimaryAccountOption {
+    id: string;
+    accountId: string;
+    googleEmail: string;
+    calendarName: string | null;
+    isPrimary: boolean;
+}
+
+export interface PrimaryOptions {
+    emails: PrimaryEmailOption[];
+    accounts: PrimaryAccountOption[];
 }

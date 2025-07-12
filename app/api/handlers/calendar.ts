@@ -4,6 +4,7 @@ import { account } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { Context } from 'hono';
 import { createCalendarService } from '@/services/calendar/service';
+import { updatePrimaryAccount } from '@/db/queries/preferences';
 
 export const getUser = (c: Context) => {
     const user = c.get('user');
@@ -222,6 +223,19 @@ export async function handleUpdateCalendarConnection(c: Context) {
             return c.json({ error: 'Connection not found' }, 404);
         }
 
+        // If setting as primary, unset other primary calendars first
+        if (body.isPrimary === true) {
+            await db
+                .update(calendarConnections)
+                .set({ isPrimary: false, updatedAt: new Date() })
+                .where(
+                    and(
+                        eq(calendarConnections.userId, user.id),
+                        eq(calendarConnections.isActive, true),
+                    ),
+                );
+        }
+
         // Update the connection
         await db
             .update(calendarConnections)
@@ -235,6 +249,24 @@ export async function handleUpdateCalendarConnection(c: Context) {
                     eq(calendarConnections.isActive, true),
                 ),
             );
+
+        // If setting as primary, update preferences to reference this account
+        if (body.isPrimary === true) {
+            try {
+                const updatedConnection = await db
+                    .select({ accountId: calendarConnections.accountId })
+                    .from(calendarConnections)
+                    .where(eq(calendarConnections.id, connectionId))
+                    .limit(1);
+
+                if (updatedConnection.length > 0) {
+                    await updatePrimaryAccount(user.id, updatedConnection[0].accountId);
+                }
+            } catch (error) {
+                console.error('Error updating preferences primary account:', error);
+                // Don't fail the request if preferences update fails
+            }
+        }
 
         return c.json({ success: true });
     } catch (error) {

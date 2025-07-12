@@ -105,6 +105,25 @@ class ApiClient {
         });
     }
 
+    // Primary management API methods
+    async getPrimaryOptions() {
+        return this.request('/preferences/primary-options');
+    }
+
+    async updatePrimaryEmail(primaryUserEmailId: number | null) {
+        return this.request('/preferences/primary-email', {
+            method: 'PATCH',
+            body: JSON.stringify({ primaryUserEmailId }),
+        });
+    }
+
+    async updatePrimaryAccount(primaryAccountId: string | null) {
+        return this.request('/preferences/primary-account', {
+            method: 'PATCH',
+            body: JSON.stringify({ primaryAccountId }),
+        });
+    }
+
     // User Emails API methods
     async getUserEmails() {
         return this.request('/user-emails');

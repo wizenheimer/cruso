@@ -5,6 +5,9 @@ import {
     handleCreatePreferences,
     handleUpdatePreferences,
     handleDeletePreferences,
+    handleUpdatePrimaryEmail,
+    handleUpdatePrimaryAccount,
+    handleGetPrimaryOptions,
 } from '@/app/api/handlers/preferences';
 
 const preferences = new Hono();
@@ -33,5 +36,20 @@ preferences.patch('/', handleUpdatePreferences);
  * DELETE /api/preferences - Delete user preferences
  */
 preferences.delete('/', handleDeletePreferences);
+
+/**
+ * GET /api/preferences/primary-options - Get available primary email and account options
+ */
+preferences.get('/primary-options', handleGetPrimaryOptions);
+
+/**
+ * PATCH /api/preferences/primary-email - Update primary user email
+ */
+preferences.patch('/primary-email', handleUpdatePrimaryEmail);
+
+/**
+ * PATCH /api/preferences/primary-account - Update primary account
+ */
+preferences.patch('/primary-account', handleUpdatePrimaryAccount);
 
 export default preferences;
