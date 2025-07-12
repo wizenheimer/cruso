@@ -1,8 +1,5 @@
 import { Context } from 'hono';
-import { db } from '@/db';
-import { userEmails } from '@/db/schema/user-emails';
-import { eq, and, ne } from 'drizzle-orm';
-import { updatePrimaryUserEmail } from '@/db/queries/preferences';
+import { userEmailService } from '@/services/user-emails';
 
 export const getUser = (c: Context) => {
     const user = c.get('user');
@@ -20,21 +17,13 @@ export const getUser = (c: Context) => {
 export async function handleGetUserEmails(c: Context) {
     try {
         const user = getUser(c);
+        const result = await userEmailService.getUserEmails(user.id);
 
-        const emails = await db
-            .select({
-                id: userEmails.id,
-                email: userEmails.email,
-                isPrimary: userEmails.isPrimary,
-                isActive: userEmails.isActive,
-                createdAt: userEmails.createdAt,
-                updatedAt: userEmails.updatedAt,
-            })
-            .from(userEmails)
-            .where(and(eq(userEmails.userId, user.id), eq(userEmails.isActive, true)))
-            .orderBy(userEmails.isPrimary, userEmails.createdAt);
+        if (!result.success) {
+            return c.json({ error: result.error }, 500);
+        }
 
-        return c.json(emails);
+        return c.json(result.data);
     } catch (error) {
         console.error('Error fetching user emails:', error);
         return c.json({ error: 'Failed to fetch user emails' }, 500);
@@ -51,50 +40,16 @@ export async function handleAddUserEmail(c: Context) {
         const user = getUser(c);
         const body = await c.req.json();
 
-        if (!body.email) {
-            return c.json({ error: 'Email address is required' }, 400);
+        const result = await userEmailService.addUserEmail(user.id, {
+            email: body.email,
+            isPrimary: body.isPrimary,
+        });
+
+        if (!result.success) {
+            return c.json({ error: result.error }, 400);
         }
 
-        // Check if email already exists globally
-        const existingEmail = await db
-            .select()
-            .from(userEmails)
-            .where(and(eq(userEmails.email, body.email), eq(userEmails.isActive, true)))
-            .limit(1);
-
-        if (existingEmail.length > 0) {
-            return c.json({ error: 'Email address already exists' }, 400);
-        }
-
-        // If this is the first email or explicitly set as primary, make it primary
-        const currentEmails = await db
-            .select()
-            .from(userEmails)
-            .where(and(eq(userEmails.userId, user.id), eq(userEmails.isActive, true)));
-
-        const isPrimary = currentEmails.length === 0 || body.isPrimary === true;
-
-        // If setting as primary, unset other primary emails
-        if (isPrimary) {
-            await db
-                .update(userEmails)
-                .set({ isPrimary: false, updatedAt: new Date() })
-                .where(and(eq(userEmails.userId, user.id), eq(userEmails.isActive, true)));
-        }
-
-        const newEmail = await db
-            .insert(userEmails)
-            .values({
-                userId: user.id,
-                email: body.email,
-                isPrimary: isPrimary,
-                isActive: true,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            })
-            .returning();
-
-        return c.json(newEmail[0], 201);
+        return c.json(result.data, 201);
     } catch (error) {
         console.error('Error adding user email:', error);
         return c.json({ error: 'Failed to add user email' }, 500);
@@ -112,63 +67,16 @@ export async function handleUpdateUserEmail(c: Context) {
         const emailId = c.req.param('id');
         const body = await c.req.json();
 
-        // Check if email exists and belongs to user
-        const existingEmail = await db
-            .select()
-            .from(userEmails)
-            .where(
-                and(
-                    eq(userEmails.id, parseInt(emailId)),
-                    eq(userEmails.userId, user.id),
-                    eq(userEmails.isActive, true),
-                ),
-            )
-            .limit(1);
+        const result = await userEmailService.updateUserEmail(user.id, parseInt(emailId), {
+            isPrimary: body.isPrimary,
+        });
 
-        if (existingEmail.length === 0) {
-            return c.json({ error: 'Email not found' }, 404);
+        if (!result.success) {
+            const statusCode = result.error === 'Email not found' ? 404 : 500;
+            return c.json({ error: result.error }, statusCode);
         }
 
-        // If setting as primary, unset other primary emails
-        if (body.isPrimary === true) {
-            await db
-                .update(userEmails)
-                .set({ isPrimary: false, updatedAt: new Date() })
-                .where(
-                    and(
-                        eq(userEmails.userId, user.id),
-                        ne(userEmails.id, parseInt(emailId)),
-                        eq(userEmails.isActive, true),
-                    ),
-                );
-        }
-
-        const updatedEmail = await db
-            .update(userEmails)
-            .set({
-                isPrimary: body.isPrimary,
-                updatedAt: new Date(),
-            })
-            .where(
-                and(
-                    eq(userEmails.id, parseInt(emailId)),
-                    eq(userEmails.userId, user.id),
-                    eq(userEmails.isActive, true),
-                ),
-            )
-            .returning();
-
-        // If setting as primary, update preferences to reference this email
-        if (body.isPrimary === true) {
-            try {
-                await updatePrimaryUserEmail(user.id, parseInt(emailId));
-            } catch (error) {
-                console.error('Error updating preferences primary email:', error);
-                // Don't fail the request if preferences update fails
-            }
-        }
-
-        return c.json(updatedEmail[0]);
+        return c.json(result.data);
     } catch (error) {
         console.error('Error updating user email:', error);
         return c.json({ error: 'Failed to update user email' }, 500);
@@ -185,73 +93,12 @@ export async function handleDeleteUserEmail(c: Context) {
         const user = getUser(c);
         const emailId = c.req.param('id');
 
-        // Check if email exists and belongs to user
-        const existingEmail = await db
-            .select()
-            .from(userEmails)
-            .where(
-                and(
-                    eq(userEmails.id, parseInt(emailId)),
-                    eq(userEmails.userId, user.id),
-                    eq(userEmails.isActive, true),
-                ),
-            )
-            .limit(1);
+        const result = await userEmailService.deleteUserEmail(user.id, parseInt(emailId));
 
-        if (existingEmail.length === 0) {
-            return c.json({ error: 'Email not found' }, 404);
+        if (!result.success) {
+            const statusCode = result.error === 'Email not found' ? 404 : 400;
+            return c.json({ error: result.error }, statusCode);
         }
-
-        // Check if this is the only email - prevent deletion if so
-        const userEmailCount = await db
-            .select()
-            .from(userEmails)
-            .where(and(eq(userEmails.userId, user.id), eq(userEmails.isActive, true)));
-
-        if (userEmailCount.length === 1) {
-            return c.json({ error: 'Cannot delete the only email address' }, 400);
-        }
-
-        // If deleting primary email, make another email primary
-        const emailToDelete = existingEmail[0];
-        if (emailToDelete.isPrimary) {
-            const otherEmails = await db
-                .select()
-                .from(userEmails)
-                .where(
-                    and(
-                        eq(userEmails.userId, user.id),
-                        ne(userEmails.id, parseInt(emailId)),
-                        eq(userEmails.isActive, true),
-                    ),
-                )
-                .orderBy(userEmails.createdAt)
-                .limit(1);
-
-            if (otherEmails.length > 0) {
-                await db
-                    .update(userEmails)
-                    .set({ isPrimary: true, updatedAt: new Date() })
-                    .where(
-                        and(eq(userEmails.id, otherEmails[0].id), eq(userEmails.isActive, true)),
-                    );
-            }
-        }
-
-        // Soft delete - mark as inactive
-        await db
-            .update(userEmails)
-            .set({
-                isActive: false,
-                updatedAt: new Date(),
-            })
-            .where(
-                and(
-                    eq(userEmails.id, parseInt(emailId)),
-                    eq(userEmails.userId, user.id),
-                    eq(userEmails.isActive, true),
-                ),
-            );
 
         return c.json({ success: true });
     } catch (error) {

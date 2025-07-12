@@ -14,7 +14,6 @@ export const userEmails = pgTable(
             onDelete: 'cascade',
         }),
         email: varchar('email', { length: 255 }).notNull().unique(),
-        isPrimary: boolean('is_primary').default(false),
         isActive: boolean('is_active').default(true),
         createdAt: timestamp('created_at').defaultNow(),
         updatedAt: timestamp('updated_at').defaultNow(),

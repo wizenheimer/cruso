@@ -58,11 +58,12 @@ async function getSmartDefaults(userId: string) {
             email: userEmails.email,
         })
         .from(userEmails)
+        .innerJoin(preferences, eq(preferences.primaryUserEmailId, userEmails.id))
         .where(
             and(
-                eq(userEmails.userId, userId),
-                eq(userEmails.isPrimary, true),
+                eq(preferences.userId, userId),
                 eq(userEmails.isActive, true),
+                eq(preferences.isActive, true),
             ),
         )
         .limit(1);
@@ -223,15 +224,27 @@ export async function updatePrimaryAccount(userId: string, primaryAccountId: str
  * Get available primary email options for a user
  */
 export async function getAvailablePrimaryEmails(userId: string) {
-    return await db
+    // Get current primary email ID from preferences
+    const [userPrefs] = await db
+        .select({ primaryUserEmailId: preferences.primaryUserEmailId })
+        .from(preferences)
+        .where(and(eq(preferences.userId, userId), eq(preferences.isActive, true)))
+        .limit(1);
+
+    const emails = await db
         .select({
             id: userEmails.id,
             email: userEmails.email,
-            isPrimary: userEmails.isPrimary,
         })
         .from(userEmails)
         .where(and(eq(userEmails.userId, userId), eq(userEmails.isActive, true)))
-        .orderBy(userEmails.isPrimary, userEmails.createdAt);
+        .orderBy(userEmails.createdAt);
+
+    // Add isPrimary field based on preferences
+    return emails.map((email) => ({
+        ...email,
+        isPrimary: userPrefs?.primaryUserEmailId === email.id,
+    }));
 }
 
 /**

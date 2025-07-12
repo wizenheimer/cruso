@@ -5,6 +5,8 @@ import { user, account, session, verification } from '@/db/schema/auth';
 import { eq } from 'drizzle-orm';
 import { ConnectionManager } from '@/services/calendar/connection';
 import { authCookiePrefix } from './auth-constants';
+import { userEmails } from '@/db/schema/user-emails';
+import { PreferenceService } from '@/services/preferences/service';
 
 /**
  * Extract email from Google ID token
@@ -128,11 +130,57 @@ export const auth = betterAuth({
      */
     databaseHooks: {
         /**
-         * Account hooks
+         * Account hooks - Sequencing is as follows:
+         * 1. before: user creation
+         * 2. after: user creation
+         * 3. before: account creation
+         * 4. after: account creation
+         * 5. before: session creation
+         * 6. after: session creation
+         * Additional account creation skips user and session creation hooks
+         * Additional session creation skips user and account creation hooks
          */
+        user: {
+            create: {
+                before: async (user, ctx) => {
+                    console.log('[DB_HOOK] Database hook: User creation started!');
+                    console.log('[DB_HOOK] User details:', {
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                    });
+
+                    if (ctx && ctx.context) {
+                        ctx.context.isNewUser = true;
+                        ctx.context.userEmail = user.email;
+                        ctx.context.userName = user.name;
+                    } else {
+                        console.log('[DB_HOOK] Context is undefined for user creation before hook');
+                    }
+                },
+                after: async (user) => {
+                    console.log('[DB_HOOK] Database hook: User created!');
+                    console.log('[DB_HOOK] User details:', {
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                    });
+                },
+            },
+        },
         account: {
             create: {
-                after: async (account) => {
+                before: async (account, ctx) => {
+                    console.log('[DB_HOOK] Database hook: Account creation started!');
+                    console.log('[DB_HOOK] Account details:', {
+                        id: account.id,
+                        userId: account.userId,
+                        providerId: account.providerId,
+                        accountId: account.accountId,
+                    });
+                    console.log('[DB_HOOK] Context:', ctx);
+                },
+                after: async (account, ctx) => {
                     console.log('\n[DB_HOOK] Database hook: Account created!');
                     console.log('[DB_HOOK] Account details:', {
                         id: account.id,
@@ -143,6 +191,7 @@ export const auth = betterAuth({
                         hasIdToken: !!account.idToken,
                         hasRefreshToken: !!account.refreshToken,
                     });
+                    console.log('[DB_HOOK] Context:', ctx);
 
                     if (account.providerId === 'google') {
                         console.log('[DB_HOOK] Processing Google account calendar sync...');
@@ -184,6 +233,45 @@ export const auth = betterAuth({
                                 console.log(
                                     '[DB_HOOK] Database hook calendar sync completed successfully',
                                 );
+
+                                // Add user email as primary email on user creation
+                                if (ctx && ctx.context.isNewUser) {
+                                    console.log(
+                                        '[DB_HOOK] Adding user email as primary email on user creation',
+                                    );
+                                    const userEmail = ctx.context.userEmail;
+                                    const [newEmail] = await db
+                                        .insert(userEmails)
+                                        .values({
+                                            userId: account.userId,
+                                            email: userEmail,
+                                        })
+                                        .returning();
+
+                                    console.log('[DB_HOOK] New email created:', newEmail);
+                                    console.log(
+                                        '[DB_HOOK] Creating preferences using PreferenceService...',
+                                    );
+
+                                    // Use the PreferenceService to create preferences
+                                    const preferenceService = new PreferenceService();
+                                    const result =
+                                        await preferenceService.createPreferencesForNewUser(
+                                            account.userId,
+                                            newEmail.id,
+                                            account.id,
+                                            ctx.context.userName,
+                                        );
+
+                                    if (result.success) {
+                                        console.log('[DB_HOOK] Preferences created successfully');
+                                    } else {
+                                        console.error(
+                                            '[DB_HOOK] Failed to create preferences:',
+                                            result.error,
+                                        );
+                                    }
+                                }
                             } else {
                                 console.log(
                                     '[DB_HOOK] Missing user data or access token for calendar sync',
@@ -203,6 +291,24 @@ export const auth = betterAuth({
                             `[DB_HOOK] Skipping calendar sync for provider: ${account.providerId}`,
                         );
                     }
+                },
+            },
+        },
+        session: {
+            create: {
+                after: async (session) => {
+                    console.log('[DB_HOOK] Database hook: Session created!');
+                    console.log('[DB_HOOK] Session details:', {
+                        id: session.id,
+                        userId: session.userId,
+                    });
+                },
+                before: async (session) => {
+                    console.log('[DB_HOOK] Database hook: Session creation started!');
+                    console.log('[DB_HOOK] Session details:', {
+                        id: session.id,
+                        userId: session.userId,
+                    });
                 },
             },
         },
