@@ -42,7 +42,7 @@ const SignupPage = () => {
         try {
             const response = await authClient.signIn.social({
                 provider: 'google',
-                callbackURL: '/dashboard',
+                callbackURL: '/get-started',
             });
 
             // Check for error in response
