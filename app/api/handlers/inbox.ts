@@ -10,106 +10,120 @@ import { ExchangeService } from '@/services/exchange';
 const allowedWebhookStatusCode = 200;
 
 /**
- * Handle the inbox request
- * @param c - The context object
- * @returns The response object
+ * Handle the inbox webhook request and process incoming emails
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response with processing status or error message
  */
-export const handleInboxRequest = async (c: Context) => {
+export const handleInboxRequest = async (requestContext: Context) => {
     // The webhook middleware has already processed the webhook
     // and stored emailData in the context
-    const emailData = c.get('emailData');
-    const user = c.get('user');
+    const incomingEmailData = requestContext.get('emailData');
+    const authenticatedUser = requestContext.get('user');
 
-    if (!emailData) {
+    if (!incomingEmailData) {
         throw new Error('Email data not found in context');
     }
 
     const inboxService = InboxService.getInstance();
 
     // Check if the email is the first message in the exchange
-    const isThreadOpener = await inboxService.isFirstMessageInExchange(emailData);
+    const isEmailThreadOpener = await inboxService.isFirstMessageInExchange(incomingEmailData);
 
     // Check if the email is a valid reply to the exchange
-    const isValidEngagement = await inboxService.isValidEngagement(emailData);
+    const isValidEmailEngagement = await inboxService.isValidEngagement(incomingEmailData);
 
     // Determine the action based on user status and thread conditions
-    const action = determineAction(user, isThreadOpener, isValidEngagement);
+    const determinedAction = determineAction(
+        authenticatedUser,
+        isEmailThreadOpener,
+        isValidEmailEngagement,
+    );
 
-    console.log('determined action', { action });
+    console.log('determined action', { action: determinedAction });
 
     // Execute the determined action
-    await executeAction(action, emailData, user);
+    await executeAction(determinedAction, incomingEmailData, authenticatedUser);
 
     // Return the success response
-    return c.json(
+    return requestContext.json(
         {
             status: 'success',
             message: 'Inbox webhook processed',
-            sender: emailData.sender,
+            sender: incomingEmailData.sender,
         },
         allowedWebhookStatusCode,
     );
 };
 
 /**
- * Determine the appropriate action
- * @param user - The user object
- * @param isThreadOpener - Whether the email is the first message in the exchange
- * @param isValidEngagement - Whether the email is a valid reply to the exchange
- * @returns The action to take
+ * Determine the appropriate action based on user status and email context
+ * @param authenticatedUser - The user object (null if not authenticated)
+ * @param isEmailThreadOpener - Whether the email is the first message in the exchange
+ * @param isValidEmailEngagement - Whether the email is a valid reply to the exchange
+ * @returns The action to take ('onboard', 'engage', or 'offboard')
  */
 const determineAction = (
-    user: User | null,
-    isThreadOpener: boolean,
-    isValidEngagement: boolean,
+    authenticatedUser: User | null,
+    isEmailThreadOpener: boolean,
+    isValidEmailEngagement: boolean,
 ): 'onboard' | 'engage' | 'offboard' => {
-    console.log('determining action', { user, isThreadOpener, isValidEngagement });
+    console.log('determining action', {
+        user: authenticatedUser,
+        isThreadOpener: isEmailThreadOpener,
+        isValidEngagement: isValidEmailEngagement,
+    });
 
-    if (!user) {
+    if (!authenticatedUser) {
         // If it is a thread opener, but the user isn't onboarded, onboard them first
-        if (isThreadOpener) return 'onboard';
+        if (isEmailThreadOpener) return 'onboard';
         // Or else, if it's not a thread opener, then only engage if the engagement is valid
-        return isValidEngagement ? 'engage' : 'offboard';
+        return isValidEmailEngagement ? 'engage' : 'offboard';
     }
 
     // Existing user logic
     // If it is a thread opener, then engage with the user
-    if (isThreadOpener) return 'engage';
+    if (isEmailThreadOpener) return 'engage';
     // If it is not a thread opener, then only engage if the engagement is valid
-    return isValidEngagement ? 'engage' : 'offboard';
+    return isValidEmailEngagement ? 'engage' : 'offboard';
 };
 
 /**
- * Execute the determined action
- * @param action - The action to take
- * @param emailData - The email data
- * @param user - The user object
+ * Execute the determined action based on the email and user context
+ * @param actionToExecute - The action to take ('onboard', 'engage', or 'offboard')
+ * @param incomingEmailData - The email data from the webhook
+ * @param authenticatedUser - The user object (null if not authenticated)
  */
 const executeAction = async (
-    action: 'onboard' | 'engage' | 'offboard',
-    emailData: EmailData,
-    user: User | null,
+    actionToExecute: 'onboard' | 'engage' | 'offboard',
+    incomingEmailData: EmailData,
+    authenticatedUser: User | null,
 ) => {
-    console.log('executing action', { action });
+    console.log('executing action', { action: actionToExecute });
 
     const exchangeService = ExchangeService.getInstance();
 
-    switch (action) {
+    switch (actionToExecute) {
         case 'onboard':
-            await exchangeService.handleNewUser(emailData);
+            await exchangeService.handleNewUser(incomingEmailData);
             break;
         case 'engage':
-            if (user) {
-                await exchangeService.handleEngagementForExistingUser(emailData, user);
+            if (authenticatedUser) {
+                await exchangeService.handleEngagementForExistingUser(
+                    incomingEmailData,
+                    authenticatedUser,
+                );
             } else {
-                await exchangeService.handleEngagementForNonUser(emailData);
+                await exchangeService.handleEngagementForNonUser(incomingEmailData);
             }
             break;
         case 'offboard':
-            if (user) {
-                await exchangeService.handleInvalidEngagementForExistingUser(emailData, user);
+            if (authenticatedUser) {
+                await exchangeService.handleInvalidEngagementForExistingUser(
+                    incomingEmailData,
+                    authenticatedUser,
+                );
             } else {
-                await exchangeService.handleInvalidEngagementForNonUser(emailData);
+                await exchangeService.handleInvalidEngagementForNonUser(incomingEmailData);
             }
             break;
     }

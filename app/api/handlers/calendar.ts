@@ -6,22 +6,28 @@ import { Context } from 'hono';
 import { createCalendarService } from '@/services/calendar/service';
 import { updatePrimaryAccount } from '@/db/queries/preferences';
 
-export const getUser = (c: Context) => {
-    const user = c.get('user');
-    if (!user) {
+/**
+ * Extract the authenticated user from the request context
+ * @param requestContext - The Hono context object containing request data
+ * @returns The authenticated user object
+ * @throws Error if user is not found in context
+ */
+export const getUser = (requestContext: Context) => {
+    const authenticatedUser = requestContext.get('user');
+    if (!authenticatedUser) {
         throw new Error('User not found in context');
     }
-    return user;
+    return authenticatedUser;
 };
 /**
  * Handle the GET request to fetch calendar connections
- * @param c - The context object
- * @returns The response object
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response with calendar connections or error message
  */
-export async function handleGetCalendarConnections(c: Context) {
+export async function handleGetCalendarConnections(requestContext: Context) {
     try {
-        const user = getUser(c);
-        const connections = await db
+        const authenticatedUser = getUser(requestContext);
+        const userCalendarConnections = await db
             .select({
                 id: calendarConnections.id,
                 accountId: calendarConnections.accountId,
@@ -40,29 +46,29 @@ export async function handleGetCalendarConnections(c: Context) {
             .from(calendarConnections)
             .where(
                 and(
-                    eq(calendarConnections.userId, user.id),
+                    eq(calendarConnections.userId, authenticatedUser.id),
                     eq(calendarConnections.isActive, true),
                 ),
             )
             .orderBy(calendarConnections.isPrimary, calendarConnections.createdAt);
 
-        return c.json(connections);
-    } catch (error) {
-        console.error('Error fetching calendar connections:', error);
-        return c.json({ error: 'Failed to fetch calendar connections' }, 500);
+        return requestContext.json(userCalendarConnections);
+    } catch (fetchCalendarConnectionsError) {
+        console.error('Error fetching calendar connections:', fetchCalendarConnectionsError);
+        return requestContext.json({ error: 'Failed to fetch calendar connections' }, 500);
     }
 }
 
 /**
  * Handle the GET request to fetch calendar accounts
- * @param c - The context object
- * @returns The response object
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response with calendar accounts and their calendars or error message
  */
-export async function handleGetCalendarAccounts(c: Context) {
+export async function handleGetCalendarAccounts(requestContext: Context) {
     try {
-        const user = getUser(c);
+        const authenticatedUser = getUser(requestContext);
         // Get all Google accounts for the user with their calendars
-        const googleAccounts = await db
+        const userGoogleAccounts = await db
             .select({
                 accountId: account.id,
                 googleAccountId: account.accountId,
@@ -70,46 +76,48 @@ export async function handleGetCalendarAccounts(c: Context) {
                 createdAt: account.createdAt,
             })
             .from(account)
-            .where(and(eq(account.userId, user.id), eq(account.providerId, 'google')));
+            .where(and(eq(account.userId, authenticatedUser.id), eq(account.providerId, 'google')));
 
         // Get calendar counts for each account
-        const accountsWithCalendars = await Promise.all(
-            googleAccounts.map(async (accountData) => {
-                const calendars = await db
+        const googleAccountsWithCalendars = await Promise.all(
+            userGoogleAccounts.map(async (googleAccountData) => {
+                const accountCalendars = await db
                     .select()
                     .from(calendarConnections)
                     .where(
                         and(
-                            eq(calendarConnections.accountId, accountData.accountId),
+                            eq(calendarConnections.accountId, googleAccountData.accountId),
                             eq(calendarConnections.isActive, true),
                         ),
                     );
 
                 // Get email from first calendar connection if available
-                const email =
-                    calendars.length > 0 ? calendars[0].googleEmail : accountData.googleAccountId;
+                const accountEmail =
+                    accountCalendars.length > 0
+                        ? accountCalendars[0].googleEmail
+                        : googleAccountData.googleAccountId;
 
                 return {
-                    accountId: accountData.accountId,
-                    googleAccountId: accountData.googleAccountId,
-                    email: email,
-                    calendarCount: calendars.length,
-                    calendars: calendars.map((cal) => ({
-                        id: cal.id,
-                        calendarId: cal.calendarId,
-                        name: cal.calendarName,
-                        isPrimary: cal.isPrimary,
-                        includeInAvailability: cal.includeInAvailability,
-                        syncStatus: cal.syncStatus,
+                    accountId: googleAccountData.accountId,
+                    googleAccountId: googleAccountData.googleAccountId,
+                    email: accountEmail,
+                    calendarCount: accountCalendars.length,
+                    calendars: accountCalendars.map((calendarConnection) => ({
+                        id: calendarConnection.id,
+                        calendarId: calendarConnection.calendarId,
+                        name: calendarConnection.calendarName,
+                        isPrimary: calendarConnection.isPrimary,
+                        includeInAvailability: calendarConnection.includeInAvailability,
+                        syncStatus: calendarConnection.syncStatus,
                     })),
                 };
             }),
         );
 
-        return c.json(accountsWithCalendars);
-    } catch (error) {
-        console.error('Error fetching Google accounts:', error);
-        return c.json({ error: 'Failed to fetch Google accounts' }, 500);
+        return requestContext.json(googleAccountsWithCalendars);
+    } catch (fetchCalendarAccountsError) {
+        console.error('Error fetching Google accounts:', fetchCalendarAccountsError);
+        return requestContext.json({ error: 'Failed to fetch Google accounts' }, 500);
     }
 }
 
@@ -197,40 +205,40 @@ export async function handleSyncCalendar(c: Context) {
 
 /**
  * Handle the PATCH request to update a calendar connection
- * @param c - The context object
- * @returns The response object
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response confirming update or error message
  */
-export async function handleUpdateCalendarConnection(c: Context) {
+export async function handleUpdateCalendarConnection(requestContext: Context) {
     try {
-        const connectionId = c.req.param('id');
-        const user = getUser(c);
-        const body = await c.req.json();
+        const targetConnectionId = requestContext.req.param('id');
+        const authenticatedUser = getUser(requestContext);
+        const connectionUpdatePayload = await requestContext.req.json();
 
         // Validate that the connection belongs to the user
-        const connection = await db
+        const existingConnection = await db
             .select()
             .from(calendarConnections)
             .where(
                 and(
-                    eq(calendarConnections.id, connectionId),
-                    eq(calendarConnections.userId, user.id),
+                    eq(calendarConnections.id, targetConnectionId),
+                    eq(calendarConnections.userId, authenticatedUser.id),
                     eq(calendarConnections.isActive, true),
                 ),
             )
             .limit(1);
 
-        if (connection.length === 0) {
-            return c.json({ error: 'Connection not found' }, 404);
+        if (existingConnection.length === 0) {
+            return requestContext.json({ error: 'Connection not found' }, 404);
         }
 
         // If setting as primary, unset other primary calendars first
-        if (body.isPrimary === true) {
+        if (connectionUpdatePayload.isPrimary === true) {
             await db
                 .update(calendarConnections)
                 .set({ isPrimary: false, updatedAt: new Date() })
                 .where(
                     and(
-                        eq(calendarConnections.userId, user.id),
+                        eq(calendarConnections.userId, authenticatedUser.id),
                         eq(calendarConnections.isActive, true),
                     ),
                 );
@@ -240,75 +248,81 @@ export async function handleUpdateCalendarConnection(c: Context) {
         await db
             .update(calendarConnections)
             .set({
-                ...body,
+                ...connectionUpdatePayload,
                 updatedAt: new Date(),
             })
             .where(
                 and(
-                    eq(calendarConnections.id, connectionId),
+                    eq(calendarConnections.id, targetConnectionId),
                     eq(calendarConnections.isActive, true),
                 ),
             );
 
         // If setting as primary, update preferences to reference this account
-        if (body.isPrimary === true) {
+        if (connectionUpdatePayload.isPrimary === true) {
             try {
-                const updatedConnection = await db
+                const updatedCalendarConnection = await db
                     .select({ accountId: calendarConnections.accountId })
                     .from(calendarConnections)
-                    .where(eq(calendarConnections.id, connectionId))
+                    .where(eq(calendarConnections.id, targetConnectionId))
                     .limit(1);
 
-                if (updatedConnection.length > 0) {
-                    await updatePrimaryAccount(user.id, updatedConnection[0].accountId);
+                if (updatedCalendarConnection.length > 0) {
+                    await updatePrimaryAccount(
+                        authenticatedUser.id,
+                        updatedCalendarConnection[0].accountId,
+                    );
                 }
-            } catch (error) {
-                console.error('Error updating preferences primary account:', error);
+            } catch (updatePrimaryAccountError) {
+                console.error(
+                    'Error updating preferences primary account:',
+                    updatePrimaryAccountError,
+                );
                 // Don't fail the request if preferences update fails
             }
         }
 
-        return c.json({ success: true });
-    } catch (error) {
-        console.error('Error updating calendar connection:', error);
-        return c.json({ error: 'Failed to update calendar connection' }, 500);
+        return requestContext.json({ success: true });
+    } catch (updateCalendarConnectionError) {
+        console.error('Error updating calendar connection:', updateCalendarConnectionError);
+        return requestContext.json({ error: 'Failed to update calendar connection' }, 500);
     }
 }
 
 /**
  * Handle the DELETE request to delete a calendar account and all its connections
- * @param c - The context object
- * @returns The response object
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response confirming deletion or error message
  */
-export async function handleDeleteCalendarAccount(c: Context) {
+export async function handleDeleteCalendarAccount(requestContext: Context) {
     try {
-        const user = getUser(c);
-        const body = await c.req.json();
-        const { accountId } = body;
+        const authenticatedUser = getUser(requestContext);
+        const deleteAccountPayload = await requestContext.req.json();
+        const { accountId: targetAccountId } = deleteAccountPayload;
 
-        if (!accountId) {
-            return c.json({ error: 'accountId is required' }, 400);
+        if (!targetAccountId) {
+            return requestContext.json({ error: 'accountId is required' }, 400);
         }
 
         // Validate that the account belongs to the user
-        const accountData = await db
+        const targetAccountData = await db
             .select()
             .from(account)
-            .where(and(eq(account.id, accountId), eq(account.userId, user.id)))
+            .where(and(eq(account.id, targetAccountId), eq(account.userId, authenticatedUser.id)))
             .limit(1);
 
-        if (accountData.length === 0) {
-            return c.json({ error: 'Account not found' }, 404);
+        if (targetAccountData.length === 0) {
+            return requestContext.json({ error: 'Account not found' }, 404);
         }
 
         // Check if this is the only account - prevent deletion if so
-        const userAccountCount = await db
+        const userGoogleAccountsCount = await db
             .select()
             .from(account)
-            .where(and(eq(account.userId, user.id), eq(account.providerId, 'google')));
+            .where(and(eq(account.userId, authenticatedUser.id), eq(account.providerId, 'google')));
 
-        if (userAccountCount.length === 1) {
-            return c.json(
+        if (userGoogleAccountsCount.length === 1) {
+            return requestContext.json(
                 {
                     error: 'Cannot delete the only calendar account. You must have at least one calendar account connected.',
                 },
@@ -325,18 +339,18 @@ export async function handleDeleteCalendarAccount(c: Context) {
             })
             .where(
                 and(
-                    eq(calendarConnections.accountId, accountId),
+                    eq(calendarConnections.accountId, targetAccountId),
                     eq(calendarConnections.isActive, true),
                 ),
             );
 
         // Delete the account
-        await db.delete(account).where(eq(account.id, accountId));
+        await db.delete(account).where(eq(account.id, targetAccountId));
 
-        return c.json({ success: true });
-    } catch (error) {
-        console.error('Error deleting calendar account:', error);
-        return c.json({ error: 'Failed to delete calendar account' }, 500);
+        return requestContext.json({ success: true });
+    } catch (deleteCalendarAccountError) {
+        console.error('Error deleting calendar account:', deleteCalendarAccountError);
+        return requestContext.json({ error: 'Failed to delete calendar account' }, 500);
     }
 }
 

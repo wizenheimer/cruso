@@ -1,108 +1,121 @@
 import { Context } from 'hono';
 import { userEmailService } from '@/services/user-emails';
 
-export const getUser = (c: Context) => {
-    const user = c.get('user');
-    if (!user) {
+/**
+ * Extract the authenticated user from the request context
+ * @param requestContext - The Hono context object containing request data
+ * @returns The authenticated user object
+ * @throws Error if user is not found in context
+ */
+export const getUser = (requestContext: Context) => {
+    const authenticatedUser = requestContext.get('user');
+    if (!authenticatedUser) {
         throw new Error('User not found in context');
     }
-    return user;
+    return authenticatedUser;
 };
 
 /**
  * Handle GET request to fetch user emails
- * @param c - The context object
- * @returns The response object
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response with user emails or error message
  */
-export async function handleGetUserEmails(c: Context) {
+export async function handleGetUserEmails(requestContext: Context) {
     try {
-        const user = getUser(c);
-        const result = await userEmailService.getUserEmails(user.id);
+        const authenticatedUser = getUser(requestContext);
+        const userEmailsResult = await userEmailService.getUserEmails(authenticatedUser.id);
 
-        if (!result.success) {
-            return c.json({ error: result.error }, 500);
+        if (!userEmailsResult.success) {
+            return requestContext.json({ error: userEmailsResult.error }, 500);
         }
 
-        return c.json(result.data);
-    } catch (error) {
-        console.error('Error fetching user emails:', error);
-        return c.json({ error: 'Failed to fetch user emails' }, 500);
+        return requestContext.json(userEmailsResult.data);
+    } catch (fetchUserEmailsError) {
+        console.error('Error fetching user emails:', fetchUserEmailsError);
+        return requestContext.json({ error: 'Failed to fetch user emails' }, 500);
     }
 }
 
 /**
  * Handle POST request to add a new email address
- * @param c - The context object
- * @returns The response object
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response with created email or error message
  */
-export async function handleAddUserEmail(c: Context) {
+export async function handleAddUserEmail(requestContext: Context) {
     try {
-        const user = getUser(c);
-        const body = await c.req.json();
+        const authenticatedUser = getUser(requestContext);
+        const addEmailPayload = await requestContext.req.json();
 
-        const result = await userEmailService.addUserEmail(user.id, {
-            email: body.email,
-            isPrimary: body.isPrimary,
+        const addUserEmailResult = await userEmailService.addUserEmail(authenticatedUser.id, {
+            email: addEmailPayload.email,
+            isPrimary: addEmailPayload.isPrimary,
         });
 
-        if (!result.success) {
-            return c.json({ error: result.error }, 400);
+        if (!addUserEmailResult.success) {
+            return requestContext.json({ error: addUserEmailResult.error }, 400);
         }
 
-        return c.json(result.data, 201);
-    } catch (error) {
-        console.error('Error adding user email:', error);
-        return c.json({ error: 'Failed to add user email' }, 500);
+        return requestContext.json(addUserEmailResult.data, 201);
+    } catch (addUserEmailError) {
+        console.error('Error adding user email:', addUserEmailError);
+        return requestContext.json({ error: 'Failed to add user email' }, 500);
     }
 }
 
 /**
  * Handle PATCH request to update a user email
- * @param c - The context object
- * @returns The response object
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response with updated email or error message
  */
-export async function handleUpdateUserEmail(c: Context) {
+export async function handleUpdateUserEmail(requestContext: Context) {
     try {
-        const user = getUser(c);
-        const emailId = c.req.param('id');
-        const body = await c.req.json();
+        const authenticatedUser = getUser(requestContext);
+        const targetEmailId = requestContext.req.param('id');
+        const updateEmailPayload = await requestContext.req.json();
 
-        const result = await userEmailService.updateUserEmail(user.id, parseInt(emailId), {
-            isPrimary: body.isPrimary,
-        });
+        const updateUserEmailResult = await userEmailService.updateUserEmail(
+            authenticatedUser.id,
+            parseInt(targetEmailId),
+            {
+                isPrimary: updateEmailPayload.isPrimary,
+            },
+        );
 
-        if (!result.success) {
-            const statusCode = result.error === 'Email not found' ? 404 : 500;
-            return c.json({ error: result.error }, statusCode);
+        if (!updateUserEmailResult.success) {
+            const statusCode = updateUserEmailResult.error === 'Email not found' ? 404 : 500;
+            return requestContext.json({ error: updateUserEmailResult.error }, statusCode);
         }
 
-        return c.json(result.data);
-    } catch (error) {
-        console.error('Error updating user email:', error);
-        return c.json({ error: 'Failed to update user email' }, 500);
+        return requestContext.json(updateUserEmailResult.data);
+    } catch (updateUserEmailError) {
+        console.error('Error updating user email:', updateUserEmailError);
+        return requestContext.json({ error: 'Failed to update user email' }, 500);
     }
 }
 
 /**
  * Handle DELETE request to remove a user email
- * @param c - The context object
- * @returns The response object
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response confirming deletion or error message
  */
-export async function handleDeleteUserEmail(c: Context) {
+export async function handleDeleteUserEmail(requestContext: Context) {
     try {
-        const user = getUser(c);
-        const emailId = c.req.param('id');
+        const authenticatedUser = getUser(requestContext);
+        const targetEmailId = requestContext.req.param('id');
 
-        const result = await userEmailService.deleteUserEmail(user.id, parseInt(emailId));
+        const deleteUserEmailResult = await userEmailService.deleteUserEmail(
+            authenticatedUser.id,
+            parseInt(targetEmailId),
+        );
 
-        if (!result.success) {
-            const statusCode = result.error === 'Email not found' ? 404 : 400;
-            return c.json({ error: result.error }, statusCode);
+        if (!deleteUserEmailResult.success) {
+            const statusCode = deleteUserEmailResult.error === 'Email not found' ? 404 : 400;
+            return requestContext.json({ error: deleteUserEmailResult.error }, statusCode);
         }
 
-        return c.json({ success: true });
-    } catch (error) {
-        console.error('Error deleting user email:', error);
-        return c.json({ error: 'Failed to delete user email' }, 500);
+        return requestContext.json({ success: true });
+    } catch (deleteUserEmailError) {
+        console.error('Error deleting user email:', deleteUserEmailError);
+        return requestContext.json({ error: 'Failed to delete user email' }, 500);
     }
 }
