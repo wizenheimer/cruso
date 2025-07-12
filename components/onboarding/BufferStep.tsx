@@ -32,7 +32,7 @@ const BUFFER_OPTIONS = [
 ];
 
 const BufferStep = ({ buffers, onUpdateBuffers }: BufferStepProps) => {
-    const [showMore, setShowMore] = useState(false);
+    const [showMore, setShowMore] = useState(true);
     const lastSyncedValue = useRef<string | null>(null);
 
     const updateBuffer = (id: string, value: string) => {

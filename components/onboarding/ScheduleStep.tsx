@@ -4,13 +4,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+
 import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 
 import { TimeSlot, WeeklySchedule } from './types';
@@ -18,29 +12,11 @@ import { TimeSlot, WeeklySchedule } from './types';
 interface ScheduleStepProps {
     schedule: WeeklySchedule;
     onUpdateSchedule: (schedule: WeeklySchedule) => void;
-    timezone: string;
-    onUpdateTimezone: (timezone: string) => void;
 }
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-const ALL_TIMEZONES =
-    typeof Intl !== 'undefined' && Intl.supportedValuesOf
-        ? Intl.supportedValuesOf('timeZone').map((tz) => ({
-              value: tz,
-              label: tz.replace(/_/g, ' '),
-          }))
-        : [
-              { value: 'America/New_York', label: 'America/New York' },
-              { value: 'Europe/London', label: 'Europe/London' },
-          ];
-
-const ScheduleStep = ({
-    schedule,
-    onUpdateSchedule,
-    timezone,
-    onUpdateTimezone,
-}: ScheduleStepProps) => {
+const ScheduleStep = ({ schedule, onUpdateSchedule }: ScheduleStepProps) => {
     const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set(DAYS_OF_WEEK));
 
     const formatTime = (time: string) => {
@@ -272,23 +248,6 @@ const ScheduleStep = ({
                         Click day names to expand • Scroll for more days
                     </div>
                 </div>
-            </div>
-
-            {/* Timezone Selection */}
-            <div className="w-full mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
-                <Select value={timezone} onValueChange={onUpdateTimezone}>
-                    <SelectTrigger className="w-full bg-white">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white max-h-72 overflow-y-auto">
-                        {ALL_TIMEZONES.map((tz) => (
-                            <SelectItem key={tz.value} value={tz.value}>
-                                {tz.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
             </div>
         </>
     );

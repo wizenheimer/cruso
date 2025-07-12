@@ -68,7 +68,7 @@ const OnboardingPage = () => {
             placeholder: 'Your AI assistant signature',
         },
     ]);
-    const [timezone, setTimezone] = useState('America/New_York');
+
     const [schedule, setSchedule] = useState<WeeklySchedule>({
         Monday: { enabled: true, timeSlots: [{ id: '1', startTime: '09:00', endTime: '17:00' }] },
         Tuesday: { enabled: true, timeSlots: [{ id: '2', startTime: '09:00', endTime: '17:00' }] },
@@ -184,9 +184,6 @@ const OnboardingPage = () => {
                     return updated;
                 });
 
-                const newTimezone = (prefs.timezone as string) || 'America/New_York';
-                console.log(`├─ [API] Timezone: ${timezone} -> ${newTimezone}`);
-                setTimezone(newTimezone);
                 console.log('└─ [API] Successfully loaded existing preferences');
             } else {
                 console.log('└─ [API] No existing preferences found or error occurred');
@@ -259,7 +256,7 @@ const OnboardingPage = () => {
         } finally {
             setDataLoading(false);
         }
-    }, [timezone]);
+    }, []);
 
     // Load data on component mount and when returning from OAuth
     useEffect(() => {
@@ -286,7 +283,6 @@ const OnboardingPage = () => {
                 buffers.find((b) => b.id === 'backtoback')?.value || '0',
             ),
             flightBufferMinutes: parseInt(buffers.find((b) => b.id === 'flight')?.value || '0'),
-            timezone: timezone,
             minNoticeMinutes: 120,
             maxDaysAhead: 60,
             defaultMeetingDurationMinutes: 30,
@@ -310,14 +306,13 @@ const OnboardingPage = () => {
         } else {
             console.log('└─ [API] Successfully saved buffer settings');
         }
-    }, [buffers, timezone]);
+    }, [buffers]);
 
     const savePersonalizationData = useCallback(async () => {
         const prefsData = {
             displayName: fields.find((f) => f.id === 'displayName')?.value || '',
             nickname: fields.find((f) => f.id === 'nickname')?.value || '',
             signature: fields.find((f) => f.id === 'signature')?.value || '',
-            timezone: timezone,
         };
 
         console.log('┌─ [API] Saving personalization data...');
@@ -336,7 +331,7 @@ const OnboardingPage = () => {
         } else {
             console.log('└─ [API] Successfully saved personalization data');
         }
-    }, [fields, timezone]);
+    }, [fields]);
 
     const saveScheduleData = useCallback(async () => {
         const dayNames = [
@@ -380,20 +375,20 @@ const OnboardingPage = () => {
                         days: [dayIndex],
                         startTime: timeSlot.startTime,
                         endTime: timeSlot.endTime,
-                        timezone: timezone,
                     });
                     createdCount++;
                 }
             }
         }
         console.log('└─ [API] Created', createdCount, 'new availability records');
-    }, [schedule, timezone]);
+    }, [schedule]);
 
     const finalizeOnboarding = useCallback(async () => {
         // Mark onboarding as complete in preferences
         console.log('┌─ [API] Finalizing onboarding...');
         const prefsData = {
-            document: 'onboarding_completed',
+          // TODO: Add document using OpenAI
+            document: '',
             isActive: true,
         };
 
@@ -530,14 +525,7 @@ const OnboardingPage = () => {
             case 3:
                 return <PersonalizationStep fields={fields} onUpdateFields={setFields} />;
             case 4:
-                return (
-                    <ScheduleStep
-                        schedule={schedule}
-                        onUpdateSchedule={setSchedule}
-                        timezone={timezone}
-                        onUpdateTimezone={setTimezone}
-                    />
-                );
+                return <ScheduleStep schedule={schedule} onUpdateSchedule={setSchedule} />;
             case 5:
                 return <CompletionStep />;
             default:
