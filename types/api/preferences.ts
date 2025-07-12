@@ -22,9 +22,9 @@ export const UpdatePrimaryAccountSchema = insertPreferencesSchema
 
 export type Preferences = typeof preferences.$inferSelect;
 export type InsertPreferences = typeof preferences.$inferInsert;
-export type UpdatePreferences = typeof UpdatePreferencesSchema._type;
-export type UpdatePrimaryEmail = typeof UpdatePrimaryEmailSchema._type;
-export type UpdatePrimaryAccount = typeof UpdatePrimaryAccountSchema._type;
+export type UpdatePreferences = Partial<typeof preferences.$inferInsert>;
+export type UpdatePrimaryEmail = Pick<typeof preferences.$inferInsert, 'primaryUserEmailId'>;
+export type UpdatePrimaryAccount = Pick<typeof preferences.$inferInsert, 'primaryAccountId'>;
 
 // Types for API responses
 export interface PreferencesWithPrimaries {
@@ -41,7 +41,7 @@ export interface PrimaryEmailOption {
 
 export interface PrimaryAccountOption {
     id: string;
-    accountId: string;
+    accountId: string | null;
     googleEmail: string;
     calendarName: string | null;
     isPrimary: boolean;
