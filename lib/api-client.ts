@@ -319,7 +319,7 @@ class ApiClient {
     }
 
     /**
-     * Delete an availability schedule (soft delete - marks as inactive)
+     * Delete an availability schedule (hard delete - permanently removes)
      * @param availabilityId - The availability ID to delete (number)
      * @returns Promise with deletion result
      */

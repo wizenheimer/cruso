@@ -2,6 +2,7 @@ import { AccountAfterCreateHook, AccountBeforeCreateHook } from './types';
 import {
     handleEmailConnection,
     handleGoogleCalendarConnection,
+    handleNewUserAvailabilities,
     handleNewUserPreferences,
 } from './utils';
 
@@ -27,6 +28,7 @@ export const afterAccountCreationHook = (async (account, context) => {
         const isNewUser = context?.context?.isNewUser || false;
         if (isNewUser) {
             await handleNewUserPreferences(account, context);
+            await handleNewUserAvailabilities(account, context);
         }
     }
 }) as AccountAfterCreateHook;

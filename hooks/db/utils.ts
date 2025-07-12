@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { schema } from '@/db/schema';
 import { ConnectionManager } from '@/services/calendar/connection';
 import { PreferenceService } from '@/services/preferences/service';
+import { AvailabilityService } from '@/services/availability';
 
 const { user, userEmails } = schema;
 
@@ -121,5 +122,26 @@ export async function handleNewUserPreferences(account: any, context: any) {
 
     if (!result.success) {
         console.error('[DB_HOOK] Failed to create preferences:', result.error);
+    }
+}
+
+export async function handleNewUserAvailabilities(account: any, context: any) {
+    // Check if the user is newly created
+    const isNewUser = context.context.isNewUser;
+    if (!isNewUser) {
+        return;
+    }
+
+    // Create default 9 to 5 weekday availability
+    const availabilityService = new AvailabilityService();
+    const result = await availabilityService.createDefaultAvailability(account.userId);
+
+    if (!result.success) {
+        console.error('[DB_HOOK] Failed to create default availability:', result.error);
+    } else {
+        console.log(
+            '[DB_HOOK] Default availability created successfully for user:',
+            account.userId,
+        );
     }
 }

@@ -53,7 +53,6 @@ CREATE TABLE "availability" (
 	"start_time" time NOT NULL,
 	"end_time" time NOT NULL,
 	"timezone" varchar(100) NOT NULL,
-	"is_active" boolean DEFAULT true,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now()
 );

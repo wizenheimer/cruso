@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { NextButton } from '@/components/onboarding/NextButton';
 import { apiClient } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
@@ -33,7 +33,8 @@ interface ApiCalendarAccount {
 const currentStep = 1;
 const totalSteps = 5;
 
-const OnboardingPage = () => {
+// Component that uses useSearchParams
+const OnboardingContent = () => {
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(currentStep);
@@ -201,52 +202,27 @@ const OnboardingPage = () => {
             });
             if (availabilityResponse.success && availabilityResponse.data) {
                 const availability = availabilityResponse.data as Array<{
-                    id: string;
+                    id: number;
                     days: number[] | null;
                     startTime: string;
                     endTime: string;
                     timezone: string;
+                    createdAt: string;
+                    updatedAt: string;
                 }>;
 
-                // Convert availability data to schedule format
-                const newSchedule: WeeklySchedule = {
-                    Monday: { enabled: false, timeSlots: [] },
-                    Tuesday: { enabled: false, timeSlots: [] },
-                    Wednesday: { enabled: false, timeSlots: [] },
-                    Thursday: { enabled: false, timeSlots: [] },
-                    Friday: { enabled: false, timeSlots: [] },
-                    Saturday: { enabled: false, timeSlots: [] },
-                    Sunday: { enabled: false, timeSlots: [] },
-                };
-
-                const dayNames = [
-                    'Sunday',
-                    'Monday',
-                    'Tuesday',
-                    'Wednesday',
-                    'Thursday',
-                    'Friday',
-                    'Saturday',
-                ];
-
-                availability.forEach((avail, index) => {
-                    if (avail.days && avail.days.length > 0) {
-                        avail.days.forEach((dayNum: number) => {
-                            const dayName = dayNames[dayNum] as keyof WeeklySchedule;
-                            if (newSchedule[dayName]) {
-                                newSchedule[dayName].enabled = true;
-                                newSchedule[dayName].timeSlots.push({
-                                    id: `${index}-${dayNum}`,
-                                    startTime: avail.startTime,
-                                    endTime: avail.endTime,
-                                });
-                            }
-                        });
-                    }
-                });
+                // Convert availability data to schedule format using utility function
+                const { convertAvailabilityToSchedule } = await import('@/lib/availability-utils');
+                const newSchedule = convertAvailabilityToSchedule(
+                    availability.map((avail) => ({
+                        ...avail,
+                        createdAt: new Date(avail.createdAt),
+                        updatedAt: new Date(avail.updatedAt),
+                    })),
+                );
 
                 setSchedule(newSchedule);
-                console.log('└─ [API] Successfully loaded availability schedule');
+                console.log('└─ [API] Successfully loaded availability schedule:', newSchedule);
             } else {
                 console.log('└─ [API] No existing availability schedule found');
             }
@@ -334,16 +310,6 @@ const OnboardingPage = () => {
     }, [fields]);
 
     const saveScheduleData = useCallback(async () => {
-        const dayNames = [
-            'Sunday',
-            'Monday',
-            'Tuesday',
-            'Wednesday',
-            'Thursday',
-            'Friday',
-            'Saturday',
-        ];
-
         // Clear existing availability first
         console.log('┌─ [API] Saving schedule data...');
         console.log('├─ [API] Getting existing availability...');
@@ -363,22 +329,21 @@ const OnboardingPage = () => {
             console.log('├─ [API] Deleted existing availability records');
         }
 
+        // Convert schedule to availability format using utility function
+        console.log('├─ [API] Converting schedule to availability format...');
+        const { convertScheduleToAvailability } = await import('@/lib/availability-utils');
+        const availabilityData = convertScheduleToAvailability(schedule);
+
         // Create new availability records
         console.log('├─ [API] Creating new availability records...');
         let createdCount = 0;
-        for (const [dayName, dayData] of Object.entries(schedule)) {
-            if (dayData.enabled && dayData.timeSlots.length > 0) {
-                const dayIndex = dayNames.indexOf(dayName);
-
-                for (const timeSlot of dayData.timeSlots) {
-                    await apiClient.createAvailability({
-                        days: [dayIndex],
-                        startTime: timeSlot.startTime,
-                        endTime: timeSlot.endTime,
-                    });
-                    createdCount++;
-                }
-            }
+        for (const avail of availabilityData) {
+            await apiClient.createAvailability({
+                days: avail.days,
+                startTime: avail.startTime,
+                endTime: avail.endTime,
+            });
+            createdCount++;
         }
         console.log('└─ [API] Created', createdCount, 'new availability records');
     }, [schedule]);
@@ -603,6 +568,14 @@ const OnboardingPage = () => {
                 {/* Add right side content */}
             </div>
         </div>
+    );
+};
+
+const OnboardingPage = () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <OnboardingContent />
+        </Suspense>
     );
 };
 

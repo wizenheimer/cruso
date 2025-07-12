@@ -3,7 +3,13 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 
@@ -16,8 +22,23 @@ interface ScheduleStepProps {
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+// Generate time options from 00:00 to 23:30 in 30-minute intervals
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
+    const hour = Math.floor(i / 2);
+    const minute = (i % 2) * 30;
+    const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+
+    // Format for display
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+
+    return { value: timeString, label: displayTime };
+});
+
 const ScheduleStep = ({ schedule, onUpdateSchedule }: ScheduleStepProps) => {
-    const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set(DAYS_OF_WEEK));
+    // Initialize with no days collapsed so users can see the time slots
+    const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
 
     const formatTime = (time: string) => {
         const [hours, minutes] = time.split(':');
@@ -28,11 +49,17 @@ const ScheduleStep = ({ schedule, onUpdateSchedule }: ScheduleStepProps) => {
     };
 
     const toggleDay = (day: string) => {
+        const newEnabled = !schedule[day].enabled;
         onUpdateSchedule({
             ...schedule,
             [day]: {
                 ...schedule[day],
-                enabled: !schedule[day].enabled,
+                enabled: newEnabled,
+                // Ensure there's at least one time slot when enabling a day
+                timeSlots:
+                    newEnabled && schedule[day].timeSlots.length === 0
+                        ? [{ id: `${day}-${Date.now()}`, startTime: '09:00', endTime: '17:00' }]
+                        : schedule[day].timeSlots,
             },
         });
     };
@@ -70,13 +97,27 @@ const ScheduleStep = ({ schedule, onUpdateSchedule }: ScheduleStepProps) => {
     };
 
     const removeTimeSlot = (day: string, slotId: string) => {
-        onUpdateSchedule({
-            ...schedule,
-            [day]: {
-                ...schedule[day],
-                timeSlots: schedule[day].timeSlots.filter((slot) => slot.id !== slotId),
-            },
-        });
+        const newTimeSlots = schedule[day].timeSlots.filter((slot) => slot.id !== slotId);
+
+        // Don't allow removing the last time slot - disable the day instead
+        if (newTimeSlots.length === 0) {
+            onUpdateSchedule({
+                ...schedule,
+                [day]: {
+                    ...schedule[day],
+                    enabled: false,
+                    timeSlots: [],
+                },
+            });
+        } else {
+            onUpdateSchedule({
+                ...schedule,
+                [day]: {
+                    ...schedule[day],
+                    timeSlots: newTimeSlots,
+                },
+            });
+        }
     };
 
     const toggleCollapse = (day: string) => {
@@ -95,7 +136,7 @@ const ScheduleStep = ({ schedule, onUpdateSchedule }: ScheduleStepProps) => {
         <>
             <h1 className="text-2xl font-semibold mb-2 text-center">Usual Working Hours</h1>
             <p className="text-base text-muted-foreground mb-8 text-center">
-                Quick auth and we&apos;ll make it official
+                Set your typical working hours for each day of the week
             </p>
 
             {/* Working Hours Configuration */}
@@ -170,7 +211,7 @@ const ScheduleStep = ({ schedule, onUpdateSchedule }: ScheduleStepProps) => {
                                     {/* Collapsible Time Slots */}
                                     {daySchedule.enabled && !isCollapsed && (
                                         <motion.div
-                                            className="ml-10 space-y-2"
+                                            className="ml-10 space-y-3"
                                             initial={{ opacity: 0, height: 0 }}
                                             animate={{ opacity: 1, height: 'auto' }}
                                             exit={{ opacity: 0, height: 0 }}
@@ -179,63 +220,97 @@ const ScheduleStep = ({ schedule, onUpdateSchedule }: ScheduleStepProps) => {
                                             {daySchedule.timeSlots.map((slot) => (
                                                 <div
                                                     key={slot.id}
-                                                    className="flex items-center gap-2"
+                                                    className="flex items-center gap-3"
                                                 >
-                                                    <Input
-                                                        type="time"
+                                                    {/* Start Time Select */}
+                                                    <Select
                                                         value={slot.startTime}
-                                                        onChange={(e) =>
+                                                        onValueChange={(value) =>
                                                             updateTimeSlot(
                                                                 day,
                                                                 slot.id,
                                                                 'startTime',
-                                                                e.target.value,
+                                                                value,
                                                             )
                                                         }
-                                                        className="w-32 text-sm"
-                                                    />
-                                                    <span className="text-gray-400">—</span>
-                                                    <Input
-                                                        type="time"
+                                                    >
+                                                        <SelectTrigger className="w-32">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
+                                                            {TIME_OPTIONS.map((option) => (
+                                                                <SelectItem
+                                                                    key={option.value}
+                                                                    value={option.value}
+                                                                    className="text-gray-900 hover:bg-gray-100"
+                                                                >
+                                                                    {option.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+
+                                                    <span className="text-gray-400 text-sm">
+                                                        to
+                                                    </span>
+
+                                                    {/* End Time Select */}
+                                                    <Select
                                                         value={slot.endTime}
-                                                        onChange={(e) =>
+                                                        onValueChange={(value) =>
                                                             updateTimeSlot(
                                                                 day,
                                                                 slot.id,
                                                                 'endTime',
-                                                                e.target.value,
+                                                                value,
                                                             )
                                                         }
-                                                        className="w-32 text-sm"
-                                                    />
+                                                    >
+                                                        <SelectTrigger className="w-32">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
+                                                            {TIME_OPTIONS.map((option) => (
+                                                                <SelectItem
+                                                                    key={option.value}
+                                                                    value={option.value}
+                                                                    className="text-gray-900 hover:bg-gray-100"
+                                                                >
+                                                                    {option.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
 
-                                                    {/* Action Buttons */}
-                                                    <div className="flex items-center gap-1">
+                                                    {/* Remove Button */}
+                                                    {daySchedule.timeSlots.length > 1 && (
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
-                                                            onClick={() => addTimeSlot(day)}
-                                                            className="h-8 w-8 p-0 hover:bg-gray-100"
-                                                            title="Add time slot"
+                                                            onClick={() =>
+                                                                removeTimeSlot(day, slot.id)
+                                                            }
+                                                            className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                                                            title="Remove time slot"
                                                         >
-                                                            <Plus className="w-4 h-4" />
+                                                            <Trash2 className="w-4 h-4" />
                                                         </Button>
-                                                        {daySchedule.timeSlots.length > 1 && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    removeTimeSlot(day, slot.id)
-                                                                }
-                                                                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                                                                title="Remove time slot"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </Button>
-                                                        )}
-                                                    </div>
+                                                    )}
                                                 </div>
                                             ))}
+
+                                            {/* Add Button - positioned outside the time slot loop */}
+                                            <div className="flex items-center gap-2 pt-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => addTimeSlot(day)}
+                                                    className="h-8 px-3 text-xs hover:bg-gray-50"
+                                                >
+                                                    <Plus className="w-3 h-3 mr-1" />
+                                                    Add Time Slot
+                                                </Button>
+                                            </div>
                                         </motion.div>
                                     )}
                                 </motion.div>

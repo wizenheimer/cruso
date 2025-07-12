@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { db } from '@/db';
 import { availability } from '@/db/schema/availability';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { preferenceService } from '@/services/preferences';
 
 interface AvailabilitySlot {
@@ -334,9 +334,7 @@ export async function handleGeneratePreferencesDocument(requestContext: Context)
                 timezone: availability.timezone,
             })
             .from(availability)
-            .where(
-                and(eq(availability.userId, authenticatedUser.id), eq(availability.isActive, true)),
-            )
+            .where(eq(availability.userId, authenticatedUser.id))
             .orderBy(availability.createdAt);
 
         // Prepare data for document generation

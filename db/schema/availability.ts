@@ -27,7 +27,6 @@ export const availability = pgTable(
         startTime: time('start_time').notNull(),
         endTime: time('end_time').notNull(),
         timezone: varchar('timezone', { length: 100 }).notNull(),
-        isActive: boolean('is_active').default(true),
         createdAt: timestamp('created_at').defaultNow(),
         updatedAt: timestamp('updated_at').defaultNow(),
     },

@@ -27,12 +27,11 @@ export async function handleGetAvailability(c: Context) {
                 startTime: availability.startTime,
                 endTime: availability.endTime,
                 timezone: availability.timezone,
-                isActive: availability.isActive,
                 createdAt: availability.createdAt,
                 updatedAt: availability.updatedAt,
             })
             .from(availability)
-            .where(and(eq(availability.userId, user.id), eq(availability.isActive, true)))
+            .where(eq(availability.userId, user.id))
             .orderBy(availability.createdAt);
 
         return c.json(userAvailability);
@@ -80,7 +79,6 @@ export async function handleCreateAvailability(c: Context) {
                 startTime: body.startTime,
                 endTime: body.endTime,
                 timezone: body.timezone || 'America/New_York',
-                isActive: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             })
@@ -141,7 +139,6 @@ export async function handleUpdateAvailability(c: Context) {
                 startTime: body.startTime,
                 endTime: body.endTime,
                 timezone: body.timezone,
-                isActive: body.isActive,
                 updatedAt: new Date(),
             })
             .where(
@@ -185,13 +182,9 @@ export async function handleDeleteAvailability(c: Context) {
             return c.json({ error: 'Availability not found' }, 404);
         }
 
-        // Soft delete - mark as inactive
+        // Hard delete - permanently remove the record
         await db
-            .update(availability)
-            .set({
-                isActive: false,
-                updatedAt: new Date(),
-            })
+            .delete(availability)
             .where(
                 and(
                     eq(availability.id, parseInt(availabilityId)),
@@ -228,7 +221,7 @@ export async function handleCheckUserAvailability(c: Context) {
         const userAvailability = await db
             .select()
             .from(availability)
-            .where(and(eq(availability.userId, user.id), eq(availability.isActive, true)));
+            .where(eq(availability.userId, user.id));
 
         // Check if user has availability on this day
         const availableSlots = userAvailability.filter(
