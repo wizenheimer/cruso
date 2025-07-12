@@ -134,6 +134,7 @@ export async function handleSyncCalendar(c: Context) {
                 and(
                     eq(calendarConnections.id, connectionId),
                     eq(calendarConnections.userId, user.id),
+                    eq(calendarConnections.isActive, true),
                 ),
             )
             .limit(1);
@@ -178,7 +179,12 @@ export async function handleSyncCalendar(c: Context) {
                     errorMessage: syncError instanceof Error ? syncError.message : 'Unknown error',
                     updatedAt: new Date(),
                 })
-                .where(eq(calendarConnections.id, connectionId));
+                .where(
+                    and(
+                        eq(calendarConnections.id, connectionId),
+                        eq(calendarConnections.isActive, true),
+                    ),
+                );
 
             return c.json({ error: 'Failed to sync calendar' }, 500);
         }
@@ -207,6 +213,7 @@ export async function handleUpdateCalendarConnection(c: Context) {
                 and(
                     eq(calendarConnections.id, connectionId),
                     eq(calendarConnections.userId, user.id),
+                    eq(calendarConnections.isActive, true),
                 ),
             )
             .limit(1);
@@ -222,7 +229,12 @@ export async function handleUpdateCalendarConnection(c: Context) {
                 ...body,
                 updatedAt: new Date(),
             })
-            .where(eq(calendarConnections.id, connectionId));
+            .where(
+                and(
+                    eq(calendarConnections.id, connectionId),
+                    eq(calendarConnections.isActive, true),
+                ),
+            );
 
         return c.json({ success: true });
     } catch (error) {
@@ -232,43 +244,52 @@ export async function handleUpdateCalendarConnection(c: Context) {
 }
 
 /**
- * Handle the DELETE request to delete a calendar connection
+ * Handle the DELETE request to delete a calendar account and all its connections
  * @param c - The context object
  * @returns The response object
  */
-export async function handleDeleteCalendarConnection(c: Context) {
+export async function handleDeleteCalendarAccount(c: Context) {
     try {
-        const connectionId = c.req.param('id');
         const user = getUser(c);
-        // Validate that the connection belongs to the user
-        const connection = await db
-            .select()
-            .from(calendarConnections)
-            .where(
-                and(
-                    eq(calendarConnections.id, connectionId),
-                    eq(calendarConnections.userId, user.id),
-                ),
-            )
-            .limit(1);
+        const body = await c.req.json();
+        const { accountId } = body;
 
-        if (connection.length === 0) {
-            return c.json({ error: 'Connection not found' }, 404);
+        if (!accountId) {
+            return c.json({ error: 'accountId is required' }, 400);
         }
 
-        // Soft delete - mark as inactive
+        // Validate that the account belongs to the user
+        const accountData = await db
+            .select()
+            .from(account)
+            .where(and(eq(account.id, accountId), eq(account.userId, user.id)))
+            .limit(1);
+
+        if (accountData.length === 0) {
+            return c.json({ error: 'Account not found' }, 404);
+        }
+
+        // Soft delete all calendar connections for this account
         await db
             .update(calendarConnections)
             .set({
                 isActive: false,
                 updatedAt: new Date(),
             })
-            .where(eq(calendarConnections.id, connectionId));
+            .where(
+                and(
+                    eq(calendarConnections.accountId, accountId),
+                    eq(calendarConnections.isActive, true),
+                ),
+            );
+
+        // Delete the account
+        await db.delete(account).where(eq(account.id, accountId));
 
         return c.json({ success: true });
     } catch (error) {
-        console.error('Error deleting calendar connection:', error);
-        return c.json({ error: 'Failed to delete calendar connection' }, 500);
+        console.error('Error deleting calendar account:', error);
+        return c.json({ error: 'Failed to delete calendar account' }, 500);
     }
 }
 
