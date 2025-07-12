@@ -29,7 +29,7 @@ export const NextButton = ({
                 </>
             ) : isLastStep ? (
                 <>
-                    <span>Get Started</span>
+                    <span>Dashboard</span>
                     <ArrowUpRight className="w-4 h-4" />
                 </>
             ) : (

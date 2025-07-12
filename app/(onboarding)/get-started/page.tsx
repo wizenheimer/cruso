@@ -55,8 +55,6 @@ const OnboardingPage = () => {
         },
     ]);
     const [timezone, setTimezone] = useState('America/New_York');
-    const [userName, setUserName] = useState('');
-    const [userEmail] = useState('');
     const [schedule, setSchedule] = useState<WeeklySchedule>({
         Monday: { enabled: true, timeSlots: [{ id: '1', startTime: '09:00', endTime: '17:00' }] },
         Tuesday: { enabled: true, timeSlots: [{ id: '2', startTime: '09:00', endTime: '17:00' }] },
@@ -167,7 +165,6 @@ const OnboardingPage = () => {
                 );
 
                 setTimezone((prefs.timezone as string) || 'America/New_York');
-                setUserName((prefs.displayName as string) || (prefs.nickname as string) || '');
                 console.log('└─ [API] Successfully loaded existing preferences');
             } else {
                 console.log('└─ [API] No existing preferences found');
@@ -499,7 +496,7 @@ const OnboardingPage = () => {
                     />
                 );
             case 5:
-                return <CompletionStep userName={userName} userEmail={userEmail} />;
+                return <CompletionStep />;
             default:
                 return null;
         }
