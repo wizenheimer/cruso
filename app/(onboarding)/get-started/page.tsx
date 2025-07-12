@@ -41,7 +41,8 @@ const OnboardingPage = () => {
     const [dataLoading, setDataLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [buffers, setBuffers] = useState<BufferSetting[]>([
-        { id: 'virtual', label: 'Virtual Meetings', value: '0', isPrimary: true },
+        { id: 'default', label: 'Default', value: '0', isPrimary: true },
+        { id: 'virtual', label: 'Virtual Meetings', value: '0' },
         { id: 'inperson', label: 'In-person Meetings', value: '15' },
         { id: 'backtoback', label: 'Back to Back Meetings', value: '0' },
         { id: 'flight', label: 'Flight Schedules', value: '0' },

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -23,15 +23,17 @@ const BUFFER_OPTIONS = [
     { value: '5', label: '5 minutes' },
     { value: '10', label: '10 minutes' },
     { value: '15', label: '15 minutes' },
-    { value: '20', label: '20 minutes' },
-    { value: '25', label: '25 minutes' },
     { value: '30', label: '30 minutes' },
     { value: '45', label: '45 minutes' },
     { value: '60', label: '1 hour' },
+    { value: '90', label: '1.5 hours' },
+    { value: '180', label: '3 hours' },
+    { value: '360', label: '6 hours' },
 ];
 
 const BufferStep = ({ buffers, onUpdateBuffers }: BufferStepProps) => {
     const [showMore, setShowMore] = useState(false);
+    const lastSyncedValue = useRef<string | null>(null);
 
     const updateBuffer = (id: string, value: string) => {
         onUpdateBuffers(
@@ -41,6 +43,28 @@ const BufferStep = ({ buffers, onUpdateBuffers }: BufferStepProps) => {
 
     const primaryBuffer = buffers.find((buffer) => buffer.isPrimary);
     const additionalBuffers = buffers.filter((buffer) => !buffer.isPrimary);
+
+    // When collapsed, sync all additional buffers with the default value
+    useEffect(() => {
+        if (!showMore && primaryBuffer && primaryBuffer.value !== lastSyncedValue.current) {
+            const updatedBuffers = buffers.map((buffer) => {
+                if (!buffer.isPrimary) {
+                    return { ...buffer, value: primaryBuffer.value };
+                }
+                return buffer;
+            });
+
+            // Check if any buffers actually need updating
+            const needsUpdate = updatedBuffers.some(
+                (buffer, index) => buffer.value !== buffers[index].value,
+            );
+
+            if (needsUpdate) {
+                lastSyncedValue.current = primaryBuffer.value;
+                onUpdateBuffers(updatedBuffers);
+            }
+        }
+    }, [showMore, primaryBuffer, buffers, onUpdateBuffers]);
 
     return (
         <>
@@ -69,9 +93,13 @@ const BufferStep = ({ buffers, onUpdateBuffers }: BufferStepProps) => {
                             <SelectTrigger className="w-48">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-white border border-gray-200 shadow-lg">
                                 {BUFFER_OPTIONS.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                        className="text-gray-900 hover:bg-gray-100"
+                                    >
                                         {option.label}
                                     </SelectItem>
                                 ))}
@@ -108,9 +136,13 @@ const BufferStep = ({ buffers, onUpdateBuffers }: BufferStepProps) => {
                                         <SelectTrigger className="w-48">
                                             <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="bg-white border border-gray-200 shadow-lg">
                                             {BUFFER_OPTIONS.map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
+                                                <SelectItem
+                                                    key={option.value}
+                                                    value={option.value}
+                                                    className="text-gray-900 hover:bg-gray-100"
+                                                >
                                                     {option.label}
                                                 </SelectItem>
                                             ))}
