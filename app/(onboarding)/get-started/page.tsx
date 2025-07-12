@@ -41,11 +41,11 @@ const OnboardingPage = () => {
     const [dataLoading, setDataLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [buffers, setBuffers] = useState<BufferSetting[]>([
-        { id: 'default', label: 'Default', value: '0', isPrimary: true },
-        { id: 'virtual', label: 'Virtual Meetings', value: '0' },
-        { id: 'inperson', label: 'In-person Meetings', value: '15' },
-        { id: 'backtoback', label: 'Back to Back Meetings', value: '0' },
-        { id: 'flight', label: 'Flight Schedules', value: '0' },
+        { id: 'default', label: 'Default', value: '15', isPrimary: true },
+        { id: 'virtual', label: 'Virtual Meetings', value: '15' },
+        { id: 'inperson', label: 'In-person Meetings', value: '25' },
+        { id: 'backtoback', label: 'Back to Back Meetings', value: '25' },
+        { id: 'flight', label: 'Flight Schedules', value: '30' },
     ]);
     const [fields, setFields] = useState<PersonalizationField[]>([
         {
@@ -122,65 +122,74 @@ const OnboardingPage = () => {
             console.log('├─ [API] Preferences response:', {
                 success: preferencesResponse.success,
                 hasData: !!preferencesResponse.data,
+                data: preferencesResponse.data,
                 error: preferencesResponse.error,
             });
             if (preferencesResponse.success && preferencesResponse.data) {
-                const prefs = preferencesResponse.data as Record<string, unknown>;
+                const responseData = preferencesResponse.data as Record<string, unknown>;
+                const prefs = responseData.preferences as Record<string, unknown>;
+                console.log('├─ [API] Parsed preferences data:', prefs);
 
                 // Update buffer settings from preferences
-                setBuffers((prev) =>
-                    prev.map((buffer) => {
+                setBuffers((prev) => {
+                    const updated = prev.map((buffer) => {
+                        let newValue = buffer.value;
                         switch (buffer.id) {
                             case 'virtual':
-                                return {
-                                    ...buffer,
-                                    value:
-                                        (prefs.virtualBufferMinutes as number)?.toString() || '0',
-                                };
+                                newValue =
+                                    (prefs.virtualBufferMinutes as number)?.toString() || '0';
+                                break;
                             case 'inperson':
-                                return {
-                                    ...buffer,
-                                    value:
-                                        (prefs.inPersonBufferMinutes as number)?.toString() || '15',
-                                };
+                                newValue =
+                                    (prefs.inPersonBufferMinutes as number)?.toString() || '15';
+                                break;
                             case 'backtoback':
-                                return {
-                                    ...buffer,
-                                    value:
-                                        (prefs.backToBackBufferMinutes as number)?.toString() ||
-                                        '0',
-                                };
+                                newValue =
+                                    (prefs.backToBackBufferMinutes as number)?.toString() || '0';
+                                break;
                             case 'flight':
-                                return {
-                                    ...buffer,
-                                    value: (prefs.flightBufferMinutes as number)?.toString() || '0',
-                                };
+                                newValue = (prefs.flightBufferMinutes as number)?.toString() || '0';
+                                break;
                             default:
-                                return buffer;
+                                break;
                         }
-                    }),
-                );
+                        console.log(`├─ [API] Buffer ${buffer.id}: ${buffer.value} -> ${newValue}`);
+                        return { ...buffer, value: newValue };
+                    });
+                    console.log('├─ [API] Updated buffers:', updated);
+                    return updated;
+                });
 
                 // Update personalization fields
-                setFields((prev) =>
-                    prev.map((field) => {
+                setFields((prev) => {
+                    const updated = prev.map((field) => {
+                        let newValue = field.value;
                         switch (field.id) {
                             case 'nickname':
-                                return { ...field, value: (prefs.nickname as string) || '' };
+                                newValue = (prefs.nickname as string) || '';
+                                break;
                             case 'displayName':
-                                return { ...field, value: (prefs.displayName as string) || '' };
+                                newValue = (prefs.displayName as string) || '';
+                                break;
                             case 'signature':
-                                return { ...field, value: (prefs.signature as string) || '' };
+                                newValue = (prefs.signature as string) || '';
+                                break;
                             default:
-                                return field;
+                                break;
                         }
-                    }),
-                );
+                        console.log(`├─ [API] Field ${field.id}: ${field.value} -> ${newValue}`);
+                        return { ...field, value: newValue };
+                    });
+                    console.log('├─ [API] Updated fields:', updated);
+                    return updated;
+                });
 
-                setTimezone((prefs.timezone as string) || 'America/New_York');
+                const newTimezone = (prefs.timezone as string) || 'America/New_York';
+                console.log(`├─ [API] Timezone: ${timezone} -> ${newTimezone}`);
+                setTimezone(newTimezone);
                 console.log('└─ [API] Successfully loaded existing preferences');
             } else {
-                console.log('└─ [API] No existing preferences found');
+                console.log('└─ [API] No existing preferences found or error occurred');
             }
 
             // Load availability schedule
@@ -250,7 +259,7 @@ const OnboardingPage = () => {
         } finally {
             setDataLoading(false);
         }
-    }, []);
+    }, [timezone]);
 
     // Load data on component mount and when returning from OAuth
     useEffect(() => {

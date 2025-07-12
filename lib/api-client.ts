@@ -20,6 +20,7 @@ class ApiClient {
     private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
         try {
             const url = `${this.baseURL}${endpoint}`;
+            console.log(`[API_CLIENT] Making request to: ${url}`);
 
             const response = await fetch(url, {
                 ...options,
@@ -30,8 +31,11 @@ class ApiClient {
                 },
             });
 
+            console.log(`[API_CLIENT] Response status: ${response.status} ${response.statusText}`);
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
+                console.log(`[API_CLIENT] Error response:`, errorData);
                 return {
                     error: errorData.error || `HTTP ${response.status}: ${response.statusText}`,
                     success: false,
@@ -39,11 +43,13 @@ class ApiClient {
             }
 
             const data = await response.json();
+            console.log(`[API_CLIENT] Success response:`, data);
             return {
                 data,
                 success: true,
             };
         } catch (error) {
+            console.error(`[API_CLIENT] Network error:`, error);
             return {
                 error: error instanceof Error ? error.message : 'Network error',
                 success: false,
