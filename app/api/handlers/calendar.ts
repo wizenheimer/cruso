@@ -301,6 +301,21 @@ export async function handleDeleteCalendarAccount(c: Context) {
             return c.json({ error: 'Account not found' }, 404);
         }
 
+        // Check if this is the only account - prevent deletion if so
+        const userAccountCount = await db
+            .select()
+            .from(account)
+            .where(and(eq(account.userId, user.id), eq(account.providerId, 'google')));
+
+        if (userAccountCount.length === 1) {
+            return c.json(
+                {
+                    error: 'Cannot delete the only calendar account. You must have at least one calendar account connected.',
+                },
+                400,
+            );
+        }
+
         // Soft delete all calendar connections for this account
         await db
             .update(calendarConnections)

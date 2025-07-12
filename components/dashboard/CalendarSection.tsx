@@ -185,7 +185,17 @@ export function CalendarSection({
                                                 )}
                                                 <DropdownMenuItem
                                                     onClick={() => onRemove(account.id)}
-                                                    className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                                                    disabled={calendarAccounts.length === 1}
+                                                    className={`${
+                                                        calendarAccounts.length === 1
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer'
+                                                    }`}
+                                                    title={
+                                                        calendarAccounts.length === 1
+                                                            ? 'You must have at least one calendar account connected'
+                                                            : undefined
+                                                    }
                                                 >
                                                     <Trash2 className="h-4 w-4 mr-2" />
                                                     Remove
