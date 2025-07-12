@@ -42,11 +42,11 @@ const OnboardingContent = () => {
     const [dataLoading, setDataLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [buffers, setBuffers] = useState<BufferSetting[]>([
-        { id: 'default', label: 'Default', value: '15', isPrimary: true },
-        { id: 'virtual', label: 'Virtual Meetings', value: '15' },
-        { id: 'inperson', label: 'In-person Meetings', value: '25' },
-        { id: 'backtoback', label: 'Back to Back Meetings', value: '25' },
-        { id: 'flight', label: 'Flight Schedules', value: '30' },
+        { id: 'default', label: 'Default Meetings Buffer', value: '15', isPrimary: true },
+        { id: 'virtual', label: 'Virtual Meetings Buffer', value: '15' },
+        { id: 'inperson', label: 'In-person Meetings Buffer', value: '15' },
+        { id: 'backtoback', label: 'Back to Back Meetings Buffer', value: '30' },
+        { id: 'flight', label: 'Flight Schedules Buffer', value: '60' },
     ]);
     const [fields, setFields] = useState<PersonalizationField[]>([
         {
@@ -238,6 +238,24 @@ const OnboardingContent = () => {
     useEffect(() => {
         loadOnboardingData();
     }, [loadOnboardingData]);
+
+    // Clear browser history to prevent back navigation
+    useEffect(() => {
+        // Replace the current history entry so back button doesn't work
+        window.history.replaceState(null, '', window.location.href);
+
+        // Handle back button clicks
+        const handlePopState = () => {
+            // Replace the history entry again if user somehow gets back
+            window.history.replaceState(null, '', window.location.href);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, []);
 
     // Check for OAuth callback and refresh calendar data
     useEffect(() => {

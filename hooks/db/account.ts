@@ -27,8 +27,11 @@ export const afterAccountCreationHook = (async (account, context) => {
         // Handle new user preferences - adds the connected calendar email to the user preferences table if the user is newly created
         const isNewUser = context?.context?.isNewUser || false;
         if (isNewUser) {
-            await handleNewUserPreferences(account, context);
+            // Add default availability
             await handleNewUserAvailabilities(account, context);
+
+            // Add default preferences
+            await handleNewUserPreferences(account, context);
         }
     }
 }) as AccountAfterCreateHook;

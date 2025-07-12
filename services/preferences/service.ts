@@ -2,16 +2,17 @@ import { db } from '@/db';
 import { preferences } from '@/db/schema/preferences';
 import { userEmails } from '@/db/schema/user-emails';
 import { calendarConnections } from '@/db/schema/calendars';
+import { availability } from '@/db/schema/availability';
 import { account, user } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { PREFERENCES_DEFAULTS } from '@/lib/preferences-constants';
+import { generatePreferencesMarkdown, type PreferencesData } from '@/lib/preferences-document';
 import {
     Preference,
     PreferenceUpdate,
     PreferencesWithPrimaries,
     PrimaryEmailOption,
     PrimaryAccountOption,
-    PrimaryOptions,
     ServiceResult,
     GetPreferencesResult,
     CreatePreferencesResult,
@@ -123,11 +124,19 @@ export class PreferenceService {
 
             const smartDefaults = await this.getSmartDefaults(userId);
 
+            // Generate preferences document
+            const document = await this.generatePreferencesDocument(
+                userId,
+                smartDefaults.displayName,
+                smartDefaults.nickname,
+                smartDefaults.timezone,
+            );
+
             const [newPrefs] = await db
                 .insert(preferences)
                 .values({
                     userId,
-                    document: PREFERENCES_DEFAULTS.DOCUMENT,
+                    document,
                     displayName: smartDefaults.displayName,
                     nickname: smartDefaults.nickname,
                     signature: smartDefaults.signature,
@@ -212,13 +221,27 @@ export class PreferenceService {
                 ? `${userName}'s AI Assistant`
                 : PREFERENCES_DEFAULTS.SIGNATURE;
 
+            // Generate preferences document
+            const document = await this.generatePreferencesDocument(
+                userId,
+                displayName,
+                nickname,
+                timezone,
+            );
+
+            console.log('[PREFERENCE_SERVICE] Generated document for new user:', {
+                userId,
+                documentLength: document.length,
+                hasContent: document.length > 0,
+            });
+
             const [newPrefs] = await db
                 .insert(preferences)
                 .values({
                     userId,
                     primaryUserEmailId,
                     primaryAccountId,
-                    document: PREFERENCES_DEFAULTS.DOCUMENT,
+                    document,
                     displayName,
                     nickname,
                     signature,
@@ -667,6 +690,65 @@ export class PreferenceService {
                 and(eq(calendarConnections.userId, userId), eq(calendarConnections.isActive, true)),
             )
             .orderBy(calendarConnections.isPrimary, calendarConnections.createdAt);
+    }
+
+    /**
+     * Private method to generate preferences document
+     */
+    private async generatePreferencesDocument(
+        userId: string,
+        displayName?: string,
+        nickname?: string,
+        timezone?: string,
+    ): Promise<string> {
+        try {
+            console.log('[PREFERENCE_SERVICE] Generating document for user:', {
+                userId,
+                displayName,
+                nickname,
+                timezone,
+            });
+
+            // Get user availability
+            const userAvailability = await db
+                .select({
+                    days: availability.days,
+                    startTime: availability.startTime,
+                    endTime: availability.endTime,
+                    timezone: availability.timezone,
+                })
+                .from(availability)
+                .where(eq(availability.userId, userId))
+                .orderBy(availability.createdAt);
+
+            console.log('[PREFERENCE_SERVICE] Found availability slots:', userAvailability.length);
+
+            // Prepare data for document generation
+            const preferencesData: PreferencesData = {
+                displayName: displayName || undefined,
+                nickname: nickname || undefined,
+                availability: userAvailability.map((avail) => ({
+                    days: avail.days || [],
+                    startTime: avail.startTime,
+                    endTime: avail.endTime,
+                    timezone: avail.timezone,
+                })),
+                defaultTimezone: timezone || undefined,
+                minNoticeMinutes: PREFERENCES_DEFAULTS.MIN_NOTICE_MINUTES,
+                defaultMeetingDurationMinutes:
+                    PREFERENCES_DEFAULTS.DEFAULT_MEETING_DURATION_MINUTES,
+                virtualBufferMinutes: PREFERENCES_DEFAULTS.VIRTUAL_BUFFER_MINUTES,
+                inPersonBufferMinutes: PREFERENCES_DEFAULTS.IN_PERSON_BUFFER_MINUTES,
+                backToBackBufferMinutes: PREFERENCES_DEFAULTS.BACK_TO_BACK_BUFFER_MINUTES,
+                flightBufferMinutes: PREFERENCES_DEFAULTS.FLIGHT_BUFFER_MINUTES,
+            };
+
+            // Generate the markdown document using the common utility
+            return generatePreferencesMarkdown(preferencesData);
+        } catch (error) {
+            console.error('[PREFERENCE_SERVICE] Error generating preferences document:', error);
+            return PREFERENCES_DEFAULTS.DOCUMENT;
+        }
     }
 
     /**

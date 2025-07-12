@@ -201,7 +201,7 @@ const SignupPage = () => {
                         transition={{ duration: 1, delay: 0.8, ease: 'easeOut' }}
                     >
                         <Image
-                            src="/images/assets/onboarding/preview.png"
+                            src="/images/assets/onboarding/preview.svg"
                             alt="Cruso Preview"
                             fill
                             className="object-cover rounded-xl shadow-2xl object-left-top"

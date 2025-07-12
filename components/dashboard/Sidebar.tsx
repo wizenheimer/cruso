@@ -138,16 +138,6 @@ export function Sidebar({ activeView, onViewChange, onClose }: SidebarProps) {
                     Scheduling
                 </div>
                 <button
-                    onClick={() => onViewChange('preferences')}
-                    className={`w-full text-left px-0 py-2 text-sm font-medium transition-colors ${
-                        activeView === 'preferences'
-                            ? 'text-gray-900'
-                            : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                    Preferences
-                </button>
-                <button
                     onClick={() => onViewChange('accounts')}
                     className={`w-full text-left px-0 py-2 text-sm font-medium transition-colors ${
                         activeView === 'accounts'
@@ -156,6 +146,16 @@ export function Sidebar({ activeView, onViewChange, onClose }: SidebarProps) {
                     }`}
                 >
                     Accounts
+                </button>
+                <button
+                    onClick={() => onViewChange('preferences')}
+                    className={`w-full text-left px-0 py-2 text-sm font-medium transition-colors ${
+                        activeView === 'preferences'
+                            ? 'text-gray-900'
+                            : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                    Preferences
                 </button>
             </nav>
 

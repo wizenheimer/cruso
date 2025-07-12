@@ -194,7 +194,12 @@ export function InboxSection({
                                                 )}
                                                 <DropdownMenuItem
                                                     onClick={() => onRemove(account.id)}
-                                                    className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                                                    className={`${
+                                                        emailAccounts.length === 1
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer'
+                                                    }`}
+                                                    disabled={emailAccounts.length === 1}
                                                 >
                                                     <Trash2 className="h-4 w-4 mr-2" />
                                                     Remove
