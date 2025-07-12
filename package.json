@@ -52,6 +52,7 @@
         "@tailwindcss/typography": "^0.5.16",
         "better-auth": "^1.2.12",
         "boring-avatars": "^1.11.2",
+        "canvas-confetti": "^1.9.3",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "drizzle-orm": "^0.44.2",
@@ -77,6 +78,7 @@
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",
         "@tailwindcss/postcss": "^4",
+        "@types/canvas-confetti": "^1.9.0",
         "@types/node": "^20",
         "@types/pg": "^8.15.4",
         "@types/react": "^19",

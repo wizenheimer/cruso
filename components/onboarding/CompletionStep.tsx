@@ -1,12 +1,61 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import BoringAvatar from 'boring-avatars';
+import confetti from 'canvas-confetti';
 import { authClient } from '@/lib/auth-client';
 import { AVATAR_COLORS, AVATAR_VARIANT } from '@/lib/ui-constants';
 
 // User info display component specific to completion step
 function UserInfo() {
-    const { data: session } = authClient.useSession();
+    const { data: session, isPending } = authClient.useSession();
+    const hasTriggeredConfetti = useRef(false);
+
+    // Trigger confetti when loading completes
+    useEffect(() => {
+        if (!isPending && !hasTriggeredConfetti.current && session?.user) {
+            hasTriggeredConfetti.current = true;
+
+            // Fire confetti from multiple angles for a more dynamic effect
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+            });
+
+            // Add a second burst after a short delay
+            setTimeout(() => {
+                confetti({
+                    particleCount: 50,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                });
+            }, 150);
+
+            setTimeout(() => {
+                confetti({
+                    particleCount: 50,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                });
+            }, 300);
+        }
+    }, [isPending, session?.user]);
+
+    // Show loading skeleton while session is loading
+    if (isPending) {
+        return (
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+                <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-24 animate-pulse" />
+                    <div className="h-3 bg-gray-200 rounded w-32 animate-pulse" />
+                </div>
+            </div>
+        );
+    }
 
     const userName = session?.user?.name || 'Anonymous User';
     const userEmail = session?.user?.email || 'user@example.com';
