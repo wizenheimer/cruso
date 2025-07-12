@@ -57,6 +57,7 @@ export async function handleGoogleCalendarConnection(account: any, context?: any
 
             // Add the user email to the context
             context.context.userEmail = userEmail;
+            context.context.userName = userName;
         }
     } catch (error) {
         console.error('[DB_HOOK] Error in database hook calendar sync:', error);
@@ -101,6 +102,7 @@ export async function handleEmailConnection(account: any, context: any) {
 export async function handleNewUserPreferences(account: any, context: any) {
     // Get the newly added email
     const newEmail = context.context.addedEmail;
+    const userName = context.context.userName;
 
     // Check if the user is newly created
     const isNewUser = context.context.isNewUser;
@@ -114,7 +116,7 @@ export async function handleNewUserPreferences(account: any, context: any) {
         account.userId,
         newEmail.id,
         account.id,
-        context.context?.userSignupName || '',
+        userName,
     );
 
     if (!result.success) {
