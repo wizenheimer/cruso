@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { apiClient } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
 import { Trash2, Plus } from 'lucide-react';
 
@@ -12,14 +13,17 @@ interface CalendarStepProps {
     connectedCalendars: ConnectedCalendar[];
     onUpdateCalendars: (calendars: ConnectedCalendar[]) => void;
     onAddCalendar?: () => void;
+    onError?: (error: string) => void;
 }
 
 const CalendarStep = ({
     connectedCalendars,
     onUpdateCalendars,
     onAddCalendar,
+    onError,
 }: CalendarStepProps) => {
     const [addingCalendar, setAddingCalendar] = useState(false);
+    const [removingCalendar, setRemovingCalendar] = useState<string | null>(null);
 
     const addMoreCalendar = async () => {
         // If onAddCalendar prop is provided, use it instead of internal logic
@@ -31,9 +35,9 @@ const CalendarStep = ({
         // Fallback to internal logic for backward compatibility
         setAddingCalendar(true);
         try {
-            const response = await authClient.signIn.social({
+            const response = await authClient.linkSocial({
                 provider: 'google',
-                callbackURL: '/onboarding/calendar',
+                callbackURL: '/get-started?action=linked&step=1',
             });
 
             if (response?.error) {
@@ -57,8 +61,31 @@ const CalendarStep = ({
         }
     };
 
-    const removeCalendar = (id: string) => {
-        onUpdateCalendars(connectedCalendars.filter((cal) => cal.id !== id));
+    const removeCalendar = async (id: string) => {
+        try {
+            setRemovingCalendar(id);
+            console.log('┌─ [API] Removing calendar...', { accountId: id });
+
+            const deleteCalendarResponse = await apiClient.deleteCalendarAccount(id);
+            console.log('├─ [API] Remove calendar response:', {
+                success: deleteCalendarResponse.success,
+                error: deleteCalendarResponse.error,
+            });
+
+            if (deleteCalendarResponse.success) {
+                // Update local state
+                onUpdateCalendars(connectedCalendars.filter((cal) => cal.id !== id));
+                console.log('└─ [API] Successfully removed calendar');
+            } else {
+                console.log('└─ [API] Failed to remove calendar');
+                onError?.(deleteCalendarResponse.error || 'Failed to remove calendar');
+            }
+        } catch (error) {
+            console.error('Error removing calendar:', error);
+            onError?.('Failed to remove calendar');
+        } finally {
+            setRemovingCalendar(null);
+        }
     };
 
     const getProviderIcon = () => {
@@ -113,9 +140,27 @@ const CalendarStep = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => removeCalendar(calendar.id)}
-                            className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                            disabled={
+                                removingCalendar === calendar.id || connectedCalendars.length === 1
+                            }
+                            className={`h-8 w-8 p-0 ${
+                                removingCalendar === calendar.id
+                                    ? 'text-gray-400 cursor-not-allowed'
+                                    : connectedCalendars.length === 1
+                                      ? 'text-gray-400 cursor-not-allowed'
+                                      : 'hover:bg-red-50 hover:text-red-600'
+                            }`}
+                            title={
+                                connectedCalendars.length === 1
+                                    ? 'You must have at least one calendar account connected'
+                                    : 'Remove calendar'
+                            }
                         >
-                            <Trash2 className="w-4 h-4" />
+                            {removingCalendar === calendar.id ? (
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Trash2 className="w-4 h-4" />
+                            )}
                         </Button>
                     </motion.div>
                 ))}

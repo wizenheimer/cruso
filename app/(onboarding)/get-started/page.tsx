@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback } from 'react';
 import { NextButton } from '@/components/onboarding/NextButton';
@@ -18,10 +19,22 @@ import {
     WeeklySchedule,
 } from '@/components/onboarding';
 
+interface ApiCalendarAccount {
+    accountId: string;
+    email: string;
+    calendars: Array<{
+        id: string;
+        name: string;
+        isPrimary: boolean;
+        includeInAvailability: boolean;
+    }>;
+}
+
 const currentStep = 1;
 const totalSteps = 5;
 
 const OnboardingPage = () => {
+    const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(currentStep);
     const [connectedCalendars, setConnectedCalendars] = useState<ConnectedCalendar[]>([]);
@@ -86,9 +99,8 @@ const OnboardingPage = () => {
                 error: calendarResponse.error,
             });
             if (calendarResponse.success && calendarResponse.data) {
-                const calendars = (
-                    calendarResponse.data as Array<{ accountId: string; email: string }>
-                ).map((account) => ({
+                const calendarAccountsData = calendarResponse.data as ApiCalendarAccount[];
+                const calendars = calendarAccountsData.map((account) => ({
                     id: account.accountId,
                     email: account.email,
                     provider: 'google' as const,
@@ -239,10 +251,20 @@ const OnboardingPage = () => {
         }
     }, []);
 
-    // Load data on component mount
+    // Load data on component mount and when returning from OAuth
     useEffect(() => {
         loadOnboardingData();
     }, [loadOnboardingData]);
+
+    // Check for OAuth callback and refresh calendar data
+    useEffect(() => {
+        const action = searchParams.get('action');
+        if (action === 'linked') {
+            // Refresh calendar data after OAuth callback
+            console.log('┌─ [OAUTH] Detected OAuth callback, refreshing calendar data...');
+            loadOnboardingData();
+        }
+    }, [searchParams, loadOnboardingData]);
 
     const saveBufferSettings = useCallback(async () => {
         const prefsData = {
@@ -436,20 +458,30 @@ const OnboardingPage = () => {
     // Handle adding calendar during onboarding
     const handleAddCalendar = async () => {
         try {
+            console.log('[FRONTEND] Starting Google account linking process...');
+            setError(null);
+
+            console.log('[FRONTEND] Calling authClient.linkSocial...');
             const response = await authClient.linkSocial({
                 provider: 'google',
                 callbackURL: '/get-started?action=linked&step=1',
             });
 
+            console.log('[FRONTEND] linkSocial response:', response);
+
             if (response.error) {
+                console.error('[FRONTEND] Error in linkSocial response:', response.error);
                 throw new Error(response.error.message || 'Failed to link account');
             }
 
             if (response.data?.url) {
+                console.log('[FRONTEND] Redirecting to OAuth URL:', response.data.url);
                 window.location.href = response.data.url;
+            } else {
+                console.warn('[FRONTEND] No redirect URL received from linkSocial');
             }
         } catch (error) {
-            console.error('Error linking Google account:', error);
+            console.error('[FRONTEND] Error linking additional Google account:', error);
             setError(error instanceof Error ? error.message : 'Failed to link account');
         }
     };
@@ -480,6 +512,7 @@ const OnboardingPage = () => {
                         connectedCalendars={connectedCalendars}
                         onUpdateCalendars={setConnectedCalendars}
                         onAddCalendar={handleAddCalendar}
+                        onError={setError}
                     />
                 );
             case 2:
