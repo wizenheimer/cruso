@@ -52,63 +52,10 @@ export default function DashboardPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    // /**
-    //  * Automatically sync calendars after OAuth authentication
-    //  * This runs in the background and refreshes the dashboard if new calendars are found
-    //  */
-    // const autoSyncPostOAuth = useCallback(async () => {
-    //     try {
-    //         console.log('[FRONTEND] Running automatic post-OAuth calendar sync...');
-
-    //         const syncResponse = await fetch('/api/auth/post-oauth-sync', {
-    //             method: 'POST',
-    //             credentials: 'include',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //         });
-
-    //         console.log('[FRONTEND] Post-OAuth sync response status:', syncResponse.status);
-
-    //         if (syncResponse.ok) {
-    //             const syncResult = await syncResponse.json();
-    //             console.log('[FRONTEND] Auto-sync result:', syncResult);
-
-    //             if (syncResult.calendarsSynced > 0) {
-    //                 console.log('[FRONTEND] Calendars were synced, refreshing dashboard data...');
-    //                 // Refresh the data to show the new calendars
-    //                 await loadDashboardData();
-    //             } else {
-    //                 console.log('[FRONTEND] No new calendars were synced');
-    //             }
-    //         } else {
-    //             console.error('[FRONTEND] Auto-sync failed:', syncResponse.statusText);
-    //         }
-    //     } catch (syncError) {
-    //         console.error('[FRONTEND] Error in auto-sync:', syncError);
-    //         // Don't show error to user for auto-sync, it's a background operation
-    //     }
-    // }, []);
-
     // Load initial data
     useEffect(() => {
         loadDashboardData();
     }, []);
-
-    // Handle OAuth callback
-    // useEffect(() => {
-    //     const urlParams = new URLSearchParams(window.location.search);
-    //     const action = urlParams.get('action');
-
-    //     if (action === 'linked') {
-    //         // Auto-sync calendars after OAuth linking
-    //         autoSyncPostOAuth();
-
-    //         // Clean up URL
-    //         const newUrl = window.location.pathname;
-    //         window.history.replaceState({}, '', newUrl);
-    //     }
-    // }, [autoSyncPostOAuth]);
 
     // Check for unsaved changes
     useEffect(() => {

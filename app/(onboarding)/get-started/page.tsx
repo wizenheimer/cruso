@@ -242,37 +242,6 @@ const OnboardingPage = () => {
         }
     }, []);
 
-    // Auto-sync calendars after OAuth
-    // const autoSyncPostOAuth = useCallback(async () => {
-    //     try {
-    //         console.log('[FRONTEND] Running automatic post-OAuth calendar sync...');
-    //         const response = await fetch('/api/auth/post-oauth-sync', {
-    //             method: 'POST',
-    //             credentials: 'include',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //         });
-
-    //         console.log('[FRONTEND] Post-OAuth sync response status:', response.status);
-    //         if (response.ok) {
-    //             const result = await response.json();
-    //             console.log('[FRONTEND] Auto-sync result:', result);
-    //             if (result.calendarsSynced > 0) {
-    //                 console.log('[FRONTEND] Calendars were synced, refreshing onboarding data...');
-    //                 // Refresh calendar data
-    //                 await loadOnboardingData();
-    //             } else {
-    //                 console.log('[FRONTEND] No new calendars were synced');
-    //             }
-    //         } else {
-    //             console.error('[FRONTEND] Auto-sync failed:', response.statusText);
-    //         }
-    //     } catch (error) {
-    //         console.error('[FRONTEND] Error in auto-sync:', error);
-    //     }
-    // }, [loadOnboardingData]);
-
     // Load data on component mount
     useEffect(() => {
         loadOnboardingData();
@@ -487,23 +456,6 @@ const OnboardingPage = () => {
             setError(error instanceof Error ? error.message : 'Failed to link account');
         }
     };
-
-    // Handle OAuth callback
-    // useEffect(() => {
-    //     const urlParams = new URLSearchParams(window.location.search);
-    //     const action = urlParams.get('action');
-    //     const stepParam = urlParams.get('step');
-
-    //     if (action === 'linked' && stepParam) {
-    //         // Auto-sync calendars after OAuth linking
-    //         autoSyncPostOAuth();
-
-    //         // Clean up URL and reload data
-    //         const newUrl = window.location.pathname;
-    //         window.history.replaceState({}, '', newUrl);
-    //         loadOnboardingData();
-    //     }
-    // }, [autoSyncPostOAuth, loadOnboardingData]);
 
     // Handle step navigation
     const handleStepClick = (stepNumber: number) => {
