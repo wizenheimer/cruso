@@ -269,7 +269,7 @@ export default function DashboardPage() {
                 console.log('└─ [API] Successfully removed calendar');
             } else {
                 console.log('└─ [API] Failed to remove calendar');
-                setError('Failed to remove calendar');
+                setError(response.error || 'Failed to remove calendar');
             }
         } catch (error) {
             console.error('Error removing calendar:', error);

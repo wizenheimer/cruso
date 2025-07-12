@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { CalendarConnection, GoogleAccount, AvailabilityResponse } from '@/client/calendar';
 import { calendarClient } from '@/client/calendar';
