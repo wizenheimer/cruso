@@ -34,7 +34,7 @@ interface ApiCalendarAccount {
 }
 
 interface ApiEmailAccount {
-    id: string;
+    id: number;
     email: string;
     isPrimary: boolean;
 }
@@ -129,23 +129,20 @@ export default function DashboardPage() {
             });
             if (calendarResponse.success && calendarResponse.data) {
                 const apiData = calendarResponse.data as ApiCalendarAccount[];
-                const transformedCalendarAccounts = apiData.map((account) => ({
-                    id: account.accountId,
-                    email: account.email,
-                    provider: 'Google Calendar' as const,
-                    isPrimary: account.calendars.some((cal) => cal.isPrimary),
-                    calendars: account.calendars.map((cal) => ({
-                        id: cal.id,
-                        name: cal.name,
-                        enabled: cal.includeInAvailability,
+                setCalendarAccounts(
+                    apiData.map((account) => ({
+                        id: account.accountId,
+                        email: account.email,
+                        provider: 'Google Calendar' as const,
+                        isPrimary: false, // Will be set after preferences are loaded
+                        calendars: account.calendars.map((cal) => ({
+                            id: cal.id,
+                            name: cal.name,
+                            enabled: cal.includeInAvailability,
+                        })),
                     })),
-                }));
-                setCalendarAccounts(transformedCalendarAccounts);
-                console.log(
-                    '└─ [API] Successfully loaded',
-                    transformedCalendarAccounts.length,
-                    'calendar accounts',
                 );
+                console.log('└─ [API] Successfully loaded', apiData.length, 'calendar accounts');
             } else {
                 console.log('└─ [API] Failed to load calendar accounts');
             }
@@ -160,18 +157,15 @@ export default function DashboardPage() {
             });
             if (emailResponse.success && emailResponse.data) {
                 const apiData = emailResponse.data as ApiEmailAccount[];
-                const transformedEmailAccounts = apiData.map((email) => ({
-                    id: email.id,
-                    email: email.email,
-                    provider: 'Gmail' as const,
-                    isPrimary: email.isPrimary,
-                }));
-                setEmailAccounts(transformedEmailAccounts);
-                console.log(
-                    '└─ [API] Successfully loaded',
-                    transformedEmailAccounts.length,
-                    'email accounts',
+                setEmailAccounts(
+                    apiData.map((email) => ({
+                        id: email.id,
+                        email: email.email,
+                        provider: 'Gmail' as const,
+                        isPrimary: email.isPrimary, // Use the primary status from API
+                    })),
                 );
+                console.log('└─ [API] Successfully loaded', apiData.length, 'email accounts');
             } else {
                 console.log('└─ [API] Failed to load email accounts');
             }
@@ -188,6 +182,17 @@ export default function DashboardPage() {
                 const prefsData = preferencesResponse.data as PreferencesWithPrimaries;
                 setPreferences(prefsData.preferences);
                 setOriginalPreferences(prefsData.preferences);
+
+                // Update calendar primary status based on preferences
+                if (prefsData.preferences.primaryAccountId) {
+                    setCalendarAccounts((accounts) =>
+                        accounts.map((account) => ({
+                            ...account,
+                            isPrimary: account.id === prefsData.preferences.primaryAccountId,
+                        })),
+                    );
+                }
+
                 console.log('└─ [API] Successfully loaded preferences');
             } else {
                 console.log('└─ [API] No preferences found');
@@ -203,16 +208,21 @@ export default function DashboardPage() {
     const handleMakePrimaryCalendar = async (accountId: string) => {
         try {
             console.log('┌─ [API] Making calendar primary...', { accountId });
-            // For calendar accounts, we need to make all calendars of this account primary
-            const response = await apiClient.updateCalendarConnection(accountId, {
-                isPrimary: true,
-            });
-            console.log('├─ [API] Make primary response:', {
+
+            // Update preferences to set this account as primary
+            const response = await apiClient.updatePrimaryAccount(accountId);
+            console.log('├─ [API] Update primary account response:', {
                 success: response.success,
                 error: response.error,
             });
             if (response.success) {
-                // Update local state
+                // Update local preferences state
+                setPreferences((prev) => (prev ? { ...prev, primaryAccountId: accountId } : null));
+                setOriginalPreferences((prev) =>
+                    prev ? { ...prev, primaryAccountId: accountId } : null,
+                );
+
+                // Update local calendar accounts state
                 setCalendarAccounts((accounts) =>
                     accounts.map((account) => ({
                         ...account,
@@ -254,16 +264,26 @@ export default function DashboardPage() {
         }
     };
 
-    const handleMakePrimaryEmail = async (accountId: string) => {
+    const handleMakePrimaryEmail = async (accountId: number) => {
         try {
             console.log('┌─ [API] Making email primary...', { accountId });
-            const response = await apiClient.updateUserEmail(accountId, { isPrimary: true });
-            console.log('├─ [API] Make primary email response:', {
+
+            // Update preferences to set this email as primary
+            const response = await apiClient.updatePrimaryEmail(accountId);
+            console.log('├─ [API] Update primary email response:', {
                 success: response.success,
                 error: response.error,
             });
             if (response.success) {
-                // Update local state
+                // Update local preferences state
+                setPreferences((prev) =>
+                    prev ? { ...prev, primaryUserEmailId: accountId } : null,
+                );
+                setOriginalPreferences((prev) =>
+                    prev ? { ...prev, primaryUserEmailId: accountId } : null,
+                );
+
+                // Update local email accounts state
                 setEmailAccounts((accounts) =>
                     accounts.map((account) => ({
                         ...account,
@@ -281,10 +301,10 @@ export default function DashboardPage() {
         }
     };
 
-    const handleRemoveEmail = async (accountId: string) => {
+    const handleRemoveEmail = async (accountId: number) => {
         try {
             console.log('┌─ [API] Removing email...', { accountId });
-            const response = await apiClient.deleteUserEmail(accountId);
+            const response = await apiClient.deleteUserEmail(accountId.toString());
             console.log('├─ [API] Remove email response:', {
                 success: response.success,
                 error: response.error,
@@ -322,6 +342,17 @@ export default function DashboardPage() {
                     isPrimary: apiData.isPrimary,
                 };
                 setEmailAccounts((accounts) => [...accounts, newAccount]);
+
+                // If this email is primary, update preferences
+                if (apiData.isPrimary && preferences) {
+                    setPreferences((prev) =>
+                        prev ? { ...prev, primaryUserEmailId: apiData.id } : null,
+                    );
+                    setOriginalPreferences((prev) =>
+                        prev ? { ...prev, primaryUserEmailId: apiData.id } : null,
+                    );
+                }
+
                 console.log('└─ [API] Successfully added email');
             } else {
                 console.log('└─ [API] Failed to add email');

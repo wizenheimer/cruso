@@ -11,7 +11,7 @@ export interface CalendarAccount {
 }
 
 export interface EmailAccount {
-    id: string;
+    id: number;
     email: string;
     provider: string;
     isPrimary: boolean;

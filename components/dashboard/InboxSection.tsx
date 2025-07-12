@@ -17,8 +17,8 @@ import { EmailAccount } from './types';
 
 interface InboxSectionProps {
     emailAccounts: EmailAccount[];
-    onMakePrimary: (accountId: string) => void;
-    onRemove: (accountId: string) => void;
+    onMakePrimary: (accountId: number) => void;
+    onRemove: (accountId: number) => void;
     onAddEmail: (email: string) => void;
 }
 
