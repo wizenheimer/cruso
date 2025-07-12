@@ -37,7 +37,16 @@
         "docker:prod:shell": "docker-compose exec app sh",
         "docker:prod:shell:db": "docker-compose exec db psql -U postgres -d cruso",
         "docker:prod:status": "docker-compose ps",
-        "docker:prod:clean": "docker-compose down -v --remove-orphans && docker system prune -f"
+        "docker:prod:clean": "docker-compose down -v --remove-orphans && docker system prune -f",
+        "prune": "docker system prune -f",
+        "prune:all": "docker system prune -a -f --volumes",
+        "prune:volumes": "docker volume prune -f",
+        "prune:images": "docker image prune -a -f",
+        "prune:containers": "docker container prune -f",
+        "prune:networks": "docker network prune -f",
+        "prune:cache": "docker builder prune -a -f",
+        "cleanup": "pnpm prune:all && pnpm store prune",
+        "cleanup:full": "pnpm prune:all && pnpm store prune && rm -rf node_modules/.cache && rm -rf .next"
     },
     "dependencies": {
         "@hono/node-server": "^1.15.0",
