@@ -384,28 +384,20 @@ const OnboardingPage = () => {
     }, [schedule]);
 
     const finalizeOnboarding = useCallback(async () => {
-        // Mark onboarding as complete in preferences
+        // Generate preferences document and mark onboarding as complete
         console.log('┌─ [API] Finalizing onboarding...');
-        const prefsData = {
-          // TODO: Add document using OpenAI
-            document: '',
-            isActive: true,
-        };
 
-        const response = await apiClient.updatePreferences(prefsData);
-        console.log('├─ [API] Update preferences response:', {
-            success: response.success,
-            error: response.error,
+        // Generate the preferences document
+        console.log('├─ [API] Generating preferences document...');
+        const documentResponse = await apiClient.generatePreferencesDocument();
+        console.log('├─ [API] Generate document response:', {
+            success: documentResponse.success,
+            error: documentResponse.error,
         });
-        if (!response.success) {
-            console.log('├─ [API] Update failed, creating new preferences...');
-            const createResponse = await apiClient.createPreferences(prefsData);
-            console.log('└─ [API] Create preferences response:', {
-                success: createResponse.success,
-                error: createResponse.error,
-            });
-        } else {
-            console.log('└─ [API] Successfully finalized onboarding');
+
+        if (!documentResponse.success) {
+            console.log('└─ [API] Failed to generate preferences document');
+            throw new Error(documentResponse.error || 'Failed to generate preferences document');
         }
     }, []);
 

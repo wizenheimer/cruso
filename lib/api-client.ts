@@ -173,6 +173,16 @@ class ApiClient {
     }
 
     /**
+     * Generate preferences document
+     * @returns Promise with generated document
+     */
+    async generatePreferencesDocument() {
+        return this.request('/preferences/generate-document', {
+            method: 'POST',
+        });
+    }
+
+    /**
      * Delete user preferences
      * @returns Promise with deletion result
      */
