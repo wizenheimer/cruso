@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
-import { PREFERENCES_DEFAULTS } from '@/lib/preferences-constants';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -191,29 +190,7 @@ export default function DashboardPage() {
                 setOriginalPreferences(prefsData.preferences);
                 console.log('└─ [API] Successfully loaded preferences');
             } else {
-                // Create default preferences if none exist
-                const defaultPreferences: Preferences = {
-                    id: 0,
-                    userId: '',
-                    document: PREFERENCES_DEFAULTS.DOCUMENT,
-                    displayName: PREFERENCES_DEFAULTS.DISPLAY_NAME,
-                    nickname: PREFERENCES_DEFAULTS.NICKNAME,
-                    signature: PREFERENCES_DEFAULTS.SIGNATURE,
-                    timezone: PREFERENCES_DEFAULTS.TIMEZONE,
-                    minNoticeMinutes: PREFERENCES_DEFAULTS.MIN_NOTICE_MINUTES,
-                    maxDaysAhead: PREFERENCES_DEFAULTS.MAX_DAYS_AHEAD,
-                    defaultMeetingDurationMinutes:
-                        PREFERENCES_DEFAULTS.DEFAULT_MEETING_DURATION_MINUTES,
-                    virtualBufferMinutes: PREFERENCES_DEFAULTS.VIRTUAL_BUFFER_MINUTES,
-                    inPersonBufferMinutes: PREFERENCES_DEFAULTS.IN_PERSON_BUFFER_MINUTES,
-                    backToBackBufferMinutes: PREFERENCES_DEFAULTS.BACK_TO_BACK_BUFFER_MINUTES,
-                    flightBufferMinutes: PREFERENCES_DEFAULTS.FLIGHT_BUFFER_MINUTES,
-                    isActive: true,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                };
-                setPreferences(defaultPreferences);
-                setOriginalPreferences(defaultPreferences);
+                console.log('└─ [API] No preferences found');
             }
         } catch (error) {
             console.error('Error loading dashboard data:', error);

@@ -9,6 +9,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut, HelpCircle, X } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 
 interface SidebarProps {
     activeView: 'preferences' | 'accounts';
@@ -18,21 +19,34 @@ interface SidebarProps {
 
 // Separate Avatar component for mobile use
 export function Avatar() {
+    const { data: session } = authClient.useSession();
+
+    const handleSignOut = async () => {
+        try {
+            await authClient.signOut();
+            // Optionally redirect after sign out
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Error signing out:', error);
+        }
+    };
+
+    const userName = session?.user?.name || 'Anonymous User';
+    const userEmail = session?.user?.email || 'user@example.com';
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <button className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg transition-colors w-full">
                     <BoringAvatar
-                        name="Olivia Martin"
+                        name={userName}
                         colors={['#dbeafe', '#bfdbfe', '#93c5fd', '#3b82f6', '#1d4ed8']}
                         variant="beam"
                         size={32}
                     />
                     <div className="text-sm text-left flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900 truncate">Olivia Martin</div>
-                        <div className="text-sm text-gray-600 truncate">
-                            olivia.martin@email.com
-                        </div>
+                        <div className="font-semibold text-gray-900 truncate">{userName}</div>
+                        <div className="text-sm text-gray-600 truncate">{userEmail}</div>
                     </div>
                 </button>
             </DropdownMenuTrigger>
@@ -45,7 +59,10 @@ export function Avatar() {
                     Support
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-200" />
-                <DropdownMenuItem className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer">
+                <DropdownMenuItem
+                    className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                    onClick={handleSignOut}
+                >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
                 </DropdownMenuItem>
@@ -56,12 +73,26 @@ export function Avatar() {
 
 // Mobile-only Avatar component (smaller, no text)
 export function MobileAvatar() {
+    const { data: session } = authClient.useSession();
+
+    const handleSignOut = async () => {
+        try {
+            await authClient.signOut();
+            // Optionally redirect after sign out
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Error signing out:', error);
+        }
+    };
+
+    const userName = session?.user?.name || 'Anonymous User';
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <button className="flex items-center hover:bg-gray-50 rounded-lg transition-colors p-1">
                     <BoringAvatar
-                        name="Olivia Martin"
+                        name={userName}
                         colors={['#dbeafe', '#bfdbfe', '#93c5fd', '#3b82f6', '#1d4ed8']}
                         variant="beam"
                         size={32}
@@ -77,7 +108,10 @@ export function MobileAvatar() {
                     Support
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-200" />
-                <DropdownMenuItem className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer">
+                <DropdownMenuItem
+                    className="text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                    onClick={handleSignOut}
+                >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
                 </DropdownMenuItem>
