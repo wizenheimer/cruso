@@ -15,13 +15,14 @@ export const userEmails = pgTable(
         }),
         email: varchar('email', { length: 255 }).notNull().unique(),
         isPrimary: boolean('is_primary').default(false),
-        verifiedAt: timestamp('verified_at'),
+        isActive: boolean('is_active').default(true),
         createdAt: timestamp('created_at').defaultNow(),
         updatedAt: timestamp('updated_at').defaultNow(),
     },
     (table) => [
         index('idx_user_emails_email').on(table.email),
         index('idx_user_emails_user').on(table.userId),
+        index('idx_user_emails_user_active').on(table.userId, table.isActive),
     ],
 );
 

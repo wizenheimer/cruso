@@ -5,7 +5,7 @@ import {
     handleGetCalendarAccounts,
     handleSyncCalendar,
     handleUpdateCalendarConnection,
-    handleDeleteCalendarConnection,
+    handleDeleteCalendarAccount,
     handleCheckAvailability,
     handleSyncAllCalendars,
 } from '@/app/api/handlers/calendar';
@@ -48,8 +48,8 @@ calendar.post('/:id/sync', handleSyncCalendar);
 calendar.patch('/:id', handleUpdateCalendarConnection);
 
 /**
- * DELETE /api/v1/calendar/:id
+ * DELETE /api/v1/calendar
  */
-calendar.delete('/:id', handleDeleteCalendarConnection);
+calendar.delete('/', handleDeleteCalendarAccount);
 
 export default calendar;

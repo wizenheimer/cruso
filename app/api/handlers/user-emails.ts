@@ -24,13 +24,13 @@ export async function handleGetUserEmails(c: Context) {
             .select({
                 id: userEmails.id,
                 email: userEmails.email,
-                verifiedAt: userEmails.verifiedAt,
                 isPrimary: userEmails.isPrimary,
+                isActive: userEmails.isActive,
                 createdAt: userEmails.createdAt,
                 updatedAt: userEmails.updatedAt,
             })
             .from(userEmails)
-            .where(eq(userEmails.userId, user.id))
+            .where(and(eq(userEmails.userId, user.id), eq(userEmails.isActive, true)))
             .orderBy(userEmails.isPrimary, userEmails.createdAt);
 
         return c.json(emails);
@@ -58,7 +58,7 @@ export async function handleAddUserEmail(c: Context) {
         const existingEmail = await db
             .select()
             .from(userEmails)
-            .where(eq(userEmails.email, body.email))
+            .where(and(eq(userEmails.email, body.email), eq(userEmails.isActive, true)))
             .limit(1);
 
         if (existingEmail.length > 0) {
@@ -69,7 +69,7 @@ export async function handleAddUserEmail(c: Context) {
         const currentEmails = await db
             .select()
             .from(userEmails)
-            .where(eq(userEmails.userId, user.id));
+            .where(and(eq(userEmails.userId, user.id), eq(userEmails.isActive, true)));
 
         const isPrimary = currentEmails.length === 0 || body.isPrimary === true;
 
@@ -78,7 +78,7 @@ export async function handleAddUserEmail(c: Context) {
             await db
                 .update(userEmails)
                 .set({ isPrimary: false, updatedAt: new Date() })
-                .where(eq(userEmails.userId, user.id));
+                .where(and(eq(userEmails.userId, user.id), eq(userEmails.isActive, true)));
         }
 
         const newEmail = await db
@@ -87,7 +87,7 @@ export async function handleAddUserEmail(c: Context) {
                 userId: user.id,
                 email: body.email,
                 isPrimary: isPrimary,
-                verifiedAt: body.verifiedAt || null,
+                isActive: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             })
@@ -115,7 +115,13 @@ export async function handleUpdateUserEmail(c: Context) {
         const existingEmail = await db
             .select()
             .from(userEmails)
-            .where(and(eq(userEmails.id, parseInt(emailId)), eq(userEmails.userId, user.id)))
+            .where(
+                and(
+                    eq(userEmails.id, parseInt(emailId)),
+                    eq(userEmails.userId, user.id),
+                    eq(userEmails.isActive, true),
+                ),
+            )
             .limit(1);
 
         if (existingEmail.length === 0) {
@@ -127,17 +133,28 @@ export async function handleUpdateUserEmail(c: Context) {
             await db
                 .update(userEmails)
                 .set({ isPrimary: false, updatedAt: new Date() })
-                .where(and(eq(userEmails.userId, user.id), ne(userEmails.id, parseInt(emailId))));
+                .where(
+                    and(
+                        eq(userEmails.userId, user.id),
+                        ne(userEmails.id, parseInt(emailId)),
+                        eq(userEmails.isActive, true),
+                    ),
+                );
         }
 
         const updatedEmail = await db
             .update(userEmails)
             .set({
                 isPrimary: body.isPrimary,
-                verifiedAt: body.verifiedAt,
                 updatedAt: new Date(),
             })
-            .where(and(eq(userEmails.id, parseInt(emailId)), eq(userEmails.userId, user.id)))
+            .where(
+                and(
+                    eq(userEmails.id, parseInt(emailId)),
+                    eq(userEmails.userId, user.id),
+                    eq(userEmails.isActive, true),
+                ),
+            )
             .returning();
 
         return c.json(updatedEmail[0]);
@@ -161,7 +178,13 @@ export async function handleDeleteUserEmail(c: Context) {
         const existingEmail = await db
             .select()
             .from(userEmails)
-            .where(and(eq(userEmails.id, parseInt(emailId)), eq(userEmails.userId, user.id)))
+            .where(
+                and(
+                    eq(userEmails.id, parseInt(emailId)),
+                    eq(userEmails.userId, user.id),
+                    eq(userEmails.isActive, true),
+                ),
+            )
             .limit(1);
 
         if (existingEmail.length === 0) {
@@ -172,7 +195,7 @@ export async function handleDeleteUserEmail(c: Context) {
         const userEmailCount = await db
             .select()
             .from(userEmails)
-            .where(eq(userEmails.userId, user.id));
+            .where(and(eq(userEmails.userId, user.id), eq(userEmails.isActive, true)));
 
         if (userEmailCount.length === 1) {
             return c.json({ error: 'Cannot delete the only email address' }, 400);
@@ -184,7 +207,13 @@ export async function handleDeleteUserEmail(c: Context) {
             const otherEmails = await db
                 .select()
                 .from(userEmails)
-                .where(and(eq(userEmails.userId, user.id), ne(userEmails.id, parseInt(emailId))))
+                .where(
+                    and(
+                        eq(userEmails.userId, user.id),
+                        ne(userEmails.id, parseInt(emailId)),
+                        eq(userEmails.isActive, true),
+                    ),
+                )
                 .orderBy(userEmails.createdAt)
                 .limit(1);
 
@@ -192,56 +221,30 @@ export async function handleDeleteUserEmail(c: Context) {
                 await db
                     .update(userEmails)
                     .set({ isPrimary: true, updatedAt: new Date() })
-                    .where(eq(userEmails.id, otherEmails[0].id));
+                    .where(
+                        and(eq(userEmails.id, otherEmails[0].id), eq(userEmails.isActive, true)),
+                    );
             }
         }
 
-        // Delete the email
+        // Soft delete - mark as inactive
         await db
-            .delete(userEmails)
-            .where(and(eq(userEmails.id, parseInt(emailId)), eq(userEmails.userId, user.id)));
+            .update(userEmails)
+            .set({
+                isActive: false,
+                updatedAt: new Date(),
+            })
+            .where(
+                and(
+                    eq(userEmails.id, parseInt(emailId)),
+                    eq(userEmails.userId, user.id),
+                    eq(userEmails.isActive, true),
+                ),
+            );
 
         return c.json({ success: true });
     } catch (error) {
         console.error('Error deleting user email:', error);
         return c.json({ error: 'Failed to delete user email' }, 500);
-    }
-}
-
-/**
- * Handle POST request to verify an email address
- * @param c - The context object
- * @returns The response object
- */
-export async function handleVerifyUserEmail(c: Context) {
-    try {
-        const user = getUser(c);
-        const emailId = c.req.param('id');
-
-        // Check if email exists and belongs to user
-        const existingEmail = await db
-            .select()
-            .from(userEmails)
-            .where(and(eq(userEmails.id, parseInt(emailId)), eq(userEmails.userId, user.id)))
-            .limit(1);
-
-        if (existingEmail.length === 0) {
-            return c.json({ error: 'Email not found' }, 404);
-        }
-
-        // Mark as verified
-        const verifiedEmail = await db
-            .update(userEmails)
-            .set({
-                verifiedAt: new Date(),
-                updatedAt: new Date(),
-            })
-            .where(and(eq(userEmails.id, parseInt(emailId)), eq(userEmails.userId, user.id)))
-            .returning();
-
-        return c.json(verifiedEmail[0]);
-    } catch (error) {
-        console.error('Error verifying user email:', error);
-        return c.json({ error: 'Failed to verify user email' }, 500);
     }
 }

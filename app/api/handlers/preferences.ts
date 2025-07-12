@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { db } from '@/db';
 import { preferences } from '@/db/schema/preferences';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const getUser = (c: Context) => {
     const user = c.get('user');
@@ -26,7 +26,7 @@ export async function handleGetPreferences(c: Context) {
         const userPreferences = await db
             .select()
             .from(preferences)
-            .where(eq(preferences.userId, user.id))
+            .where(and(eq(preferences.userId, user.id), eq(preferences.isActive, true)))
             .limit(1);
 
         if (userPreferences.length === 0) {
@@ -85,7 +85,7 @@ export async function handleCreatePreferences(c: Context) {
         const existingPreferences = await db
             .select()
             .from(preferences)
-            .where(eq(preferences.userId, user.id))
+            .where(and(eq(preferences.userId, user.id), eq(preferences.isActive, true)))
             .limit(1);
 
         if (existingPreferences.length > 0) {
@@ -138,7 +138,7 @@ export async function handleUpdatePreferences(c: Context) {
         const existingPreferences = await db
             .select()
             .from(preferences)
-            .where(eq(preferences.userId, user.id))
+            .where(and(eq(preferences.userId, user.id), eq(preferences.isActive, true)))
             .limit(1);
 
         if (existingPreferences.length === 0) {
@@ -163,7 +163,7 @@ export async function handleUpdatePreferences(c: Context) {
                 flightBufferMinutes: body.flightBufferMinutes,
                 updatedAt: new Date(),
             })
-            .where(eq(preferences.userId, user.id))
+            .where(and(eq(preferences.userId, user.id), eq(preferences.isActive, true)))
             .returning();
 
         console.log('[HANDLER] Preferences updated successfully for user:', user.id);
@@ -188,7 +188,7 @@ export async function handleDeletePreferences(c: Context) {
         const existingPreferences = await db
             .select()
             .from(preferences)
-            .where(eq(preferences.userId, user.id))
+            .where(and(eq(preferences.userId, user.id), eq(preferences.isActive, true)))
             .limit(1);
 
         if (existingPreferences.length === 0) {
@@ -203,7 +203,7 @@ export async function handleDeletePreferences(c: Context) {
                 isActive: false,
                 updatedAt: new Date(),
             })
-            .where(eq(preferences.userId, user.id));
+            .where(and(eq(preferences.userId, user.id), eq(preferences.isActive, true)));
 
         return c.json({ success: true });
     } catch (error) {

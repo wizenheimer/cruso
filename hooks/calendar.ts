@@ -40,12 +40,13 @@ export function useCalendarConnections() {
         }
     };
 
-    const removeConnection = async (id: number) => {
+    const removeAccount = async (accountId: string) => {
         try {
-            await calendarClient.removeConnection(id);
-            setConnections((prev) => prev.filter((conn) => conn.id !== id));
+            await calendarClient.removeAccount(accountId);
+            // Refresh the connections list since we removed an entire account
+            await fetchConnections();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to remove connection');
+            setError(err instanceof Error ? err.message : 'Failed to remove account');
             throw err;
         }
     };
@@ -66,7 +67,7 @@ export function useCalendarConnections() {
         error,
         fetchConnections,
         updateConnection,
-        removeConnection,
+        removeAccount,
         syncConnection,
     };
 }

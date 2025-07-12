@@ -120,12 +120,13 @@ export class CalendarClient {
     }
 
     /**
-     * Remove a calendar connection
-     * @param id - The id of the calendar connection to remove.
+     * Remove a calendar account and all its connections
+     * @param accountId - The id of the account to remove.
      */
-    async removeConnection(id: number): Promise<void> {
-        await this.fetchWithAuth(`/v1/calendar/${id}`, {
+    async removeAccount(accountId: string): Promise<void> {
+        await this.fetchWithAuth('/v1/calendar', {
             method: 'DELETE',
+            body: JSON.stringify({ accountId }),
         });
     }
 

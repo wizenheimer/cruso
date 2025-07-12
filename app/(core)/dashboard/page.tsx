@@ -253,7 +253,7 @@ export default function DashboardPage() {
     const handleRemoveCalendar = async (accountId: string) => {
         try {
             console.log('┌─ [API] Removing calendar...', { accountId });
-            const response = await apiClient.deleteCalendarConnection(accountId);
+            const response = await apiClient.deleteCalendarAccount(accountId);
             console.log('├─ [API] Remove calendar response:', {
                 success: response.success,
                 error: response.error,

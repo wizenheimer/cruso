@@ -86,7 +86,9 @@ export async function getCalendarConnectionById(connectionId: string) {
         })
         .from(calendarConnections)
         .leftJoin(account, eq(calendarConnections.accountId, account.id))
-        .where(eq(calendarConnections.id, connectionId))
+        .where(
+            and(eq(calendarConnections.id, connectionId), eq(calendarConnections.isActive, true)),
+        )
         .limit(1);
 
     return connection || null;

@@ -72,7 +72,12 @@ export async function handlePostOAuthSync(c: Context) {
             const existingConnections = await db
                 .select()
                 .from(calendarConnections)
-                .where(eq(calendarConnections.accountId, accountData.id))
+                .where(
+                    and(
+                        eq(calendarConnections.accountId, accountData.id),
+                        eq(calendarConnections.isActive, true),
+                    ),
+                )
                 .limit(1);
 
             if (existingConnections.length > 0) {
@@ -122,7 +127,12 @@ export async function handlePostOAuthSync(c: Context) {
                 const syncedConnections = await db
                     .select()
                     .from(calendarConnections)
-                    .where(eq(calendarConnections.accountId, accountData.id));
+                    .where(
+                        and(
+                            eq(calendarConnections.accountId, accountData.id),
+                            eq(calendarConnections.isActive, true),
+                        ),
+                    );
 
                 totalCalendars += syncedConnections.length;
                 syncedAccounts++;

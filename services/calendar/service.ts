@@ -241,7 +241,12 @@ export class GoogleCalendarService {
                             errorMessage: null,
                             updatedAt: new Date(),
                         })
-                        .where(eq(calendarConnections.id, connection.id));
+                        .where(
+                            and(
+                                eq(calendarConnections.id, connection.id),
+                                eq(calendarConnections.isActive, true),
+                            ),
+                        );
                 } catch (error) {
                     console.error(`Error fetching calendar ${connection.calendarId}:`, error);
 
@@ -253,7 +258,12 @@ export class GoogleCalendarService {
                             errorMessage: error instanceof Error ? error.message : 'Unknown error',
                             updatedAt: new Date(),
                         })
-                        .where(eq(calendarConnections.id, connection.id));
+                        .where(
+                            and(
+                                eq(calendarConnections.id, connection.id),
+                                eq(calendarConnections.isActive, true),
+                            ),
+                        );
                 }
             }
 
@@ -629,7 +639,12 @@ export class GoogleCalendarService {
                         errorMessage: null,
                         updatedAt: new Date(),
                     })
-                    .where(eq(calendarConnections.id, connection.id));
+                    .where(
+                        and(
+                            eq(calendarConnections.id, connection.id),
+                            eq(calendarConnections.isActive, true),
+                        ),
+                    );
 
                 successCount++;
             } catch (error) {
@@ -644,7 +659,12 @@ export class GoogleCalendarService {
                         errorMessage: errorMessage,
                         updatedAt: new Date(),
                     })
-                    .where(eq(calendarConnections.id, connection.id));
+                    .where(
+                        and(
+                            eq(calendarConnections.id, connection.id),
+                            eq(calendarConnections.isActive, true),
+                        ),
+                    );
             }
         }
 

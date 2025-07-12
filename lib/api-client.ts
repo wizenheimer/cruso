@@ -73,9 +73,10 @@ class ApiClient {
         });
     }
 
-    async deleteCalendarConnection(connectionId: string) {
-        return this.request(`/calendar/${connectionId}`, {
+    async deleteCalendarAccount(accountId: string) {
+        return this.request('/calendar', {
             method: 'DELETE',
+            body: JSON.stringify({ accountId }),
         });
     }
 
@@ -126,12 +127,6 @@ class ApiClient {
     async deleteUserEmail(emailId: string) {
         return this.request(`/user-emails/${emailId}`, {
             method: 'DELETE',
-        });
-    }
-
-    async verifyUserEmail(emailId: string) {
-        return this.request(`/user-emails/${emailId}/verify`, {
-            method: 'POST',
         });
     }
 
