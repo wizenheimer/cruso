@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { NextButton } from '@/components/onboarding/NextButton';
 import { apiClient } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
+import { showToast } from '@/lib/toast';
 import {
     CalendarStep,
     BufferStep,
@@ -228,6 +229,7 @@ const OnboardingContent = () => {
             }
         } catch (error) {
             console.error('Error loading onboarding data:', error);
+            showToast.error('Failed to load onboarding data');
             setError('Failed to load onboarding data');
         } finally {
             setDataLoading(false);
@@ -380,7 +382,10 @@ const OnboardingContent = () => {
 
         if (!documentResponse.success) {
             console.log('└─ [API] Failed to generate preferences document');
-            throw new Error(documentResponse.error || 'Failed to generate preferences document');
+            const errorMessage =
+                documentResponse.error || 'Failed to generate preferences document';
+            showToast.error(errorMessage);
+            throw new Error(errorMessage);
         }
     }, []);
 
@@ -425,12 +430,11 @@ const OnboardingContent = () => {
             }
             setLoading(false);
         } catch (error) {
-            console.error(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to proceed to next step. Please try again.',
-            );
-            setError(error instanceof Error ? error.message : 'Failed to save step data');
+            const errorMessage =
+                error instanceof Error ? error.message : 'Failed to save step data';
+            console.error('Failed to proceed to next step:', errorMessage);
+            showToast.error(errorMessage);
+            setError(errorMessage);
             setLoading(false);
         }
     }, [step, saveCurrentStepData]);
@@ -461,8 +465,10 @@ const OnboardingContent = () => {
                 console.warn('[FRONTEND] No redirect URL received from linkSocial');
             }
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to link account';
             console.error('[FRONTEND] Error linking additional Google account:', error);
-            setError(error instanceof Error ? error.message : 'Failed to link account');
+            showToast.error(errorMessage);
+            setError(errorMessage);
         }
     };
 

@@ -39,7 +39,7 @@ export function generatePreferencesMarkdown(data: PreferencesData): string {
 
     // Personal Info Section
     if (data.displayName || data.nickname) {
-        sections.push('## Personal Info\n');
+        sections.push('\n## Personal Info\n');
         if (data.displayName) {
             sections.push(`- My full name is ${data.displayName}.\n`);
         }
@@ -50,7 +50,7 @@ export function generatePreferencesMarkdown(data: PreferencesData): string {
 
     // Availability Section
     if (data.availability && data.availability.length > 0) {
-        sections.push('## Availability\n');
+        sections.push('\n## Availability\n');
 
         const workingHours = formatAvailability(data.availability);
         workingHours.forEach((hours) => {
@@ -73,7 +73,7 @@ export function generatePreferencesMarkdown(data: PreferencesData): string {
         data.backToBackBufferMinutes !== undefined ||
         data.flightBufferMinutes !== undefined
     ) {
-        sections.push('## Scheduling\n');
+        sections.push('\n## Scheduling\n');
 
         if (data.minNoticeMinutes !== undefined) {
             const hours = Math.floor(data.minNoticeMinutes / 60);

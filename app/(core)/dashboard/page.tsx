@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
+import { showToast } from '@/lib/toast';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -42,7 +43,6 @@ interface ApiEmailAccount {
 export default function DashboardPage() {
     const [activeView, setActiveView] = useState<'preferences' | 'accounts'>('accounts');
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     const [calendarAccounts, setCalendarAccounts] = useState<CalendarAccount[]>([]);
     const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>([]);
@@ -71,7 +71,6 @@ export default function DashboardPage() {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
-            setError(null);
 
             // Load calendar accounts
             console.log('┌─ [API] Loading calendar accounts...');
@@ -163,7 +162,7 @@ export default function DashboardPage() {
             }
         } catch (dashboardError) {
             console.error('Error loading dashboard data:', dashboardError);
-            setError('Failed to load dashboard data');
+            showToast.error('Failed to load dashboard data');
         } finally {
             setLoading(false);
         }
@@ -204,11 +203,11 @@ export default function DashboardPage() {
                 console.log('└─ [API] Successfully updated primary calendar');
             } else {
                 console.log('└─ [API] Failed to update primary calendar');
-                setError('Failed to update primary calendar');
+                showToast.error('Failed to update primary calendar');
             }
         } catch (primaryCalendarError) {
             console.error('Error updating primary calendar:', primaryCalendarError);
-            setError('Failed to update primary calendar');
+            showToast.error('Failed to update primary calendar');
         }
     };
 
@@ -234,11 +233,12 @@ export default function DashboardPage() {
                 console.log('└─ [API] Successfully removed calendar');
             } else {
                 console.log('└─ [API] Failed to remove calendar');
-                setError(deleteCalendarResponse.error || 'Failed to remove calendar');
+                const errorMessage = deleteCalendarResponse.error || 'Failed to remove calendar';
+                showToast.error(errorMessage);
             }
         } catch (removeCalendarError) {
             console.error('Error removing calendar:', removeCalendarError);
-            setError('Failed to remove calendar');
+            showToast.error('Failed to remove calendar');
         }
     };
 
@@ -279,11 +279,11 @@ export default function DashboardPage() {
                 console.log('└─ [API] Successfully updated primary email');
             } else {
                 console.log('└─ [API] Failed to update primary email');
-                setError('Failed to update primary email');
+                showToast.error('Failed to update primary email');
             }
         } catch (primaryEmailError) {
             console.error('Error updating primary email:', primaryEmailError);
-            setError('Failed to update primary email');
+            showToast.error('Failed to update primary email');
         }
     };
 
@@ -309,11 +309,11 @@ export default function DashboardPage() {
                 console.log('└─ [API] Successfully removed email');
             } else {
                 console.log('└─ [API] Failed to remove email');
-                setError('Failed to remove email');
+                showToast.error('Failed to remove email');
             }
         } catch (removeEmailError) {
             console.error('Error removing email:', removeEmailError);
-            setError('Failed to remove email');
+            showToast.error('Failed to remove email');
         }
     };
 
@@ -362,11 +362,11 @@ export default function DashboardPage() {
                 console.log('└─ [API] Successfully added email');
             } else {
                 console.log('└─ [API] Failed to add email');
-                setError('Failed to add email');
+                showToast.error('Failed to add email');
             }
         } catch (addEmailError) {
             console.error('Error adding email:', addEmailError);
-            setError('Failed to add email');
+            showToast.error('Failed to add email');
         }
     };
 
@@ -418,11 +418,11 @@ export default function DashboardPage() {
                 console.log('└─ [API] Successfully saved preferences');
             } else {
                 console.log('└─ [API] Failed to save preferences');
-                setError('Failed to save preferences');
+                showToast.error('Failed to save preferences');
             }
         } catch (savePreferencesError) {
             console.error('Error saving preferences:', savePreferencesError);
-            setError('Failed to save preferences');
+            showToast.error('Failed to save preferences');
         } finally {
             setIsSaving(false);
         }
@@ -495,12 +495,12 @@ export default function DashboardPage() {
                     console.log('└─ [API] Successfully toggled calendar');
                 } else {
                     console.log('└─ [API] Failed to toggle calendar');
-                    setError('Failed to update calendar settings');
+                    showToast.error('Failed to update calendar settings');
                 }
             }
         } catch (calendarToggleError) {
             console.error('Error updating calendar:', calendarToggleError);
-            setError('Failed to update calendar settings');
+            showToast.error('Failed to update calendar settings');
         }
     };
 
@@ -511,7 +511,6 @@ export default function DashboardPage() {
     const handleAddCalendar = async () => {
         try {
             console.log('[FRONTEND] Starting Google account linking process...');
-            setError(null);
 
             console.log('[FRONTEND] Calling authClient.linkSocial...');
             const linkSocialResponse = await authClient.linkSocial({
@@ -533,12 +532,12 @@ export default function DashboardPage() {
                 console.warn('[FRONTEND] No redirect URL received from linkSocial');
             }
         } catch (addCalendarError) {
-            console.error('[FRONTEND] Error linking additional Google account:', addCalendarError);
-            setError(
+            const errorMessage =
                 addCalendarError instanceof Error
                     ? addCalendarError.message
-                    : 'Failed to link account',
-            );
+                    : 'Failed to link account';
+            console.error('[FRONTEND] Error linking additional Google account:', addCalendarError);
+            showToast.error(errorMessage);
         }
     };
 
@@ -557,22 +556,6 @@ export default function DashboardPage() {
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
                     <p className="mt-4 text-gray-600">Loading dashboard...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-red-600 mb-4">{error}</p>
-                    <button
-                        onClick={loadDashboardData}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                        Retry
-                    </button>
                 </div>
             </div>
         );

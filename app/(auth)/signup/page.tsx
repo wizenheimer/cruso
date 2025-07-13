@@ -7,6 +7,7 @@ import { Testimonials } from '@/components/onboarding/Testimonials';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { authClient } from '@/lib/auth-client';
+import { showToast } from '@/lib/toast';
 
 // Replace with actual testimonials from users
 const testimonials = [
@@ -57,14 +58,17 @@ const SignupPage = () => {
             }
 
             // If no URL is returned, something went wrong
-            console.error('Failed to get Google OAuth URL. Please try again.');
+            const errorMessage = 'Failed to get Google OAuth URL. Please try again.';
+            console.error(errorMessage);
+            showToast.error(errorMessage);
             setLoading(false);
         } catch (error) {
-            console.error(
+            const errorMessage =
                 error instanceof Error
                     ? error.message
-                    : 'Failed to sign up with Google. Please try again.',
-            );
+                    : 'Failed to sign up with Google. Please try again.';
+            console.error(errorMessage);
+            showToast.error(errorMessage);
             setLoading(false);
         }
     };
