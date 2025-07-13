@@ -1,700 +1,689 @@
 {
-	"info": {
-		"_postman_id": "1911264d-42ef-4eaf-97aa-01ab0ad10aa7",
-		"name": "Cruso Labs API",
-		"description": "Complete API collection for Cruso Labs with authentication",
-		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
-		"_exporter_id": "38905328"
-	},
-	"item": [
-		{
-			"name": "Health Routes",
-			"item": [
-				{
-					"name": "Health Check",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": "{{baseUrl}}/api/health"
-					},
-					"response": []
-				},
-				{
-					"name": "Readiness Check",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": "{{baseUrl}}/api/health/ready"
-					},
-					"response": []
-				},
-				{
-					"name": "Liveness Check",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": "{{baseUrl}}/api/health/live"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Auth Routes",
-			"item": [
-				{
-					"name": "OAuth Sync",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/auth/post-oauth-sync"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Session Info",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/auth/session"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Calendar Routes (v1)",
-			"item": [
-				{
-					"name": "Get Calendar Connections",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/calendar"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Calendar Accounts",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/calendar/accounts"
-					},
-					"response": []
-				},
-				{
-					"name": "Check Availability",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"startTime\": \"2024-01-01T10:00:00Z\",\n  \"endTime\": \"2024-01-01T11:00:00Z\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/calendar/availability"
-					},
-					"response": []
-				},
-				{
-					"name": "Sync All Calendars",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/calendar/sync-all"
-					},
-					"response": []
-				},
-				{
-					"name": "Sync Specific Calendar",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/calendar/{{calendarId}}/sync"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Calendar Connection",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"calendarName\": \"Updated Calendar Name\",\n  \"includeInAvailability\": true,\n  \"isPrimary\": false\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/calendar/{{calendarId}}"
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Calendar Account",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/calendar"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Availability Routes (v1)",
-			"item": [
-				{
-					"name": "Get User Availability",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/availability"
-					},
-					"response": []
-				},
-				{
-					"name": "Create New Availability",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"days\": [1, 2, 3, 4, 5],\n  \"startTime\": \"09:00\",\n  \"endTime\": \"17:00\",\n  \"timezone\": \"America/New_York\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/availability"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Availability",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"days\": [1, 2, 3, 4, 5, 6],\n  \"startTime\": \"10:00\",\n  \"endTime\": \"18:00\",\n  \"timezone\": \"America/Los_Angeles\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/availability/{{availabilityId}}"
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Availability",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/availability/{{availabilityId}}"
-					},
-					"response": []
-				},
-				{
-					"name": "Check If User Available",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/availability/check?date=2024-01-01&time=10:00",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"availability",
-								"check"
-							],
-							"query": [
-								{
-									"key": "date",
-									"value": "2024-01-01"
-								},
-								{
-									"key": "time",
-									"value": "10:00"
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Inbox Routes (v1)",
-			"item": [
-				{
-					"name": "Inbox Webhook",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"sender\": \"user@example.com\",\n  \"recipient\": \"me@crusolabs.com\",\n  \"subject\": \"Test Email\",\n  \"body\": \"Email content\",\n  \"timestamp\": \"2024-01-01T10:00:00Z\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/inbox/webhook"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Preferences Routes (v1)",
-			"item": [
-				{
-					"name": "Get User Preferences",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/preferences"
-					},
-					"response": []
-				},
-				{
-					"name": "Create User Preferences",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/preferences"
-					},
-					"response": []
-				},
-				{
-					"name": "Update User Preferences",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"displayName\": \"Jane Doe\",\n  \"timezone\": \"America/Los_Angeles\",\n  \"defaultMeetingDurationMinutes\": 45\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/preferences"
-					},
-					"response": []
-				},
-				{
-					"name": "Delete User Preferences",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/preferences"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Primary Options",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/preferences/primary-options"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Primary Email",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"primaryUserEmailId\": {{primaryUserEmailId}}\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/preferences/primary-email"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Primary Account",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"primaryAccountId\": \"{{primaryAccountId}}\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/preferences/primary-account"
-					},
-					"response": []
-				},
-				{
-					"name": "Generate Preferences Document",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/preferences/generate-document"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "User Emails Routes (v1)",
-			"item": [
-				{
-					"name": "Get User Emails",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/user-emails"
-					},
-					"response": []
-				},
-				{
-					"name": "Add New User Email",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"newemail@example.com\",\n  \"isPrimary\": false\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/user-emails"
-					},
-					"response": []
-				},
-				{
-					"name": "Update User Email",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"isPrimary\": true\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/api/v1/user-emails/{{userEmailId}}"
-					},
-					"response": []
-				},
-				{
-					"name": "Delete User Email",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "cruso.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": "{{baseUrl}}/api/v1/user-emails/{{userEmailId}}"
-					},
-					"response": []
-				}
-			]
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"packages": {},
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"packages": {},
-				"exec": [
-					""
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:3000"
-		},
-		{
-			"key": "sessionToken",
-			"value": "7UDGWrksheJ4DAyhRZ7o44c6L24JdZvf.D6y7lGRvktkl7MbrUNfc%2FMzSIboSS3EzTU9A2xbVbbk%3D"
-		},
-		{
-			"key": "calendarId",
-			"value": "123"
-		},
-		{
-			"key": "availabilityId",
-			"value": "123"
-		},
-		{
-			"key": "userEmailId",
-			"value": "123"
-		},
-		{
-			"key": "primaryUserEmailId",
-			"value": "123"
-		},
-		{
-			"key": "primaryAccountId",
-			"value": "account_123"
-		}
-	]
+    "info": {
+        "_postman_id": "1911264d-42ef-4eaf-97aa-01ab0ad10aa7",
+        "name": "Cruso Labs API",
+        "description": "Complete API collection for Cruso Labs with authentication",
+        "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+        "_exporter_id": "38905328"
+    },
+    "item": [
+        {
+            "name": "Health Routes",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/health"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Readiness Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/health/ready"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Liveness Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/health/live"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Auth Routes",
+            "item": [
+                {
+                    "name": "OAuth Sync",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/auth/post-oauth-sync"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Session Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/auth/session"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Calendar Routes (v1)",
+            "item": [
+                {
+                    "name": "Get Calendar Connections",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/calendar"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Calendar Accounts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/calendar/accounts"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Check Availability",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"startTime\": \"2024-01-01T10:00:00Z\",\n  \"endTime\": \"2024-01-01T11:00:00Z\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/calendar/availability"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Sync All Calendars",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/calendar/sync-all"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Sync Specific Calendar",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/calendar/{{calendarId}}/sync"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Calendar Connection",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"calendarName\": \"Updated Calendar Name\",\n  \"includeInAvailability\": true,\n  \"isPrimary\": false\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/calendar/{{calendarId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Calendar Account",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/calendar"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Availability Routes (v1)",
+            "item": [
+                {
+                    "name": "Get User Availability",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/availability"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create New Availability",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"days\": [1, 2, 3, 4, 5],\n  \"startTime\": \"09:00\",\n  \"endTime\": \"17:00\",\n  \"timezone\": \"America/New_York\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/availability"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Availability",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"days\": [1, 2, 3, 4, 5, 6],\n  \"startTime\": \"10:00\",\n  \"endTime\": \"18:00\",\n  \"timezone\": \"America/Los_Angeles\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/availability/{{availabilityId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Availability",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/availability/{{availabilityId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Check If User Available",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/availability/check?date=2024-01-01&time=10:00",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "availability", "check"],
+                            "query": [
+                                {
+                                    "key": "date",
+                                    "value": "2024-01-01"
+                                },
+                                {
+                                    "key": "time",
+                                    "value": "10:00"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Inbox Routes (v1)",
+            "item": [
+                {
+                    "name": "Inbox Webhook",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"sender\": \"user@example.com\",\n  \"recipient\": \"me@crusolabs.com\",\n  \"subject\": \"Test Email\",\n  \"body\": \"Email content\",\n  \"timestamp\": \"2024-01-01T10:00:00Z\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/inbox/webhook"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Preferences Routes (v1)",
+            "item": [
+                {
+                    "name": "Get User Preferences",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/preferences"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create User Preferences",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/preferences"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update User Preferences",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"displayName\": \"Jane Doe\",\n  \"timezone\": \"America/Los_Angeles\",\n  \"defaultMeetingDurationMinutes\": 45\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/preferences"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete User Preferences",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/preferences"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Primary Options",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/preferences/primary-options"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Primary Email",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"primaryUserEmailId\": {{primaryUserEmailId}}\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/preferences/primary-email"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Primary Account",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"primaryAccountId\": \"{{primaryAccountId}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/preferences/primary-account"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Generate Preferences Document",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/preferences/generate-document"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "User Emails Routes (v1)",
+            "item": [
+                {
+                    "name": "Get User Emails",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/user-emails"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Add New User Email",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"newemail@example.com\",\n  \"isPrimary\": false\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/user-emails"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update User Email",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"isPrimary\": true\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/user-emails/{{userEmailId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete User Email",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/user-emails/{{userEmailId}}"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [""]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [""]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000"
+        },
+        {
+            "key": "sessionToken",
+            "value": "7UDGWrksheJ4DAyhRZ7o44c6L24JdZvf.D6y7lGRvktkl7MbrUNfc%2FMzSIboSS3EzTU9A2xbVbbk%3D"
+        },
+        {
+            "key": "calendarId",
+            "value": "123"
+        },
+        {
+            "key": "availabilityId",
+            "value": "123"
+        },
+        {
+            "key": "userEmailId",
+            "value": "123"
+        },
+        {
+            "key": "primaryUserEmailId",
+            "value": "123"
+        },
+        {
+            "key": "primaryAccountId",
+            "value": "account_123"
+        }
+    ]
 }

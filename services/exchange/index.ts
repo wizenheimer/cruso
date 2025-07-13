@@ -1,13 +1,20 @@
 import { EmailService } from '../email';
 import { EmailData } from '../inbox/types';
 import { User } from '@/types/api/users';
-import { createUserWithEmail } from '@/db/queries/users';
 import { InboxService } from '@/services/inbox';
 import {
     getExchangeOwner,
     createExchangeOwner,
     getExchangeById,
 } from '@/db/queries/exchange-owners';
+import {
+    ONBOARDING_EMAIL_SUBJECT,
+    ONBOARDING_EMAIL_TEMPLATE,
+    USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
+    NON_USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
+} from '@/lib/templates';
+
+const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
 
 export class ExchangeService {
     private static instance: ExchangeService | null = null;
@@ -17,14 +24,29 @@ export class ExchangeService {
         this.emailService = EmailService.getInstance();
     }
 
+    /**
+     * Get the signature for an exchange
+     * @param exchangeId - The exchange ID to retrieve
+     * @returns Promise<string>
+     */
     private async getSignature(exchangeId: string): Promise<string> {
         const exchangeOwner = await getExchangeOwner(exchangeId);
 
-        if (exchangeOwner) {
-            return `Best,\n\nAssistant of ${exchangeOwner.userEmail}`;
+        // If the exchange owner is a user, get the user preferences to retrieve the signature
+        if (exchangeOwner && exchangeOwner.userId) {
+            // Get user preferences to retrieve the signature
+            const { getUserPreferences } = await import('@/db/queries/preferences');
+            const userPreferences = await getUserPreferences(exchangeOwner.userId);
+
+            if (userPreferences?.signature) {
+                return `Best,\n\n${userPreferences.signature}`;
+            }
+
+            // Fallback to the original logic if no signature is set
+            return `Best,\n\n${exchangeOwner.userEmail}'s AI Assistant`;
         }
 
-        return `Best,\n\nThe Cruso Team`;
+        return `Best,\n\nCruso`;
     }
 
     /**
@@ -69,31 +91,12 @@ export class ExchangeService {
      */
     async handleNewUser(inboundEmailData: EmailData) {
         console.log('onboarding non-user', { inboundEmailData });
-        const user = await createUserWithEmail(inboundEmailData.sender);
-
-        if (!user) {
-            throw new Error('failed to create user');
-        }
-
-        // Associate the current exchange with the new user
-        await createExchangeOwner(inboundEmailData.exchangeId, user.id);
 
         const outboundEmailData = await this.emailService.sendEmail({
-            recipients: [user.email],
-            subject: 'Welcome to Cruso',
-            body: `Hi,
-
-            Welcome to Cruso! We're thrilled to have you on board.
-
-            Quick auth, and we'll get you started.
-
-            https://app.cruso.ai/login
-
-            If you have any questions, please contact us at support@cruso.ai
-
-            Best,
-
-            The Cruso Team`,
+            recipients: [inboundEmailData.sender],
+            cc: [ONBOARDING_EMAIL_RECIPIENT],
+            subject: ONBOARDING_EMAIL_SUBJECT,
+            body: ONBOARDING_EMAIL_TEMPLATE,
             newThread: true, // Force new thread for onboarding
         });
 
@@ -112,14 +115,10 @@ export class ExchangeService {
         console.log('handling invalid engagement for existing user', { inboundEmailData, user });
 
         const signature = await this.getSignature(inboundEmailData.exchangeId);
+        const body = USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE + `\n\n${signature}`;
         const outboundEmailData = await this.emailService.sendReply(inboundEmailData, {
             type: 'sender-only',
-            body: `
-            Hi,
-
-            Seems you're trying to reply to an older email in the thread. Instead, consider replying to the latest email in the thread, or creating a new thread altogether.
-
-            ${signature}`,
+            body,
         });
 
         console.log('sent invalid engagement email', { outboundEmailData });
@@ -136,14 +135,10 @@ export class ExchangeService {
         console.log('handling invalid engagement for non-user', { inboundEmailData });
 
         const signature = await this.getSignature(inboundEmailData.exchangeId);
+        const body = NON_USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE + `\n\n${signature}`;
         const outboundEmailData = await this.emailService.sendReply(inboundEmailData, {
             type: 'sender-only',
-            body: `
-            Hi,
-
-            Seems you're trying to reply to an older email in the thread. Instead, consider replying to the latest email in the thread, or creating a new thread altogether.
-
-            ${signature}`,
+            body,
         });
 
         console.log('sent invalid engagement email', { outboundEmailData });
