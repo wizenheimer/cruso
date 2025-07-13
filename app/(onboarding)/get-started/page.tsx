@@ -20,10 +20,12 @@ import {
     PersonalizationField,
     WeeklySchedule,
 } from '@/components/onboarding';
+import { FeatureSlide } from '@/components/onboarding/FeatureSlide';
 import MailboxOverlay from '@/components/icons/dynamic/mail-overlay';
 import EnvelopeOverlay from '@/components/icons/dynamic/envelope-overlay';
 import ScheduleViewOverlay from '@/components/icons/dynamic/schedule-view-overlay';
 import ScheduleHeatmapOverlay from '@/components/icons/dynamic/schedule-heatmap-overlay';
+import Image from 'next/image';
 
 interface ApiCalendarAccount {
     accountId: string;
@@ -38,11 +40,27 @@ interface ApiCalendarAccount {
 
 const totalSteps = 5;
 
+// Feature descriptions for the final step
+const features = [
+    {
+        description:
+            'Smart email automation that learns your preferences and handles your inbox intelligently.',
+    },
+    {
+        description:
+            'Intelligent calendar management with AI assistance for optimal scheduling and time management.',
+    },
+    {
+        description:
+            'Seamless integration with your existing workflow to boost productivity without disruption.',
+    },
+];
+
 // Component that uses useSearchParams
 const OnboardingContent = () => {
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
-    const { currentStep: step, setCurrentStep: setStep, clearStorage } = useOnboardingStore();
+    const { currentStep: step, setCurrentStep: setStep } = useOnboardingStore();
     const [connectedCalendars, setConnectedCalendars] = useState<ConnectedCalendar[]>([]);
     const [dataLoading, setDataLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -437,8 +455,9 @@ const OnboardingContent = () => {
             if (step < totalSteps) {
                 setStep(step + 1);
             } else {
+                // Skipped for now
                 // Clear local storage and reset step before navigating to dashboard
-                clearStorage();
+                // clearStorage();
                 // Navigate to dashboard on last step
                 window.location.href = '/dashboard';
             }
@@ -451,7 +470,7 @@ const OnboardingContent = () => {
             setError(errorMessage);
             setLoading(false);
         }
-    }, [step, saveCurrentStepData, setStep, clearStorage]);
+    }, [step, saveCurrentStepData, setStep]);
 
     // Handle adding calendar during onboarding
     const handleAddCalendar = async () => {
@@ -559,7 +578,7 @@ const OnboardingContent = () => {
             case 4:
                 return <ScheduleHeatmapOverlay />;
             case 5:
-                // TODO: Add completion celebration animation
+                // Step 5 content is now handled in the main layout
                 return null;
             default:
                 return null;
@@ -640,11 +659,50 @@ const OnboardingContent = () => {
             </div>
 
             {/* Right side - Testimonial and Image */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex-col justify-center rounded-l-2xl">
-                {/* Centered content */}
-                <div className="flex items-center justify-center w-full h-full p-8">
-                    <div className="w-96 h-auto max-w-full">{renderRightHalfContent()}</div>
-                </div>
+            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex-col justify-start rounded-l-2xl">
+                {step === 5 ? (
+                    // For step 5, use the signup page layout
+                    <>
+                        <motion.div
+                            className="px-8 xl:px-16 pt-8 xl:pt-16 pb-4 w-full"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.5, ease: 'easeOut' }}
+                        >
+                            <FeatureSlide
+                                features={features}
+                                autoPlay={true}
+                                interval={5000}
+                                showNavigation={true}
+                                className="w-full"
+                            />
+                        </motion.div>
+
+                        {/* Image Section - clean sneak peek effect */}
+                        <div className="absolute bottom-0 right-0 w-full h-full flex items-end justify-end">
+                            <motion.div
+                                className="relative w-[75%] h-[60%] transform translate-x-[8%] translate-y-[8%]"
+                                initial={{ y: 100, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ duration: 1, delay: 0.8, ease: 'easeOut' }}
+                            >
+                                <Image
+                                    src="/images/assets/onboarding/preview.svg"
+                                    alt="Cruso Preview"
+                                    fill
+                                    className="object-cover rounded-xl shadow-2xl object-left-top"
+                                    priority
+                                    sizes="(max-width: 1024px) 50vw, 40vw"
+                                />
+                            </motion.div>
+                        </div>
+                    </>
+                ) : (
+                    // For other steps, use the original centered layout
+                    <div className="flex items-center justify-center w-full h-full p-8">
+                        <div className="w-96 h-auto max-w-full">{renderRightHalfContent()}</div>
+                    </div>
+                )}
             </div>
         </div>
     );
