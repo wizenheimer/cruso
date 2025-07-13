@@ -21,6 +21,8 @@ import {
     WeeklySchedule,
 } from '@/components/onboarding';
 import MailboxOverlay from '@/components/icons/dynamic/mail-overlay';
+import EnvelopeOverlay from '@/components/icons/dynamic/envelope-overlay';
+import ScheduleViewOverlay from '@/components/icons/dynamic/schedule-view-overlay';
 
 interface ApiCalendarAccount {
     accountId: string;
@@ -531,6 +533,39 @@ const OnboardingContent = () => {
         }
     };
 
+    const renderRightHalfContent = () => {
+        switch (step) {
+            case 1:
+                return (
+                    <MailboxOverlay
+                        emailAddresses={connectedCalendars.map((calendar) => calendar.email)}
+                        typeSpeed={100}
+                        deleteSpeed={50}
+                        pauseDuration={1000}
+                    />
+                );
+            case 2:
+                return <ScheduleViewOverlay />;
+            case 3:
+                return (
+                    <EnvelopeOverlay
+                        name={fields.find((f) => f.id === 'nickname')?.value || 'there'}
+                        typeSpeed={100}
+                        deleteSpeed={50}
+                        pauseDuration={1000}
+                    />
+                );
+            case 4:
+                // TODO: Add schedule visualization
+                return null;
+            case 5:
+                // TODO: Add completion celebration animation
+                return null;
+            default:
+                return null;
+        }
+    };
+
     if (dataLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-white">
@@ -606,16 +641,9 @@ const OnboardingContent = () => {
 
             {/* Right side - Testimonial and Image */}
             <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex-col justify-center rounded-l-2xl">
-                {/* Centered MailboxOverlay */}
+                {/* Centered content */}
                 <div className="flex items-center justify-center w-full h-full p-8">
-                    <div className="w-96 h-auto max-w-full">
-                        <MailboxOverlay
-                            emailAddresses={connectedCalendars.map((calendar) => calendar.email)}
-                            typeSpeed={100}
-                            deleteSpeed={50}
-                            pauseDuration={1000}
-                        />
-                    </div>
+                    <div className="w-96 h-auto max-w-full">{renderRightHalfContent()}</div>
                 </div>
             </div>
         </div>
