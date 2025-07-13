@@ -20,6 +20,7 @@ import {
     PersonalizationField,
     WeeklySchedule,
 } from '@/components/onboarding';
+import MailboxOverlay from '@/components/icons/dynamic/mail-overlay';
 
 interface ApiCalendarAccount {
     accountId: string;
@@ -604,8 +605,18 @@ const OnboardingContent = () => {
             </div>
 
             {/* Right side - Testimonial and Image */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex-col justify-start rounded-l-2xl">
-                {/* Add right side content */}
+            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex-col justify-center rounded-l-2xl">
+                {/* Centered MailboxOverlay */}
+                <div className="flex items-center justify-center w-full h-full p-8">
+                    <div className="w-96 h-auto max-w-full">
+                        <MailboxOverlay
+                            emailAddresses={connectedCalendars.map((calendar) => calendar.email)}
+                            typeSpeed={100}
+                            deleteSpeed={50}
+                            pauseDuration={1000}
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );
