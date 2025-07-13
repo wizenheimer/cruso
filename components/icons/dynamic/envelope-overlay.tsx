@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 function useCyclingTypewriter(
     texts: string[],
@@ -87,9 +88,11 @@ export default function EnvelopeOverlay({
 
     return (
         <div style={{ position: 'relative', width: 380, height: 400 }}>
-            <img
+            <Image
                 src="/images/assets/onboarding/envelope.svg"
                 alt="Envelope"
+                width={380}
+                height={400}
                 style={{ width: '100%', height: '100%', display: 'block' }}
             />
             <motion.div

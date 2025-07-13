@@ -23,6 +23,7 @@ import {
 import MailboxOverlay from '@/components/icons/dynamic/mail-overlay';
 import EnvelopeOverlay from '@/components/icons/dynamic/envelope-overlay';
 import ScheduleViewOverlay from '@/components/icons/dynamic/schedule-view-overlay';
+import ScheduleHeatmapOverlay from '@/components/icons/dynamic/schedule-heatmap-overlay';
 
 interface ApiCalendarAccount {
     accountId: string;
@@ -556,8 +557,7 @@ const OnboardingContent = () => {
                     />
                 );
             case 4:
-                // TODO: Add schedule visualization
-                return null;
+                return <ScheduleHeatmapOverlay />;
             case 5:
                 // TODO: Add completion celebration animation
                 return null;
