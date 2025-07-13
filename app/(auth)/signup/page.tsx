@@ -44,6 +44,13 @@ const SignupPage = () => {
             const response = await authClient.signIn.social({
                 provider: 'google',
                 callbackURL: '/get-started',
+                fetchOptions: {
+                    onError: (error) => {
+                        console.error('Error signing up with Google:', error);
+                        showToast.error('Failed to sign up with Google. Please try again.');
+                        setLoading(false);
+                    },
+                },
             });
 
             // Check for error in response

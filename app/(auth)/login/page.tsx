@@ -44,6 +44,13 @@ const LoginPage = () => {
             const response = await authClient.signIn.social({
                 provider: 'google',
                 callbackURL: '/dashboard',
+                fetchOptions: {
+                    onError: (error) => {
+                        console.error('Error signing in with Google:', error);
+                        showToast.error('Failed to sign in with Google. Please try again.');
+                        setLoading(false);
+                    },
+                },
             });
 
             // Check for error in response

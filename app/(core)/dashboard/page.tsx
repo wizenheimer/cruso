@@ -516,6 +516,12 @@ export default function DashboardPage() {
             const linkSocialResponse = await authClient.linkSocial({
                 provider: 'google',
                 callbackURL: '/dashboard?action=linked',
+                fetchOptions: {
+                    onError: (error) => {
+                        console.error('Error linking Google account:', error);
+                        showToast.error('Failed to link Google account. Please try again.');
+                    },
+                },
             });
 
             console.log('[FRONTEND] linkSocial response:', linkSocialResponse);

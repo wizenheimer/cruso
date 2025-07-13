@@ -11,6 +11,7 @@ import {
 import { LogOut, HelpCircle, X } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 import { AVATAR_COLORS, AVATAR_VARIANT } from '@/lib/ui-constants';
+import { showToast } from '@/lib/toast';
 
 interface SidebarProps {
     activeView: 'preferences' | 'accounts';
@@ -48,6 +49,7 @@ export function Avatar() {
             window.location.href = '/login';
         } catch (error) {
             console.error('Error signing out:', error);
+            showToast.error('Failed to sign out. Please try again.');
         }
     };
 
@@ -85,6 +87,7 @@ export function MobileAvatar() {
             window.location.href = '/login';
         } catch (error) {
             console.error('Error signing out:', error);
+            showToast.error('Failed to sign out. Please try again.');
         }
     };
 

@@ -8,6 +8,7 @@ import { authClient } from '@/lib/auth-client';
 import { Trash2, Plus } from 'lucide-react';
 
 import { ConnectedCalendar } from './types';
+import { showToast } from '@/lib/toast';
 
 interface CalendarStepProps {
     connectedCalendars: ConnectedCalendar[];
@@ -38,6 +39,13 @@ const CalendarStep = ({
             const response = await authClient.linkSocial({
                 provider: 'google',
                 callbackURL: '/get-started?action=linked&step=1',
+                fetchOptions: {
+                    onError: (error) => {
+                        console.error('Error linking Google account:', error);
+                        showToast.error('Failed to link Google account. Please try again.');
+                        setAddingCalendar(false);
+                    },
+                },
             });
 
             if (response?.error) {

@@ -449,6 +449,12 @@ const OnboardingContent = () => {
             const response = await authClient.linkSocial({
                 provider: 'google',
                 callbackURL: '/get-started?action=linked&step=1',
+                fetchOptions: {
+                    onError: (error) => {
+                        console.error('Error linking Google account:', error);
+                        showToast.error('Failed to link Google account. Please try again.');
+                    },
+                },
             });
 
             console.log('[FRONTEND] linkSocial response:', response);
