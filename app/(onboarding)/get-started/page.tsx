@@ -8,6 +8,7 @@ import { NextButton } from '@/components/onboarding/NextButton';
 import { apiClient } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
 import { showToast } from '@/lib/toast';
+import { useOnboardingStore } from '@/lib/stores/onboarding';
 import {
     CalendarStep,
     BufferStep,
@@ -31,14 +32,13 @@ interface ApiCalendarAccount {
     }>;
 }
 
-const currentStep = 1;
 const totalSteps = 5;
 
 // Component that uses useSearchParams
 const OnboardingContent = () => {
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState(currentStep);
+    const { currentStep: step, setCurrentStep: setStep, clearStorage } = useOnboardingStore();
     const [connectedCalendars, setConnectedCalendars] = useState<ConnectedCalendar[]>([]);
     const [dataLoading, setDataLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -241,6 +241,14 @@ const OnboardingContent = () => {
         loadOnboardingData();
     }, [loadOnboardingData]);
 
+    // Validate and restore step on mount
+    useEffect(() => {
+        // Ensure step is within valid range
+        if (step < 1 || step > totalSteps) {
+            setStep(1);
+        }
+    }, [step, setStep]);
+
     // Clear browser history to prevent back navigation
     useEffect(() => {
         // Replace the current history entry so back button doesn't work
@@ -425,6 +433,8 @@ const OnboardingContent = () => {
             if (step < totalSteps) {
                 setStep(step + 1);
             } else {
+                // Clear local storage and reset step before navigating to dashboard
+                clearStorage();
                 // Navigate to dashboard on last step
                 window.location.href = '/dashboard';
             }
@@ -437,7 +447,7 @@ const OnboardingContent = () => {
             setError(errorMessage);
             setLoading(false);
         }
-    }, [step, saveCurrentStepData]);
+    }, [step, saveCurrentStepData, setStep, clearStorage]);
 
     // Handle adding calendar during onboarding
     const handleAddCalendar = async () => {
