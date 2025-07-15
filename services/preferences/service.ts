@@ -5,8 +5,8 @@ import { calendarConnections } from '@/db/schema/calendars';
 import { availability } from '@/db/schema/availability';
 import { account, user } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
-import { PREFERENCES_DEFAULTS } from '@/lib/preferences-constants';
-import { generatePreferencesMarkdown, type PreferencesData } from '@/lib/preferences-document';
+import { PREFERENCES_DEFAULTS } from '@/constants/preferences';
+import { generatePreferencesMarkdown, type PreferencesData } from '@/lib/preference';
 import {
     Preference,
     PreferenceUpdate,

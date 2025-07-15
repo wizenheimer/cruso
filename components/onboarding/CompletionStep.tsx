@@ -3,8 +3,8 @@
 import { useEffect, useRef } from 'react';
 import BoringAvatar from 'boring-avatars';
 import confetti from 'canvas-confetti';
-import { authClient } from '@/lib/auth-client';
-import { AVATAR_COLORS, AVATAR_VARIANT } from '@/lib/ui-constants';
+import { authClient } from '@/client/auth';
+import { AVATAR_COLORS, AVATAR_VARIANT } from '@/constants/palette';
 
 // User info display component specific to completion step
 function UserInfo() {

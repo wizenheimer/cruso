@@ -3,8 +3,8 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { apiClient } from '@/lib/api-client';
-import { authClient } from '@/lib/auth-client';
+import { apiClient } from '@/client/api';
+import { authClient } from '@/client/auth';
 import { Trash2, Plus } from 'lucide-react';
 
 import { ConnectedCalendar } from './types';

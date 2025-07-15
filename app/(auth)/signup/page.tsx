@@ -6,34 +6,18 @@ import Link from 'next/link';
 import { Testimonials } from '@/components/onboarding/Testimonials';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/client/auth';
 import { showToast } from '@/lib/toast';
+import { SIGNUP_TESTIMONIALS } from '@/constants/testimonials';
 
-// Replace with actual testimonials from users
-const testimonials = [
-    {
-        id: 1,
-        quote: 'Few things make me feel more powerful than setting up automations in Cruso to make my life easier and more efficient.',
-        author: 'Aliah Lane',
-        title: 'Founder, Layers.io',
-        rating: 5,
-    },
-    {
-        id: 2,
-        quote: 'Cruso has completely transformed how I manage my daily workflows. The automation possibilities are endless.',
-        author: 'Marcus Chen',
-        title: 'Product Manager, TechFlow',
-        rating: 5,
-    },
-    {
-        id: 3,
-        quote: 'The intuitive interface and powerful automation features make Cruso indispensable for my productivity stack.',
-        author: 'Sarah Williams',
-        title: 'CEO, InnovateLab',
-        rating: 5,
-    },
-];
+/**
+ * Signup page testimonials
+ */
+const testimonials = SIGNUP_TESTIMONIALS;
 
+/**
+ * Signup page
+ */
 const SignupPage = () => {
     const [loading, setLoading] = useState(false);
 

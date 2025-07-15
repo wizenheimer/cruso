@@ -1,4 +1,4 @@
-import { PREFERENCES_DEFAULTS } from './preferences-constants';
+import { PREFERENCES_DEFAULTS } from '@/constants/preferences';
 
 // Types for document generation
 export interface AvailabilitySlot {

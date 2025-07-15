@@ -28,6 +28,9 @@ importers:
             '@mastra/memory':
                 specifier: ^0.11.2
                 version: 0.11.2(@mastra/core@0.10.14(@hono/zod-validator@0.7.0(hono@4.8.4)(zod@3.25.74))(openapi-types@12.1.3)(react@19.1.0)(zod@3.25.74))(react@19.1.0)
+            '@mastra/pg':
+                specifier: ^0.12.2
+                version: 0.12.2(@mastra/core@0.10.14(@hono/zod-validator@0.7.0(hono@4.8.4)(zod@3.25.74))(openapi-types@12.1.3)(react@19.1.0)(zod@3.25.74))(pg-query-stream@4.10.3(pg@8.16.3))
             '@radix-ui/react-avatar':
                 specifier: ^1.1.10
                 version: 1.1.10(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1682,6 +1685,14 @@ packages:
             }
         peerDependencies:
             '@mastra/core': '>=0.10.9-0 <0.11.0-0'
+
+    '@mastra/pg@0.12.2':
+        resolution:
+            {
+                integrity: sha512-xYFU8gH6jlQT27eK+ORZ9Aq/HAdeUv72VwFpideYu5BfllT1laScYhvTcgh44r9HmAwTwfD6oCQ2sU7QiTZxtQ==,
+            }
+        peerDependencies:
+            '@mastra/core': '>=0.10.7-0 <0.11.0-0'
 
     '@mastra/schema-compat@0.10.4':
         resolution:
@@ -5206,6 +5217,13 @@ packages:
             }
         engines: { node: '>=12.0.0' }
 
+    assert-options@0.8.3:
+        resolution:
+            {
+                integrity: sha512-s6v4HnA+vYSGO4eZX+F+I3gvF74wPk+m6Z1Q3w1Dsg4Pnv/R24vhKAasoMVZGvDpOOfTg1Qz4ptZnEbuy95XsQ==,
+            }
+        engines: { node: '>=14.0.0' }
+
     ast-types-flow@0.0.8:
         resolution:
             {
@@ -5225,6 +5243,12 @@ packages:
                 integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==,
             }
         engines: { node: '>= 0.4' }
+
+    async-mutex@0.5.0:
+        resolution:
+            {
+                integrity: sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==,
+            }
 
     async@2.6.4:
         resolution:
@@ -8705,12 +8729,27 @@ packages:
                 integrity: sha512-nkc6NpDcvPVpZXxrreI/FOtX3XemeLl8E0qFr6F2Lrm/I8WOnaWNhIPK2Z7OHpw7gh5XJThi6j6ppgNoaT1w4w==,
             }
 
+    pg-cursor@2.15.3:
+        resolution:
+            {
+                integrity: sha512-eHw63TsiGtFEfAd7tOTZ+TLy+i/2ePKS20H84qCQ+aQ60pve05Okon9tKMC+YN3j6XyeFoHnaim7Lt9WVafQsA==,
+            }
+        peerDependencies:
+            pg: ^8
+
     pg-int8@1.0.1:
         resolution:
             {
                 integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==,
             }
         engines: { node: '>=4.0.0' }
+
+    pg-minify@1.8.0:
+        resolution:
+            {
+                integrity: sha512-jO/oJOununpx8DzKgvSsWm61P8JjwXlaxSlbbfTBo1nvSWoo/+I6qZYaSN96jm/KDwa5d+JMQwPGgcP6HXDRow==,
+            }
+        engines: { node: '>=16.0.0' }
 
     pg-pool@3.10.1:
         resolution:
@@ -8720,11 +8759,28 @@ packages:
         peerDependencies:
             pg: '>=8.0'
 
+    pg-promise@11.15.0:
+        resolution:
+            {
+                integrity: sha512-EUXpXn90yPVPKxQH4qqUAEVcApd2tp/JdR3wG6LzBUgaXTUYqwmuXG4vFhhZTCctzhfzRA20EbORb9H4aAgUHA==,
+            }
+        engines: { node: '>=16.0' }
+        peerDependencies:
+            pg-query-stream: 4.10.3
+
     pg-protocol@1.10.3:
         resolution:
             {
                 integrity: sha512-6DIBgBQaTKDJyxnXaLiLR8wBpQQcGWuAESkRBX/t6OwA8YsqP+iVSiond2EDy6Y/dsGk8rh/jtax3js5NeV7JQ==,
             }
+
+    pg-query-stream@4.10.3:
+        resolution:
+            {
+                integrity: sha512-h2utrzpOIzeT9JfaqfvBbVuvCfBjH86jNfVrGGTbyepKAIOyTfDew0lAt8bbJjs9n/I5bGDl7S2sx6h5hPyJxw==,
+            }
+        peerDependencies:
+            pg: ^8
 
     pg-types@2.2.0:
         resolution:
@@ -9590,6 +9646,13 @@ packages:
             {
                 integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==,
             }
+
+    spex@3.4.1:
+        resolution:
+            {
+                integrity: sha512-Br0Mu3S+c70kr4keXF+6K4B8ohR+aJjI9s7SbdsI3hliE1Riz4z+FQk7FQL+r7X1t90KPkpuKwQyITpCIQN9mg==,
+            }
+        engines: { node: '>=14.0.0' }
 
     split2@4.2.0:
         resolution:
@@ -11665,6 +11728,17 @@ snapshots:
         transitivePeerDependencies:
             - pg-native
             - react
+
+    '@mastra/pg@0.12.2(@mastra/core@0.10.14(@hono/zod-validator@0.7.0(hono@4.8.4)(zod@3.25.74))(openapi-types@12.1.3)(react@19.1.0)(zod@3.25.74))(pg-query-stream@4.10.3(pg@8.16.3))':
+        dependencies:
+            '@mastra/core': 0.10.14(@hono/zod-validator@0.7.0(hono@4.8.4)(zod@3.25.74))(openapi-types@12.1.3)(react@19.1.0)(zod@3.25.74)
+            async-mutex: 0.5.0
+            pg: 8.16.3
+            pg-promise: 11.15.0(pg-query-stream@4.10.3(pg@8.16.3))
+            xxhash-wasm: 1.1.0
+        transitivePeerDependencies:
+            - pg-native
+            - pg-query-stream
 
     '@mastra/schema-compat@0.10.4(ai@4.3.18(react@19.1.0)(zod@3.25.74))(zod@3.25.74)':
         dependencies:
@@ -14479,11 +14553,17 @@ snapshots:
             pvutils: 1.1.3
             tslib: 2.8.1
 
+    assert-options@0.8.3: {}
+
     ast-types-flow@0.0.8: {}
 
     astring@1.9.0: {}
 
     async-function@1.0.0: {}
+
+    async-mutex@0.5.0:
+        dependencies:
+            tslib: 2.8.1
 
     async@2.6.4:
         dependencies:
@@ -16874,13 +16954,34 @@ snapshots:
 
     pg-connection-string@2.9.1: {}
 
+    pg-cursor@2.15.3(pg@8.16.3):
+        dependencies:
+            pg: 8.16.3
+
     pg-int8@1.0.1: {}
+
+    pg-minify@1.8.0: {}
 
     pg-pool@3.10.1(pg@8.16.3):
         dependencies:
             pg: 8.16.3
 
+    pg-promise@11.15.0(pg-query-stream@4.10.3(pg@8.16.3)):
+        dependencies:
+            assert-options: 0.8.3
+            pg: 8.16.3
+            pg-minify: 1.8.0
+            pg-query-stream: 4.10.3(pg@8.16.3)
+            spex: 3.4.1
+        transitivePeerDependencies:
+            - pg-native
+
     pg-protocol@1.10.3: {}
+
+    pg-query-stream@4.10.3(pg@8.16.3):
+        dependencies:
+            pg: 8.16.3
+            pg-cursor: 2.15.3(pg@8.16.3)
 
     pg-types@2.2.0:
         dependencies:
@@ -17525,6 +17626,8 @@ snapshots:
     source-map@0.7.4: {}
 
     space-separated-tokens@2.0.2: {}
+
+    spex@3.4.1: {}
 
     split2@4.2.0: {}
 

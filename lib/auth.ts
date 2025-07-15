@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/db'; // your drizzle instance
 import { user, account, session, verification } from '@/db/schema/auth';
-import { authCookiePrefix } from './auth-constants';
+import { authCookiePrefix } from '@/constants/auth';
 import { userHooks, accountHooks, sessionHooks } from '@/hooks';
 
 // Re-export for backward compatibility

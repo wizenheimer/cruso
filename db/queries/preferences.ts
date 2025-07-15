@@ -4,7 +4,7 @@ import { userEmails } from '@/db/schema/user-emails';
 import { calendarConnections } from '@/db/schema/calendars';
 import { account, user } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
-import { PREFERENCES_DEFAULTS } from '@/lib/preferences-constants';
+import { PREFERENCES_DEFAULTS } from '@/constants/preferences';
 
 /**
  * Get user preferences with primary email and account data

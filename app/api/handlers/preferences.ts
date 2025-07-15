@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { availability } from '@/db/schema/availability';
 import { eq } from 'drizzle-orm';
 import { preferenceService } from '@/services/preferences';
-import { generatePreferencesMarkdown, type PreferencesData } from '@/lib/preferences-document';
+import { generatePreferencesMarkdown, type PreferencesData } from '@/lib/preference';
 
 export const getUser = (c: Context) => {
     const user = c.get('user');

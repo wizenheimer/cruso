@@ -5,8 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { NextButton } from '@/components/onboarding/NextButton';
-import { apiClient } from '@/lib/api-client';
-import { authClient } from '@/lib/auth-client';
+import { apiClient } from '@/client/api';
+import { authClient } from '@/client/auth';
 import { showToast } from '@/lib/toast';
 import { useOnboardingStore } from '@/lib/stores/onboarding';
 import {
@@ -235,7 +235,7 @@ const OnboardingContent = () => {
                 }>;
 
                 // Convert availability data to schedule format using utility function
-                const { convertAvailabilityToSchedule } = await import('@/lib/availability-utils');
+                const { convertAvailabilityToSchedule } = await import('@/lib/availability');
                 const newSchedule = convertAvailabilityToSchedule(
                     availability.map((avail) => ({
                         ...avail,
@@ -381,7 +381,7 @@ const OnboardingContent = () => {
 
         // Convert schedule to availability format using utility function
         console.log('├─ [API] Converting schedule to availability format...');
-        const { convertScheduleToAvailability } = await import('@/lib/availability-utils');
+        const { convertScheduleToAvailability } = await import('@/lib/availability');
         const availabilityData = convertScheduleToAvailability(schedule);
 
         // Create new availability records

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
-import { authCookiePrefix } from '@/lib/auth-constants';
+import { authCookiePrefix } from '@/constants/auth';
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;

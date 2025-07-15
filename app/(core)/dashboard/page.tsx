@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
-import { authClient } from '@/lib/auth-client';
+import { apiClient } from '@/client/api';
+import { authClient } from '@/client/auth';
 import { showToast } from '@/lib/toast';
 import {
     DropdownMenu,

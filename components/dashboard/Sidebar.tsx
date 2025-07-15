@@ -9,8 +9,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut, HelpCircle, X } from 'lucide-react';
-import { authClient } from '@/lib/auth-client';
-import { AVATAR_COLORS, AVATAR_VARIANT } from '@/lib/ui-constants';
+import { authClient } from '@/client/auth';
+import { AVATAR_COLORS, AVATAR_VARIANT } from '@/constants/palette';
 import { showToast } from '@/lib/toast';
 
 interface SidebarProps {

@@ -12,7 +12,7 @@ import {
     ONBOARDING_EMAIL_TEMPLATE,
     USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
     NON_USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
-} from '@/lib/templates';
+} from '@/constants/email';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
 
