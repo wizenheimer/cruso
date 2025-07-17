@@ -13,15 +13,19 @@ import {
     USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
     NON_USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
 } from '@/constants/email';
+import { Mastra } from '@mastra/core/mastra';
+import { mastra } from '@/mastra';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
 
 export class ExchangeService {
     private static instance: ExchangeService | null = null;
     private emailService: EmailService;
+    private mastra: Mastra;
 
     private constructor() {
         this.emailService = EmailService.getInstance();
+        this.mastra = mastra;
     }
 
     /**
@@ -189,34 +193,22 @@ ${signature}`,
     async handleEngagementForExistingUser(emailData: EmailData, user: User) {
         console.log('handling engagement for existing user', { emailData, user });
 
-        const inboxService = InboxService.getInstance();
-        await inboxService.saveEmail(emailData);
+        // Get agent to handle the email
+        const agent = await this.getAgent();
 
-        // Create exchange ownership association for new exchanges
-        const exchangeOwner = await getExchangeOwner(emailData.exchangeId);
-        if (!exchangeOwner) {
-            await createExchangeOwner(emailData.exchangeId, user.id);
-        }
-
-        // Determine reply type based on email content
-        const replyToMe = emailData.body.includes('ping me');
-        const replyType = replyToMe ? 'sender-only' : 'all-excluding-sender';
-
-        const signature = await this.getSignature(emailData.exchangeId);
-
-        const sentEmail = await this.emailService.sendReply(emailData, {
-            type: replyType,
-            body: `You have been pinged!
-
-${signature}`,
+        // Get the result from the agent
+        const result = await agent.generate(emailData.body, {
+            maxSteps: 5, // Allow up to 5 tool usage steps
+            onStepFinish: ({ text, toolCalls, toolResults }) => {
+                console.log('Step completed:', { text, toolCalls, toolResults });
+            },
         });
 
-        console.log('sent engagement email', { sentEmail });
+        console.log('agent result', { result });
+    }
 
-        // Save the sent email to the database
-        await inboxService.saveEmail(sentEmail);
-        console.log('saved engagement email', { sentEmail });
-
-        return sentEmail;
+    async getAgent() {
+        const agent = await this.mastra.getAgent('supervisorAgent');
+        return agent;
     }
 }

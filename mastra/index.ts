@@ -1,12 +1,15 @@
 import { Mastra } from '@mastra/core/mastra';
 import { storage } from './storage/pg';
 import { logger } from './commons';
+import { supervisorAgent } from './agents/supervisor';
 
 /**
  * Mastra - It is used to create the workflow and agent.
  */
 export const mastra = new Mastra({
-    agents: {},
+    agents: {
+        supervisorAgent,
+    },
     storage,
     logger,
 });

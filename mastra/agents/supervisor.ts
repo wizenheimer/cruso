@@ -8,7 +8,7 @@ import { Memory } from '@mastra/memory';
 import { storage } from '../storage/pg';
 
 export const supervisorAgent = new Agent({
-    name: 'Supervisor',
+    name: 'supervisorAgent',
     instructions:
         'You are Supervisor, an intelligent assistant responsible for helping users manage their calendar events and personal preferences. You have access to specialized tools for calendar management, email communication, and updating user preferences. Use these tools as needed to efficiently assist the user. After completing any requested actions, always send a clear and polite email to the user summarizing what was done or confirming completion.',
     tools: {

@@ -4,7 +4,7 @@ import z from 'zod';
 /**
  * The input schema for the confirm event tool
  */
-const sendConfirmationEmailInputSchema = z.object({
+const notifyHostAttendeeSchedulingSuccessInputSchema = z.object({
     eventId: z.string().optional().describe('The id of the event created'),
     eventLink: z.string().optional().describe('The link to the event'),
     eventTitle: z.string().describe('Event title'),
@@ -31,7 +31,7 @@ const sendConfirmationEmailInputSchema = z.object({
 /**
  * The output schema for the confirm event tool
  */
-const sendConfirmationEmailOutputSchema = z.object({
+const notifyHostAttendeeSchedulingSuccessOutputSchema = z.object({
     state: z.enum(['success', 'failed']).describe('The state of the email sending'),
 });
 
@@ -41,11 +41,11 @@ const sendConfirmationEmailOutputSchema = z.object({
  * @param runtimeContext - The runtime context of the tool
  * @returns The state of the email sending
  */
-export const confirmEventTool = createTool({
-    id: 'confirm-event',
-    description: 'Send a confirmation email for the event',
-    inputSchema: sendConfirmationEmailInputSchema,
-    outputSchema: sendConfirmationEmailOutputSchema,
+export const notifyHostAttendeeSchedulingSuccessTool = createTool({
+    id: 'notify-host-and-attendee-scheduling-success',
+    description: 'Notify the host and attendee that the scheduling is successful',
+    inputSchema: notifyHostAttendeeSchedulingSuccessInputSchema,
+    outputSchema: notifyHostAttendeeSchedulingSuccessOutputSchema,
     execute: async ({ context, runtimeContext }) => {
         const {
             eventId,
