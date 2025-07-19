@@ -5,6 +5,7 @@ import { calendarConnections } from '@/db/schema/calendars';
 import { account } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { GoogleAuthManager } from './manager';
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 export interface CalendarEvent {
     id?: string;
@@ -82,7 +83,9 @@ export interface CalendarInfo {
 
 export interface AvailabilityResult {
     isAvailable: boolean;
+    timezone: string;
     busySlots: Array<{ start: string; end: string }>;
+    freeSlots: Array<{ start: string; end: string }>;
     events: Array<{
         id: string;
         summary: string;
@@ -462,14 +465,23 @@ export class GoogleCalendarService {
      * Check availability across all user's calendars
      */
     async checkAvailability(
-        timeMin: string,
-        timeMax: string,
+        timeMinRFC3339: string,
+        timeMaxRFC3339: string,
         options: {
             includeCalendarIds?: string[];
             excludeCalendarIds?: string[];
-            timeZone?: string;
+            responseTimezone?: string;
+            timeDurationMinutes?: number;
         } = {},
     ): Promise<AvailabilityResult> {
+        const responseTimezone = options.responseTimezone || 'UTC';
+        const duration =
+            options.timeDurationMinutes ||
+            Math.floor(
+                (new Date(timeMaxRFC3339).getTime() - new Date(timeMinRFC3339).getTime()) /
+                    (1000 * 60),
+            );
+
         try {
             let connections = await db
                 .select({
@@ -523,9 +535,9 @@ export class GoogleCalendarService {
                     // Use freebusy API for efficient availability checking
                     const freebusyResponse = await calendar.freebusy.query({
                         requestBody: {
-                            timeMin,
-                            timeMax,
-                            timeZone: options.timeZone,
+                            timeMin: timeMinRFC3339,
+                            timeMax: timeMaxRFC3339,
+                            timeZone: responseTimezone,
                             items: accountConnections.map(({ connection }) => ({
                                 id: connection.calendarId,
                             })),
@@ -537,6 +549,7 @@ export class GoogleCalendarService {
                         const calendarBusy =
                             freebusyResponse.data.calendars?.[connection.calendarId]?.busy || [];
 
+                        // Google returns times in the requested timezone already when timeZone is specified
                         busySlots.push(
                             ...calendarBusy.map((slot) => ({
                                 start: slot.start!,
@@ -548,16 +561,22 @@ export class GoogleCalendarService {
                         try {
                             const { events } = await this.getEvents(
                                 connection.calendarId,
-                                timeMin,
-                                timeMax,
+                                timeMinRFC3339,
+                                timeMaxRFC3339,
                             );
 
                             allEvents.push(
                                 ...events.map((event) => ({
                                     id: event.id!,
                                     summary: event.summary || 'Busy',
-                                    start: event.start?.dateTime || event.start?.date || '',
-                                    end: event.end?.dateTime || event.end?.date || '',
+                                    start: this.convertToTimezone(
+                                        event.start?.dateTime || event.start?.date || '',
+                                        responseTimezone,
+                                    ),
+                                    end: this.convertToTimezone(
+                                        event.end?.dateTime || event.end?.date || '',
+                                        responseTimezone,
+                                    ),
                                     calendarId: connection.calendarId,
                                     calendarName: connection.calendarName || 'Unknown Calendar',
                                 })),
@@ -590,13 +609,24 @@ export class GoogleCalendarService {
             // Sort busy slots by start time and merge overlapping slots
             const mergedBusySlots = this.mergeBusySlots(busySlots);
 
-            // Determine if completely available
-            const isAvailable = mergedBusySlots.length === 0;
+            // Calculate free slots based on duration
+            const freeSlots = this.calculateFreeSlots(
+                timeMinRFC3339,
+                timeMaxRFC3339,
+                mergedBusySlots,
+                duration,
+                responseTimezone,
+            );
+
+            // Determine if completely available (considering duration)
+            const isAvailable = freeSlots.length > 0;
 
             return {
                 isAvailable,
                 busySlots: mergedBusySlots,
+                freeSlots,
                 events: allEvents,
+                timezone: responseTimezone,
             };
         } catch (error) {
             throw new Error(
@@ -605,6 +635,156 @@ export class GoogleCalendarService {
                 }`,
             );
         }
+    }
+
+    /**
+     * Merge overlapping busy slots
+     */
+    private mergeBusySlots(
+        busySlots: Array<{ start: string; end: string }>,
+    ): Array<{ start: string; end: string }> {
+        if (busySlots.length === 0) return [];
+
+        // Sort by start time
+        const sorted = [...busySlots].sort(
+            (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+        );
+
+        const merged: Array<{ start: string; end: string }> = [sorted[0]];
+
+        for (let i = 1; i < sorted.length; i++) {
+            const current = sorted[i];
+            const previous = merged[merged.length - 1];
+
+            // Check if current overlaps with previous
+            if (new Date(current.start) <= new Date(previous.end)) {
+                // Merge by extending the end time if necessary
+                previous.end =
+                    new Date(current.end) > new Date(previous.end) ? current.end : previous.end;
+            } else {
+                // No overlap, add as new slot
+                merged.push(current);
+            }
+        }
+
+        return merged;
+    }
+
+    /**
+     * Calculate free slots based on busy slots and duration
+     */
+    private calculateFreeSlots(
+        timeMinRFC3339: string,
+        timeMaxRFC3339: string,
+        busySlots: Array<{ start: string; end: string }>,
+        durationMinutes: number,
+        timezone: string,
+    ): Array<{ start: string; end: string }> {
+        const freeSlots: Array<{ start: string; end: string }> = [];
+        const durationMs = durationMinutes * 60 * 1000;
+
+        // IMPORTANT: We work with the original time boundaries, not converted ones
+        // The busy slots are already in the response timezone (UTC by default)
+        const windowStart = new Date(timeMinRFC3339);
+        const windowEnd = new Date(timeMaxRFC3339);
+
+        console.log('├─ [CALCULATE_FREE_SLOTS] Time window:', {
+            originalStart: timeMinRFC3339,
+            originalEnd: timeMaxRFC3339,
+            windowStartUTC: windowStart.toISOString(),
+            windowEndUTC: windowEnd.toISOString(),
+            timezone,
+        });
+
+        if (busySlots.length === 0) {
+            // If no busy slots and duration fits, entire period is free
+            if (windowEnd.getTime() - windowStart.getTime() >= durationMs) {
+                // Return in the response timezone
+                freeSlots.push({
+                    start: this.formatToRFC3339(windowStart, timezone),
+                    end: this.formatToRFC3339(windowEnd, timezone),
+                });
+            }
+            return freeSlots;
+        }
+
+        // We need to find free slots ONLY within the requested window
+        let checkStart = windowStart;
+
+        for (let i = 0; i < busySlots.length; i++) {
+            const busyStart = new Date(busySlots[i].start);
+            const busyEnd = new Date(busySlots[i].end);
+
+            // Skip busy slots that end before our window starts
+            if (busyEnd <= windowStart) {
+                continue;
+            }
+
+            // Stop if busy slot starts after our window ends
+            if (busyStart >= windowEnd) {
+                break;
+            }
+
+            // Check for free slot before this busy slot
+            if (busyStart > checkStart) {
+                const freeStart = checkStart > windowStart ? checkStart : windowStart;
+                const freeEnd = busyStart < windowEnd ? busyStart : windowEnd;
+
+                if (freeEnd.getTime() - freeStart.getTime() >= durationMs) {
+                    freeSlots.push({
+                        start: this.formatToRFC3339(freeStart, timezone),
+                        end: this.formatToRFC3339(freeEnd, timezone),
+                    });
+                }
+            }
+
+            // Update check start to end of current busy slot
+            checkStart = busyEnd > checkStart ? busyEnd : checkStart;
+        }
+
+        // Check for free slot after all busy slots (within window)
+        if (checkStart < windowEnd && windowEnd.getTime() - checkStart.getTime() >= durationMs) {
+            freeSlots.push({
+                start: this.formatToRFC3339(checkStart, timezone),
+                end: this.formatToRFC3339(windowEnd, timezone),
+            });
+        }
+
+        console.log('├─ [CALCULATE_FREE_SLOTS] Found free slots:', freeSlots);
+
+        return freeSlots;
+    }
+
+    /**
+     * Convert a datetime string to a specific timezone
+     * Handles both dateTime (with time) and date (all-day) formats
+     */
+    private convertToTimezone(dateTimeString: string, timezone: string): string {
+        if (!dateTimeString) return '';
+
+        // Check if it's an all-day event (date only, no time)
+        if (dateTimeString.length === 10) {
+            // For all-day events, just return the date as-is
+            return dateTimeString;
+        }
+
+        const date = new Date(dateTimeString);
+
+        // If the input timezone is already the target timezone, return as-is
+        if (timezone === 'UTC' && dateTimeString.endsWith('Z')) {
+            return dateTimeString;
+        }
+
+        // Format the date in the target timezone as RFC3339
+        return formatInTimeZone(date, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+    }
+
+    /**
+     * Format a Date object to RFC3339 string in the specified timezone
+     */
+    private formatToRFC3339(date: Date, timezone: string): string {
+        // Format the date in the target timezone as RFC3339
+        return formatInTimeZone(date, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
     }
 
     /**
@@ -870,39 +1050,6 @@ export class GoogleCalendarService {
                   }
                 : undefined,
         };
-    }
-
-    /**
-     * Merge overlapping busy slots
-     */
-    private mergeBusySlots(
-        busySlots: Array<{ start: string; end: string }>,
-    ): Array<{ start: string; end: string }> {
-        if (busySlots.length === 0) return [];
-
-        // Sort by start time
-        const sorted = [...busySlots].sort(
-            (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
-        );
-
-        const merged: Array<{ start: string; end: string }> = [sorted[0]];
-
-        for (let i = 1; i < sorted.length; i++) {
-            const current = sorted[i];
-            const previous = merged[merged.length - 1];
-
-            // Check if current overlaps with previous
-            if (new Date(current.start) <= new Date(previous.end)) {
-                // Merge by extending the end time if necessary
-                previous.end =
-                    new Date(current.end) > new Date(previous.end) ? current.end : previous.end;
-            } else {
-                // No overlap, add as new slot
-                merged.push(current);
-            }
-        }
-
-        return merged;
     }
 }
 

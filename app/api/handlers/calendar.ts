@@ -362,7 +362,7 @@ export async function handleDeleteCalendarAccount(requestContext: Context) {
 export async function handleCheckAvailability(c: Context) {
     try {
         const user = getUser(c);
-        const { startTime, endTime } = await c.req.json();
+        const { startTime, endTime, timeDurationMinutes, responseTimezone } = await c.req.json();
 
         if (!startTime || !endTime) {
             return c.json({ error: 'startTime and endTime are required' }, 400);
@@ -371,7 +371,10 @@ export async function handleCheckAvailability(c: Context) {
         // Use calendar service to check availability
         const calendarService = createCalendarService(user.id);
 
-        const availabilityResult = await calendarService.checkAvailability(startTime, endTime);
+        const availabilityResult = await calendarService.checkAvailability(startTime, endTime, {
+            timeDurationMinutes: timeDurationMinutes,
+            responseTimezone: responseTimezone,
+        });
 
         const allEvents = availabilityResult.events;
 
@@ -391,7 +394,7 @@ export async function handleCheckAvailability(c: Context) {
             );
 
         return c.json({
-            events: allEvents,
+            availabilityResult: availabilityResult,
             calendarsChecked: activeConnections.length,
         });
     } catch (error) {
