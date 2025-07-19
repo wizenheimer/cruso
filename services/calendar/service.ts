@@ -8,6 +8,9 @@ import { GoogleAuthManager } from './manager';
 import { formatInTimeZone } from 'date-fns-tz';
 import { preferenceService } from '../preferences';
 
+// ==================================================
+// Calendar Event Interface
+// ==================================================
 export interface CalendarEvent {
     id?: string;
     summary: string;
@@ -38,36 +41,9 @@ export interface CalendarEvent {
     };
 }
 
-export interface CalendarEvent {
-    id?: string;
-    summary: string;
-    description?: string;
-    start: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    end: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    attendees?: Array<{
-        email: string;
-        displayName?: string;
-        responseStatus?: string;
-    }>;
-    location?: string;
-    conferenceData?: calendar_v3.Schema$ConferenceData;
-    reminders?: {
-        useDefault?: boolean;
-        overrides?: Array<{
-            method: string;
-            minutes: number;
-        }>;
-    };
-}
-
+// ==================================================
+// Calendar Info Interface
+// ==================================================
 export interface CalendarInfo {
     id: string;
     summary: string;
@@ -82,6 +58,9 @@ export interface CalendarInfo {
     googleEmail: string;
 }
 
+// ==================================================
+// Availability Result Interface
+// ==================================================
 export interface AvailabilityResult {
     isAvailable: boolean;
     timezone: string;
@@ -97,6 +76,9 @@ export interface AvailabilityResult {
     }>;
 }
 
+// ==================================================
+// Block Availability Result Interface
+// ==================================================
 export interface BlockAvailabilityResult {
     state: 'success' | 'error';
     rescheduledEventCount?: number;
@@ -105,12 +87,18 @@ export interface BlockAvailabilityResult {
     message?: string;
 }
 
+// ==================================================
+// Clear Availability Result Interface
+// ==================================================
 export interface ClearAvailabilityResult {
     state: 'success' | 'error';
     rescheduledEventCount?: number;
     rescheduledEventDetails?: CalendarEvent[];
 }
 
+// ==================================================
+// Google Calendar Service Class
+// ==================================================
 export class GoogleCalendarService {
     private userId: string;
     private authManager: GoogleAuthManager;
@@ -300,6 +288,77 @@ export class GoogleCalendarService {
     }
 
     /**
+     * Get the primary calendar ID for the user
+     */
+    private async getPrimaryCalendarId(): Promise<string> {
+        // Get user preferences to find primary account
+        const userPreferences = await preferenceService.getPreferences(this.userId);
+        const primaryAccountId = userPreferences.data?.preferences.primaryAccountId;
+
+        if (!primaryAccountId) {
+            throw new Error('Primary account not found');
+        }
+
+        // Get primary calendar connection
+        const primaryCalendarConnections = await db
+            .select()
+            .from(calendarConnections)
+            .where(
+                and(
+                    eq(calendarConnections.accountId, primaryAccountId),
+                    eq(calendarConnections.isActive, true),
+                    eq(calendarConnections.isPrimary, true),
+                ),
+            )
+            .limit(1);
+
+        if (primaryCalendarConnections.length === 0) {
+            throw new Error('No primary calendar found');
+        }
+
+        return primaryCalendarConnections[0].calendarId;
+    }
+
+    /**
+     * Get events from the primary calendar
+     */
+    async getEventsFromPrimaryCalendar(
+        timeMin: string,
+        timeMax: string,
+        options?: {
+            maxResults?: number;
+            pageToken?: string;
+            q?: string;
+            showDeleted?: boolean;
+            singleEvents?: boolean;
+            orderBy?: 'startTime' | 'updated';
+        },
+    ): Promise<{ events: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
+        console.log('┌─ [GET_PRIMARY_EVENTS] Starting...', { timeMin, timeMax });
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [GET_PRIMARY_EVENTS] Primary calendar:', primaryCalendarId);
+
+            const result = await this.getEvents(primaryCalendarId, timeMin, timeMax, options);
+
+            console.log('└─ [GET_PRIMARY_EVENTS] Retrieved events:', result.events.length);
+
+            return {
+                ...result,
+                calendarId: primaryCalendarId,
+            };
+        } catch (error) {
+            console.error('└─ [GET_PRIMARY_EVENTS] Error:', error);
+            throw new Error(
+                `Failed to get primary calendar events: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
      * Get events from a specific calendar
      */
     async getEvents(
@@ -349,6 +408,44 @@ export class GoogleCalendarService {
     }
 
     /**
+     * Create an event in the primary calendar
+     */
+    async createEventInPrimaryCalendar(
+        event: CalendarEvent,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+            conferenceDataVersion?: number;
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        console.log('┌─ [CREATE_PRIMARY_EVENT] Starting...', {
+            summary: event.summary,
+            start: event.start,
+            end: event.end,
+        });
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [CREATE_PRIMARY_EVENT] Primary calendar:', primaryCalendarId);
+
+            const createdEvent = await this.createEvent(primaryCalendarId, event, options);
+
+            console.log('└─ [CREATE_PRIMARY_EVENT] Event created:', createdEvent.id);
+
+            return {
+                ...createdEvent,
+                calendarId: primaryCalendarId,
+            };
+        } catch (error) {
+            console.error('└─ [CREATE_PRIMARY_EVENT] Error:', error);
+            throw new Error(
+                `Failed to create event in primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
      * Create an event in a specific calendar
      */
     async createEvent(
@@ -390,6 +487,43 @@ export class GoogleCalendarService {
             console.log('└─ [CALENDAR_SERVICE] Failed to create event:', error);
             throw new Error(
                 `Failed to create event: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Update an event in the primary calendar
+     */
+    async updateEventInPrimaryCalendar(
+        eventId: string,
+        event: Partial<CalendarEvent>,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        console.log('┌─ [UPDATE_PRIMARY_EVENT] Starting...', {
+            eventId,
+            updates: Object.keys(event),
+        });
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [UPDATE_PRIMARY_EVENT] Primary calendar:', primaryCalendarId);
+
+            const updatedEvent = await this.updateEvent(primaryCalendarId, eventId, event, options);
+
+            console.log('└─ [UPDATE_PRIMARY_EVENT] Event updated successfully');
+
+            return {
+                ...updatedEvent,
+                calendarId: primaryCalendarId,
+            };
+        } catch (error) {
+            console.error('└─ [UPDATE_PRIMARY_EVENT] Error:', error);
+            throw new Error(
+                `Failed to update event in primary calendar: ${
                     error instanceof Error ? error.message : 'Unknown error'
                 }`,
             );
@@ -445,6 +579,38 @@ export class GoogleCalendarService {
     }
 
     /**
+     * Delete an event from the primary calendar
+     */
+    async deleteEventFromPrimaryCalendar(
+        eventId: string,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<{ calendarId: string }> {
+        console.log('┌─ [DELETE_PRIMARY_EVENT] Starting...', { eventId });
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [DELETE_PRIMARY_EVENT] Primary calendar:', primaryCalendarId);
+
+            await this.deleteEvent(primaryCalendarId, eventId, options);
+
+            console.log('└─ [DELETE_PRIMARY_EVENT] Event deleted successfully');
+
+            return {
+                calendarId: primaryCalendarId,
+            };
+        } catch (error) {
+            console.error('└─ [DELETE_PRIMARY_EVENT] Error:', error);
+            throw new Error(
+                `Failed to delete event from primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
      * Delete an event from a specific calendar
      */
     async deleteEvent(
@@ -470,6 +636,163 @@ export class GoogleCalendarService {
         } catch (error) {
             throw new Error(
                 `Failed to delete event: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Create an event in primary calendar with minimal options
+     * Ideal for forwarding events to the primary calendar for creation
+     */
+    async quickCreateEventInPrimaryCalendar(
+        summary: string,
+        startDateTime: string,
+        endDateTime: string,
+        options?: {
+            description?: string;
+            location?: string;
+            attendees?: string[];
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+            conferenceDataVersion?: number;
+            createConference?: boolean;
+            colorId?: string;
+            reminders?: {
+                useDefault?: boolean;
+                overrides?: Array<{
+                    method: 'email' | 'popup';
+                    minutes: number;
+                }>;
+            };
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        console.log('┌─ [QUICK_CREATE_PRIMARY_EVENT] Starting...', {
+            summary,
+            startDateTime,
+            endDateTime,
+        });
+
+        const event: CalendarEvent = {
+            summary,
+            start: {
+                dateTime: startDateTime,
+            },
+            end: {
+                dateTime: endDateTime,
+            },
+            description: options?.description,
+            location: options?.location,
+            attendees: options?.attendees?.map((email) => ({ email })),
+            reminders: options?.reminders || {
+                useDefault: true,
+            },
+        };
+
+        // Add conference data if requested
+        if (options?.createConference) {
+            event.conferenceData = {
+                createRequest: {
+                    requestId: `meet-${Date.now()}`,
+                    conferenceSolutionKey: {
+                        type: 'hangoutsMeet',
+                    },
+                },
+            };
+        }
+
+        return this.createEventInPrimaryCalendar(event, {
+            sendUpdates: options?.sendUpdates,
+            conferenceDataVersion: options?.createConference ? 1 : options?.conferenceDataVersion,
+        });
+    }
+
+    /**
+     * Batch operations for primary calendar
+     */
+    async performBatchOperationsOnPrimaryCalendar(
+        operations: Array<{
+            type: 'create' | 'update' | 'delete';
+            eventId?: string;
+            event?: CalendarEvent | Partial<CalendarEvent>;
+        }>,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<{
+        successful: Array<{ operation: any; result?: any }>;
+        failed: Array<{ operation: any; error: string }>;
+    }> {
+        console.log('┌─ [BATCH_PRIMARY_OPERATIONS] Starting...', {
+            operationCount: operations.length,
+            types: operations.map((op) => op.type),
+        });
+
+        const successful: Array<{ operation: any; result?: any }> = [];
+        const failed: Array<{ operation: any; error: string }> = [];
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [BATCH_PRIMARY_OPERATIONS] Primary calendar:', primaryCalendarId);
+
+            for (const operation of operations) {
+                try {
+                    let result;
+
+                    switch (operation.type) {
+                        case 'create':
+                            if (!operation.event) {
+                                throw new Error('Event data required for create operation');
+                            }
+                            result = await this.createEvent(
+                                primaryCalendarId,
+                                operation.event as CalendarEvent,
+                                { sendUpdates: options?.sendUpdates },
+                            );
+                            break;
+
+                        case 'update':
+                            if (!operation.eventId || !operation.event) {
+                                throw new Error('Event ID and data required for update operation');
+                            }
+                            result = await this.updateEvent(
+                                primaryCalendarId,
+                                operation.eventId,
+                                operation.event as Partial<CalendarEvent>,
+                                { sendUpdates: options?.sendUpdates },
+                            );
+                            break;
+
+                        case 'delete':
+                            if (!operation.eventId) {
+                                throw new Error('Event ID required for delete operation');
+                            }
+                            await this.deleteEvent(primaryCalendarId, operation.eventId, {
+                                sendUpdates: options?.sendUpdates,
+                            });
+                            result = { deleted: true, eventId: operation.eventId };
+                            break;
+                    }
+
+                    successful.push({ operation, result });
+                } catch (error) {
+                    failed.push({
+                        operation,
+                        error: error instanceof Error ? error.message : 'Unknown error',
+                    });
+                }
+            }
+
+            console.log('└─ [BATCH_PRIMARY_OPERATIONS] Completed:', {
+                successful: successful.length,
+                failed: failed.length,
+            });
+
+            return { successful, failed };
+        } catch (error) {
+            console.error('└─ [BATCH_PRIMARY_OPERATIONS] Fatal error:', error);
+            throw new Error(
+                `Failed to execute batch operations: ${
                     error instanceof Error ? error.message : 'Unknown error'
                 }`,
             );
