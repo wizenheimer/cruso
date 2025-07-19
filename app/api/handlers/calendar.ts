@@ -589,6 +589,37 @@ export async function handleUpdateEventInPrimaryCalendar(c: Context) {
 }
 
 /**
+ * Handle the PATCH request to reschedule an event in primary calendar
+ * @param c - The context object
+ * @returns The response object
+ */
+export async function handleRescheduleEventInPrimaryCalendar(c: Context) {
+    try {
+        const user = getUser(c);
+        const eventId = c.req.param('eventId');
+        const { startDateTime, endDateTime, timeZone } = await c.req.json();
+
+        if (!eventId) {
+            return c.json({ error: 'eventId is required' }, 400);
+        }
+
+        const calendarService = createCalendarService(user.id);
+
+        const result = await calendarService.rescheduleEventInPrimaryCalendar(
+            eventId,
+            startDateTime,
+            endDateTime,
+            timeZone,
+        );
+
+        return c.json(result);
+    } catch (error) {
+        console.error('Error rescheduling event in primary calendar:', error);
+        return c.json({ error: 'Failed to reschedule event in primary calendar' }, 500);
+    }
+}
+
+/**
  * Handle the DELETE request to delete an event from primary calendar
  * @param c - The context object
  * @returns The response object

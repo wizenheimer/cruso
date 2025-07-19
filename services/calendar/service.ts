@@ -643,6 +643,60 @@ export class GoogleCalendarService {
     }
 
     /**
+     * Reschedule an event in the primary calendar
+     */
+    async rescheduleEventInPrimaryCalendar(
+        eventId: string,
+        startDateTime: string,
+        endDateTime: string,
+        timeZone: string,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        console.log('┌─ [RESCHEDULE_PRIMARY_EVENT] Starting...', {
+            eventId,
+            startDateTime,
+            endDateTime,
+        });
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [RESCHEDULE_PRIMARY_EVENT] Primary calendar:', primaryCalendarId);
+
+            const updatedEvent = await this.updateEvent(
+                primaryCalendarId,
+                eventId,
+                {
+                    start: {
+                        dateTime: startDateTime,
+                        timeZone,
+                    },
+                    end: {
+                        dateTime: endDateTime,
+                        timeZone,
+                    },
+                },
+                options,
+            );
+
+            console.log('└─ [RESCHEDULE_PRIMARY_EVENT] Event updated successfully');
+
+            return {
+                ...updatedEvent,
+                calendarId: primaryCalendarId,
+            };
+        } catch (error) {
+            console.error('└─ [RESCHEDULE_PRIMARY_EVENT] Error:', error);
+            throw new Error(
+                `Failed to reschedule event in primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
      * Create an event in primary calendar with minimal options
      * Ideal for forwarding events to the primary calendar for creation
      */

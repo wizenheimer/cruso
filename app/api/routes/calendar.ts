@@ -18,6 +18,7 @@ import {
     handleCreateEvent,
     handleUpdateEvent,
     handleDeleteEvent,
+    handleRescheduleEventInPrimaryCalendar,
 } from '@/app/api/handlers/calendar';
 
 const calendar = new Hono();
@@ -81,14 +82,19 @@ calendar.get('/events', handleGetEventsFromPrimaryCalendar);
 // ==================================================
 
 /**
+ * PUT /api/v1/calendar/events/:id
+ */
+calendar.put('/events/:eventId', handleUpdateEventInPrimaryCalendar);
+
+/**
  * PATCH /api/v1/calendar/events/:id
  */
-calendar.patch('/events/:id', handleUpdateEventInPrimaryCalendar);
+calendar.patch('/events/:eventId', handleRescheduleEventInPrimaryCalendar);
 
 /**
  * DELETE /api/v1/calendar/events/:id
  */
-calendar.delete('/events/:id', handleDeleteEventFromPrimaryCalendar);
+calendar.delete('/events/:eventId', handleDeleteEventFromPrimaryCalendar);
 
 // ==================================================
 // Event Routes - Specific Calendar
