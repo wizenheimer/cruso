@@ -3,7 +3,7 @@ import { calendarConnections } from '@/db/schema/calendars';
 import { account } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { Context } from 'hono';
-import { createCalendarService, RecurrenceRule } from '@/services/calendar/service';
+import { createCalendarService } from '@/services/calendar/service';
 import { updatePrimaryAccount } from '@/db/queries/preferences';
 
 /**

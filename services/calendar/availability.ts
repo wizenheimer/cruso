@@ -27,8 +27,8 @@ export class AvailabilityChecker {
             console.log('├─ [AVAILABILITY] Creating calendar service...');
             const calendarService = createCalendarService(this.userId);
 
-            console.log('├─ [AVAILABILITY] Calling calendar service checkAvailability...');
-            const result = await calendarService.checkAvailability(
+            console.log('├─ [AVAILABILITY] Calling calendar service checkAvailabilityBlock...');
+            const result = await calendarService.checkAvailabilityBlock(
                 startTime.toISOString(),
                 endTime.toISOString(),
             );
@@ -86,7 +86,7 @@ export class AvailabilityChecker {
     async getBusyTimes(startTime: Date, endTime: Date): Promise<Array<{ start: Date; end: Date }>> {
         try {
             const calendarService = createCalendarService(this.userId);
-            const result = await calendarService.checkAvailability(
+            const result = await calendarService.checkAvailabilityBlock(
                 startTime.toISOString(),
                 endTime.toISOString(),
             );
@@ -144,7 +144,7 @@ export async function checkUserAvailability(
 }> {
     try {
         const calendarService = createCalendarService(userId);
-        const result = await calendarService.checkAvailability(
+        const result = await calendarService.checkAvailabilityBlock(
             startTime.toISOString(),
             endTime.toISOString(),
         );
@@ -179,7 +179,7 @@ export async function findMeetingSlots(
 
         for (const userId of userIds) {
             const calendarService = createCalendarService(userId);
-            const result = await calendarService.checkAvailability(
+            const result = await calendarService.checkAvailabilityBlock(
                 startDate.toISOString(),
                 endDate.toISOString(),
             );
