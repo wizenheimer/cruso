@@ -7,6 +7,29 @@ import { eq, and } from 'drizzle-orm';
 import { GoogleAuthManager } from './manager';
 import { formatInTimeZone } from 'date-fns-tz';
 import { preferenceService } from '../preferences';
+import { RRule, rrulestr, Frequency, Weekday } from 'rrule';
+
+// ==================================================
+// Recurrence Rule Interface
+// ==================================================
+export interface RecurrenceRule {
+    freq: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'HOURLY' | 'MINUTELY' | 'SECONDLY';
+    dtstart?: Date;
+    interval?: number;
+    wkst?: 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU';
+    count?: number;
+    until?: Date;
+    bysetpos?: number[];
+    bymonth?: number[];
+    bymonthday?: number[];
+    byyearday?: number[];
+    byweekno?: number[];
+    byweekday?: ('MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU')[];
+    byhour?: number[];
+    byminute?: number[];
+    bysecond?: number[];
+    byeaster?: number | null;
+}
 
 // ==================================================
 // Calendar Event Interface
@@ -1901,6 +1924,614 @@ export class GoogleCalendarService {
                 `Failed to stop watching calendar: ${
                     error instanceof Error ? error.message : 'Unknown error'
                 }`,
+            );
+        }
+    }
+
+    /**
+     * Convert RecurrenceRule object to RRULE string
+     */
+    private convertRecurrenceRuleToString(recurrenceRule: RecurrenceRule): string {
+        // Convert string values to RRule constants
+        const rruleOptions: any = {
+            ...recurrenceRule,
+            freq: this.convertFrequencyToRRule(recurrenceRule.freq),
+            wkst: recurrenceRule.wkst ? this.convertWeekdayToRRule(recurrenceRule.wkst) : undefined,
+            byweekday: recurrenceRule.byweekday
+                ? recurrenceRule.byweekday.map((day) => this.convertWeekdayToRRule(day))
+                : undefined,
+        };
+
+        const rrule = new RRule(rruleOptions);
+        return rrule.toString();
+    }
+
+    /**
+     * Convert frequency string to RRule constant
+     */
+    private convertFrequencyToRRule(freq: string): number {
+        switch (freq) {
+            case 'YEARLY':
+                return RRule.YEARLY;
+            case 'MONTHLY':
+                return RRule.MONTHLY;
+            case 'WEEKLY':
+                return RRule.WEEKLY;
+            case 'DAILY':
+                return RRule.DAILY;
+            case 'HOURLY':
+                return RRule.HOURLY;
+            case 'MINUTELY':
+                return RRule.MINUTELY;
+            case 'SECONDLY':
+                return RRule.SECONDLY;
+            default:
+                throw new Error(`Invalid frequency: ${freq}`);
+        }
+    }
+
+    /**
+     * Convert weekday string to RRule constant
+     */
+    private convertWeekdayToRRule(weekday: string): any {
+        switch (weekday) {
+            case 'MO':
+                return RRule.MO;
+            case 'TU':
+                return RRule.TU;
+            case 'WE':
+                return RRule.WE;
+            case 'TH':
+                return RRule.TH;
+            case 'FR':
+                return RRule.FR;
+            case 'SA':
+                return RRule.SA;
+            case 'SU':
+                return RRule.SU;
+            default:
+                throw new Error(`Invalid weekday: ${weekday}`);
+        }
+    }
+
+    /**
+     * Convert RecurrenceRule array to RRULE string array
+     */
+    private convertRecurrenceRulesToStrings(recurrenceRules: RecurrenceRule[]): string[] {
+        return recurrenceRules.map((rule) => this.convertRecurrenceRuleToString(rule));
+    }
+
+    /**
+     * Parse RRULE string to RecurrenceRule object
+     */
+    private parseRecurrenceRuleString(rruleString: string): RecurrenceRule {
+        const rrule = rrulestr(rruleString);
+        const options = rrule.origOptions;
+
+        return {
+            freq: this.convertFrequencyFromRRule(options.freq!),
+            dtstart: options.dtstart || undefined,
+            interval: options.interval || undefined,
+            wkst: options.wkst ? this.convertWeekdayFromRRule(options.wkst) : undefined,
+            count: options.count || undefined,
+            until: options.until || undefined,
+            bysetpos: Array.isArray(options.bysetpos) ? options.bysetpos : undefined,
+            bymonth: Array.isArray(options.bymonth) ? options.bymonth : undefined,
+            bymonthday: Array.isArray(options.bymonthday) ? options.bymonthday : undefined,
+            byyearday: Array.isArray(options.byyearday) ? options.byyearday : undefined,
+            byweekno: Array.isArray(options.byweekno) ? options.byweekno : undefined,
+            byweekday: Array.isArray(options.byweekday)
+                ? options.byweekday.map((day) => this.convertWeekdayFromRRule(day))
+                : undefined,
+            byhour: Array.isArray(options.byhour) ? options.byhour : undefined,
+            byminute: Array.isArray(options.byminute) ? options.byminute : undefined,
+            bysecond: Array.isArray(options.bysecond) ? options.bysecond : undefined,
+            byeaster: options.byeaster || undefined,
+        } as RecurrenceRule;
+    }
+
+    /**
+     * Convert RRule frequency constant to string
+     */
+    private convertFrequencyFromRRule(
+        freq: number,
+    ): 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'HOURLY' | 'MINUTELY' | 'SECONDLY' {
+        switch (freq) {
+            case RRule.YEARLY:
+                return 'YEARLY';
+            case RRule.MONTHLY:
+                return 'MONTHLY';
+            case RRule.WEEKLY:
+                return 'WEEKLY';
+            case RRule.DAILY:
+                return 'DAILY';
+            case RRule.HOURLY:
+                return 'HOURLY';
+            case RRule.MINUTELY:
+                return 'MINUTELY';
+            case RRule.SECONDLY:
+                return 'SECONDLY';
+            default:
+                throw new Error(`Invalid frequency: ${freq}`);
+        }
+    }
+
+    /**
+     * Convert RRule weekday constant to string
+     */
+    private convertWeekdayFromRRule(weekday: any): 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU' {
+        // Handle both number and Weekday object
+        const weekdayNum = typeof weekday === 'number' ? weekday : weekday.weekday;
+
+        switch (weekdayNum) {
+            case RRule.MO.weekday:
+                return 'MO';
+            case RRule.TU.weekday:
+                return 'TU';
+            case RRule.WE.weekday:
+                return 'WE';
+            case RRule.TH.weekday:
+                return 'TH';
+            case RRule.FR.weekday:
+                return 'FR';
+            case RRule.SA.weekday:
+                return 'SA';
+            case RRule.SU.weekday:
+                return 'SU';
+            default:
+                throw new Error(`Invalid weekday: ${weekday}`);
+        }
+    }
+
+    /**
+     * Parse RRULE string array to RecurrenceRule object array
+     */
+    private parseRecurrenceRuleStrings(rruleStrings: string[]): RecurrenceRule[] {
+        return rruleStrings.map((rruleString) => this.parseRecurrenceRuleString(rruleString));
+    }
+
+    /**
+     * Create a recurring event in the primary calendar
+     */
+    async createRecurringEventInPrimaryCalendar(
+        event: CalendarEvent & {
+            recurrence?: RecurrenceRule[];
+        },
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+            conferenceDataVersion?: number;
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            const result = await this.createRecurringEvent(primaryCalendarId, event, options);
+            return { ...result, calendarId: primaryCalendarId };
+        } catch (error) {
+            throw new Error(
+                `Failed to create recurring event in primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Create a recurring event in a specific calendar
+     */
+    async createRecurringEvent(
+        calendarId: string,
+        event: CalendarEvent & {
+            recurrence?: RecurrenceRule[];
+        },
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+            conferenceDataVersion?: number;
+        },
+    ): Promise<CalendarEvent> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            // Convert RecurrenceRule objects to RRULE strings
+            const recurrenceStrings = event.recurrence
+                ? this.convertRecurrenceRulesToStrings(event.recurrence)
+                : undefined;
+
+            // Prepare the event data for Google Calendar API
+            const googleEvent: calendar_v3.Schema$Event = {
+                summary: event.summary,
+                description: event.description,
+                start: event.start,
+                end: event.end,
+                location: event.location,
+                attendees: event.attendees?.map((attendee) => ({
+                    email: attendee.email,
+                    displayName: attendee.displayName,
+                    responseStatus: attendee.responseStatus,
+                })),
+                conferenceData: event.conferenceData,
+                reminders: event.reminders,
+                recurrence: recurrenceStrings,
+            };
+
+            const response = await calendar.events.insert({
+                calendarId,
+                requestBody: googleEvent,
+                sendUpdates: options?.sendUpdates,
+                conferenceDataVersion: options?.conferenceDataVersion,
+            });
+
+            if (response.status !== 200 || !response.data) {
+                throw new Error(`Failed to create recurring event: ${response.statusText}`);
+            }
+
+            return this.transformGoogleEvent(response.data);
+        } catch (error) {
+            throw new Error(
+                `Failed to create recurring event: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Update a recurring event in the primary calendar
+     */
+    async updateRecurringEventInPrimaryCalendar(
+        eventId: string,
+        event: Partial<CalendarEvent> & {
+            recurrence?: RecurrenceRule[];
+        },
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            const result = await this.updateRecurringEvent(
+                primaryCalendarId,
+                eventId,
+                event,
+                options,
+            );
+            return { ...result, calendarId: primaryCalendarId };
+        } catch (error) {
+            throw new Error(
+                `Failed to update recurring event in primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Update a recurring event in a specific calendar
+     */
+    async updateRecurringEvent(
+        calendarId: string,
+        eventId: string,
+        event: Partial<CalendarEvent> & {
+            recurrence?: RecurrenceRule[];
+        },
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            // Convert RecurrenceRule objects to RRULE strings
+            const recurrenceStrings = event.recurrence
+                ? this.convertRecurrenceRulesToStrings(event.recurrence)
+                : undefined;
+
+            // Prepare the event data for Google Calendar API
+            const googleEvent: calendar_v3.Schema$Event = {
+                summary: event.summary,
+                description: event.description,
+                start: event.start,
+                end: event.end,
+                location: event.location,
+                attendees: event.attendees?.map((attendee) => ({
+                    email: attendee.email,
+                    displayName: attendee.displayName,
+                    responseStatus: attendee.responseStatus,
+                })),
+                conferenceData: event.conferenceData,
+                reminders: event.reminders,
+                recurrence: recurrenceStrings,
+            };
+
+            const response = await calendar.events.patch({
+                calendarId,
+                eventId,
+                requestBody: googleEvent,
+                sendUpdates: options?.sendUpdates,
+            });
+
+            if (response.status !== 200 || !response.data) {
+                throw new Error(`Failed to update recurring event: ${response.statusText}`);
+            }
+
+            return this.transformGoogleEvent(response.data);
+        } catch (error) {
+            throw new Error(
+                `Failed to update recurring event: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Delete a recurring event from the primary calendar
+     */
+    async deleteRecurringEventFromPrimaryCalendar(
+        eventId: string,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<{ calendarId: string }> {
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            await this.deleteRecurringEvent(primaryCalendarId, eventId, options);
+            return { calendarId: primaryCalendarId };
+        } catch (error) {
+            throw new Error(
+                `Failed to delete recurring event from primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Delete a recurring event from a specific calendar
+     */
+    async deleteRecurringEvent(
+        calendarId: string,
+        eventId: string,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<void> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            const response = await calendar.events.delete({
+                calendarId,
+                eventId,
+                sendUpdates: options?.sendUpdates,
+            });
+
+            if (response.status !== 204) {
+                throw new Error(`Failed to delete recurring event: ${response.statusText}`);
+            }
+        } catch (error) {
+            throw new Error(
+                `Failed to delete recurring event: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Get a recurring event from the primary calendar
+     */
+    async getRecurringEventFromPrimaryCalendar(
+        eventId: string,
+        options?: {
+            timeZone?: string;
+            alwaysIncludeEmail?: boolean;
+            maxAttendees?: number;
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            const result = await this.getRecurringEvent(primaryCalendarId, eventId, options);
+            return { ...result, calendarId: primaryCalendarId };
+        } catch (error) {
+            throw new Error(
+                `Failed to get recurring event from primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Get a recurring event from a specific calendar
+     */
+    async getRecurringEvent(
+        calendarId: string,
+        eventId: string,
+        options?: {
+            timeZone?: string;
+            alwaysIncludeEmail?: boolean;
+            maxAttendees?: number;
+        },
+    ): Promise<CalendarEvent> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            const response = await calendar.events.get({
+                calendarId,
+                eventId,
+                timeZone: options?.timeZone,
+                alwaysIncludeEmail: options?.alwaysIncludeEmail,
+                maxAttendees: options?.maxAttendees,
+            });
+
+            if (response.status !== 200 || !response.data) {
+                throw new Error(`Failed to get recurring event: ${response.statusText}`);
+            }
+
+            return this.transformGoogleEvent(response.data);
+        } catch (error) {
+            throw new Error(
+                `Failed to get recurring event: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Reschedule a recurring event in the primary calendar
+     */
+    async rescheduleRecurringEventInPrimaryCalendar(
+        eventId: string,
+        startDateTime: string,
+        endDateTime: string,
+        timeZone: string,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        console.log('┌─ [CALENDAR_SERVICE] Rescheduling recurring event in primary calendar...', {
+            eventId,
+            startDateTime,
+            endDateTime,
+            timeZone,
+            options,
+        });
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            const result = await this.rescheduleRecurringEvent(
+                primaryCalendarId,
+                eventId,
+                startDateTime,
+                endDateTime,
+                timeZone,
+                options,
+            );
+
+            console.log(
+                '└─ [CALENDAR_SERVICE] Recurring event rescheduled in primary calendar successfully',
+                {
+                    eventId,
+                    calendarId: primaryCalendarId,
+                },
+            );
+
+            return { ...result, calendarId: primaryCalendarId };
+        } catch (error) {
+            console.error(
+                '└─ [CALENDAR_SERVICE] Error rescheduling recurring event in primary calendar:',
+                error,
+            );
+            throw new Error(
+                `Failed to reschedule recurring event: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            );
+        }
+    }
+
+    /**
+     * Reschedule a recurring event in a specific calendar
+     */
+    async rescheduleRecurringEvent(
+        calendarId: string,
+        eventId: string,
+        startDateTime: string,
+        endDateTime: string,
+        timeZone: string,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent> {
+        console.log('┌─ [CALENDAR_SERVICE] Rescheduling recurring event in specific calendar...', {
+            calendarId,
+            eventId,
+            startDateTime,
+            endDateTime,
+            timeZone,
+            options,
+        });
+
+        try {
+            const { connection, account: accountData } =
+                await this.getCalendarConnection(calendarId);
+
+            if (!accountData) {
+                throw new Error(`No account found for calendar ${calendarId}`);
+            }
+
+            const calendar = await this.getCalendarApi(accountData.id);
+
+            // First, get the current event to preserve its properties
+            const currentEventResponse = await calendar.events.get({
+                calendarId: calendarId,
+                eventId: eventId,
+            });
+
+            if (!currentEventResponse.data) {
+                throw new Error('No event data received from Google Calendar API');
+            }
+
+            const currentEvent = currentEventResponse.data;
+
+            // Update the event with new start and end times
+            const updatedEvent: calendar_v3.Schema$Event = {
+                ...currentEvent,
+                start: {
+                    dateTime: startDateTime,
+                    timeZone: timeZone,
+                },
+                end: {
+                    dateTime: endDateTime,
+                    timeZone: timeZone,
+                },
+            };
+
+            // Update the event
+            const response = await calendar.events.update({
+                calendarId: calendarId,
+                eventId: eventId,
+                requestBody: updatedEvent,
+                sendUpdates: options?.sendUpdates,
+            });
+
+            if (!response.data) {
+                throw new Error('No event data received from Google Calendar API after update');
+            }
+
+            const transformedEvent = this.transformGoogleEvent(response.data);
+
+            console.log('└─ [CALENDAR_SERVICE] Recurring event rescheduled successfully', {
+                eventId,
+                calendarId,
+            });
+
+            return transformedEvent;
+        } catch (error) {
+            console.error(
+                '└─ [CALENDAR_SERVICE] Error rescheduling recurring event in specific calendar:',
+                error,
+            );
+            throw new Error(
+                `Failed to reschedule recurring event: ${error instanceof Error ? error.message : 'Unknown error'}`,
             );
         }
     }
