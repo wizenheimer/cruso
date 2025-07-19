@@ -355,7 +355,7 @@ export async function handleDeleteCalendarAccount(requestContext: Context) {
 }
 
 /**
- * Handle the POST request to check availability
+ * Handle the GET request to check availability
  * @param c - The context object
  * @returns The response object
  */
@@ -371,10 +371,14 @@ export async function handleCheckAvailability(c: Context) {
         // Use calendar service to check availability
         const calendarService = createCalendarService(user.id);
 
-        const availabilityResult = await calendarService.checkAvailability(startTime, endTime, {
-            timeDurationMinutes: timeDurationMinutes,
-            responseTimezone: responseTimezone,
-        });
+        const availabilityResult = await calendarService.checkAvailabilityBlock(
+            startTime,
+            endTime,
+            {
+                timeDurationMinutes: timeDurationMinutes,
+                responseTimezone: responseTimezone,
+            },
+        );
 
         const allEvents = availabilityResult.events;
 
@@ -400,6 +404,58 @@ export async function handleCheckAvailability(c: Context) {
     } catch (error) {
         console.error('Error checking availability:', error);
         return c.json({ error: 'Failed to check availability' }, 500);
+    }
+}
+
+/**
+ * Handle the POST request to block availability
+ * @param c - The context object
+ * @returns The response object
+ */
+export async function handleBlockAvailability(c: Context) {
+    try {
+        const user = getUser(c);
+        const {
+            startTime,
+            endTime,
+            timeDurationMinutes,
+            eventSummary,
+            eventDescription,
+            eventAttendees,
+            eventLocation,
+            eventConference,
+            eventPrivate,
+        } = await c.req.json();
+
+        if (!startTime || !endTime) {
+            return c.json({ error: 'startTime and endTime are required' }, 400);
+        }
+
+        // Use calendar service to check availability
+        const calendarService = createCalendarService(user.id);
+
+        const createAvailabilityBlockResult = await calendarService.createAvailabilityBlock(
+            startTime,
+            endTime,
+            {
+                timeDurationMinutes: timeDurationMinutes,
+                eventSummary: eventSummary,
+                eventDescription: eventDescription,
+                eventAttendees: eventAttendees,
+                eventLocation: eventLocation,
+                eventConference: eventConference,
+                eventPrivate: eventPrivate,
+            },
+        );
+
+        console.log('Availability blocked successfully', createAvailabilityBlockResult);
+
+        return c.json({
+            createAvailabilityBlockResult: createAvailabilityBlockResult,
+        });
+    } catch (error) {
+        console.error('Error blocking availability:', error);
+        return c.json({ error: 'Failed to block availability' }, 500);
     }
 }
 

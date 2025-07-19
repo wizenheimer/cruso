@@ -5,7 +5,8 @@ import { calendarConnections } from '@/db/schema/calendars';
 import { account } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { GoogleAuthManager } from './manager';
-import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
+import { formatInTimeZone } from 'date-fns-tz';
+import { preferenceService } from '../preferences';
 
 export interface CalendarEvent {
     id?: string;
@@ -94,6 +95,20 @@ export interface AvailabilityResult {
         calendarId: string;
         calendarName: string;
     }>;
+}
+
+export interface BlockAvailabilityResult {
+    state: 'success' | 'error';
+    rescheduledEventCount?: number;
+    rescheduledEventDetails?: CalendarEvent[];
+    blockEventDetails?: CalendarEvent;
+    message?: string;
+}
+
+export interface ClearAvailabilityResult {
+    state: 'success' | 'error';
+    rescheduledEventCount?: number;
+    rescheduledEventDetails?: CalendarEvent[];
 }
 
 export class GoogleCalendarService {
@@ -464,7 +479,7 @@ export class GoogleCalendarService {
     /**
      * Check availability across all user's calendars
      */
-    async checkAvailability(
+    async checkAvailabilityBlock(
         timeMinRFC3339: string,
         timeMaxRFC3339: string,
         options: {
@@ -472,9 +487,11 @@ export class GoogleCalendarService {
             excludeCalendarIds?: string[];
             responseTimezone?: string;
             timeDurationMinutes?: number;
+            includeEvents?: boolean;
         } = {},
     ): Promise<AvailabilityResult> {
         const responseTimezone = options.responseTimezone || 'UTC';
+        const includeEvents = options.includeEvents || false;
         const duration =
             options.timeDurationMinutes ||
             Math.floor(
@@ -558,34 +575,36 @@ export class GoogleCalendarService {
                         );
 
                         // Also get detailed events for context
-                        try {
-                            const { events } = await this.getEvents(
-                                connection.calendarId,
-                                timeMinRFC3339,
-                                timeMaxRFC3339,
-                            );
+                        if (includeEvents) {
+                            try {
+                                const { events } = await this.getEvents(
+                                    connection.calendarId,
+                                    timeMinRFC3339,
+                                    timeMaxRFC3339,
+                                );
 
-                            allEvents.push(
-                                ...events.map((event) => ({
-                                    id: event.id!,
-                                    summary: event.summary || 'Busy',
-                                    start: this.convertToTimezone(
-                                        event.start?.dateTime || event.start?.date || '',
-                                        responseTimezone,
-                                    ),
-                                    end: this.convertToTimezone(
-                                        event.end?.dateTime || event.end?.date || '',
-                                        responseTimezone,
-                                    ),
-                                    calendarId: connection.calendarId,
-                                    calendarName: connection.calendarName || 'Unknown Calendar',
-                                })),
-                            );
-                        } catch (error) {
-                            console.error(
-                                `Error getting events for calendar ${connection.calendarId}:`,
-                                error,
-                            );
+                                allEvents.push(
+                                    ...events.map((event) => ({
+                                        id: event.id!,
+                                        summary: event.summary || 'Busy',
+                                        start: this.convertToTimezone(
+                                            event.start?.dateTime || event.start?.date || '',
+                                            responseTimezone,
+                                        ),
+                                        end: this.convertToTimezone(
+                                            event.end?.dateTime || event.end?.date || '',
+                                            responseTimezone,
+                                        ),
+                                        calendarId: connection.calendarId,
+                                        calendarName: connection.calendarName || 'Unknown Calendar',
+                                    })),
+                                );
+                            } catch (error) {
+                                console.error(
+                                    `Error getting events for calendar ${connection.calendarId}:`,
+                                    error,
+                                );
+                            }
                         }
                     }
                 } catch (error) {
@@ -635,6 +654,500 @@ export class GoogleCalendarService {
                 }`,
             );
         }
+    }
+
+    /**
+     * Create an availability block in the primary calendar
+     * This method intelligently finds or creates space for the requested time block
+     * If no event parameters are provided, it will only clear the time slot without creating a block
+     */
+    async createAvailabilityBlock(
+        timeMinRFC3339: string, // start time formatted as RFC3339
+        timeMaxRFC3339: string, // end time formatted as RFC3339
+        options: {
+            responseTimezone?: string; // timezone for the response
+            timeDurationMinutes?: number; // duration of the block in minutes
+            eventSummary?: string; // summary of the block
+            eventDescription?: string; // description of the block
+            eventAttendees?: string[]; // attendees of the block
+            eventLocation?: string; // location of the block
+            eventConference?: boolean; // whether to create a conference for the block
+            eventPrivate?: boolean; // whether to make the block private
+            eventColorId?: string; // color of the block
+            createBlock?: boolean; // whether to create a block event
+        } = {},
+    ): Promise<BlockAvailabilityResult> {
+        const responseTimezone = options.responseTimezone || 'UTC';
+        const duration =
+            options.timeDurationMinutes ||
+            Math.floor(
+                (new Date(timeMaxRFC3339).getTime() - new Date(timeMinRFC3339).getTime()) /
+                    (1000 * 60),
+            );
+
+        // Determine if we should create a block event
+        // If createBlock is explicitly false, don't create
+        // If createBlock is true or any event parameters are provided, create the block
+        const shouldCreateBlock =
+            options.createBlock !== false &&
+            (options.createBlock === true ||
+                options.eventSummary !== undefined ||
+                options.eventDescription !== undefined ||
+                options.eventAttendees !== undefined ||
+                options.eventLocation !== undefined ||
+                options.eventConference !== undefined ||
+                options.eventPrivate !== undefined ||
+                options.eventColorId !== undefined);
+
+        console.log('┌─ [CREATE_AVAILABILITY_BLOCK] Starting...', {
+            timeMin: timeMinRFC3339,
+            timeMax: timeMaxRFC3339,
+            duration,
+            responseTimezone,
+            shouldCreateBlock,
+        });
+
+        const rescheduledEventDetails: CalendarEvent[] = [];
+        let blockEventDetails: CalendarEvent | null = null;
+
+        try {
+            // Get user preferences to find primary account
+            const userPreferences = await preferenceService.getPreferences(this.userId);
+            const primaryAccountId = userPreferences.data?.preferences.primaryAccountId;
+
+            if (!primaryAccountId) {
+                throw new Error('Primary account not found');
+            }
+
+            console.log('├─ [CREATE_AVAILABILITY_BLOCK] Primary account ID:', primaryAccountId);
+
+            // Get primary calendar connections
+            const primaryCalendarConnections = await db
+                .select()
+                .from(calendarConnections)
+                .where(
+                    and(
+                        eq(calendarConnections.accountId, primaryAccountId),
+                        eq(calendarConnections.isActive, true),
+                        eq(calendarConnections.includeInAvailability, true),
+                        eq(calendarConnections.isPrimary, true),
+                    ),
+                );
+
+            if (primaryCalendarConnections.length === 0) {
+                throw new Error('No primary calendar found');
+            }
+
+            console.log(
+                '├─ [CREATE_AVAILABILITY_BLOCK] Primary calendar:',
+                primaryCalendarConnections[0].calendarId,
+            );
+
+            const calendar = await this.getCalendarApi(primaryAccountId);
+            const primaryCalendarId = primaryCalendarConnections[0].calendarId;
+
+            // Calculate if duration equals entire time slot
+            const totalTimeSlotMinutes = Math.floor(
+                (new Date(timeMaxRFC3339).getTime() - new Date(timeMinRFC3339).getTime()) /
+                    (1000 * 60),
+            );
+            const isFullSlotBlock = duration === totalTimeSlotMinutes;
+
+            console.log('├─ [CREATE_AVAILABILITY_BLOCK] Time slot analysis:', {
+                totalTimeSlotMinutes,
+                requestedDuration: duration,
+                isFullSlotBlock,
+            });
+
+            // Build event request body
+            const eventRequestBody = {
+                summary: options.eventSummary || 'Blocked',
+                description: options.eventDescription || 'Time blocked for availability',
+                attendees: options.eventAttendees?.map((email) => ({ email })),
+                conferenceData: options.eventConference
+                    ? {
+                          createRequest: {
+                              requestId: `block-${Date.now()}`,
+                              conferenceSolutionKey: {
+                                  type: 'hangoutsMeet',
+                              },
+                          },
+                      }
+                    : undefined,
+                location: options.eventLocation,
+                colorId: options.eventColorId || '8', // Default to graphite
+                status: 'confirmed',
+                transparency: 'opaque',
+                visibility: options.eventPrivate ? 'private' : 'default',
+            };
+
+            // Optimization: If blocking entire time slot, just delete all events
+            if (isFullSlotBlock) {
+                console.log(
+                    '├─ [CREATE_AVAILABILITY_BLOCK] Full slot block requested, clearing all events...',
+                );
+
+                // Get all events in the time range
+                const { events } = await this.getEvents(
+                    primaryCalendarId,
+                    timeMinRFC3339,
+                    timeMaxRFC3339,
+                    {
+                        singleEvents: true,
+                        orderBy: 'startTime',
+                    },
+                );
+
+                console.log(
+                    '├─ [CREATE_AVAILABILITY_BLOCK] Found events to delete:',
+                    events.length,
+                );
+
+                // Bulk delete all events
+                for (const event of events) {
+                    await this.deleteEvent(primaryCalendarId, event.id!, {
+                        sendUpdates: 'all',
+                    });
+                    rescheduledEventDetails.push(event);
+                }
+
+                // Create block event for entire time slot only if requested
+                if (shouldCreateBlock) {
+                    const response = await calendar.events.insert({
+                        calendarId: primaryCalendarId,
+                        conferenceDataVersion: options.eventConference ? 1 : undefined,
+                        requestBody: {
+                            ...eventRequestBody,
+                            start: {
+                                dateTime: timeMinRFC3339,
+                                timeZone: responseTimezone,
+                            },
+                            end: {
+                                dateTime: timeMaxRFC3339,
+                                timeZone: responseTimezone,
+                            },
+                        },
+                    });
+
+                    blockEventDetails = this.transformGoogleEvent(response.data);
+                    console.log('├─ [CREATE_AVAILABILITY_BLOCK] Block event created');
+                }
+
+                console.log('└─ [CREATE_AVAILABILITY_BLOCK] Full slot processing completed');
+
+                return {
+                    state: 'success',
+                    rescheduledEventCount: rescheduledEventDetails.length,
+                    rescheduledEventDetails,
+                    blockEventDetails: blockEventDetails || undefined,
+                    message: shouldCreateBlock
+                        ? `Successfully blocked entire time slot. ${rescheduledEventDetails.length} events were rescheduled.`
+                        : `Successfully cleared time slot. ${rescheduledEventDetails.length} events were removed.`,
+                };
+            }
+
+            // For partial blocks, check current availability
+            const availabilityResult = await this.checkAvailabilityBlock(
+                timeMinRFC3339,
+                timeMaxRFC3339,
+                {
+                    includeCalendarIds: [primaryCalendarId],
+                    responseTimezone,
+                    timeDurationMinutes: duration,
+                },
+            );
+
+            console.log('├─ [CREATE_AVAILABILITY_BLOCK] Current availability:', {
+                isAvailable: availabilityResult.isAvailable,
+                freeSlotCount: availabilityResult.freeSlots.length,
+            });
+
+            // Case 1: If there's a free slot that fits our duration AND we want to create a block
+            if (availabilityResult.freeSlots.length > 0 && shouldCreateBlock) {
+                const freeSlot = availabilityResult.freeSlots[0];
+                const blockStart = new Date(freeSlot.start);
+                const blockEnd = new Date(blockStart.getTime() + duration * 60 * 1000);
+
+                // Make sure block doesn't exceed free slot
+                const freeSlotEnd = new Date(freeSlot.end);
+                if (blockEnd > freeSlotEnd) {
+                    blockEnd.setTime(freeSlotEnd.getTime());
+                }
+
+                console.log('├─ [CREATE_AVAILABILITY_BLOCK] Creating block in free slot:', {
+                    start: blockStart.toISOString(),
+                    end: blockEnd.toISOString(),
+                });
+
+                const response = await calendar.events.insert({
+                    calendarId: primaryCalendarId,
+                    conferenceDataVersion: options.eventConference ? 1 : undefined,
+                    requestBody: {
+                        ...eventRequestBody,
+                        start: {
+                            dateTime: blockStart.toISOString(),
+                            timeZone: responseTimezone,
+                        },
+                        end: {
+                            dateTime: blockEnd.toISOString(),
+                            timeZone: responseTimezone,
+                        },
+                    },
+                });
+
+                blockEventDetails = this.transformGoogleEvent(response.data);
+
+                console.log(
+                    '└─ [CREATE_AVAILABILITY_BLOCK] Block created in free slot successfully',
+                );
+
+                return {
+                    state: 'success',
+                    rescheduledEventCount: 0,
+                    rescheduledEventDetails: [],
+                    blockEventDetails: blockEventDetails,
+                    message: 'Successfully created block in available time slot.',
+                };
+            }
+
+            // If there's a free slot but we don't want to create a block
+            if (availabilityResult.freeSlots.length > 0 && !shouldCreateBlock) {
+                console.log(
+                    '└─ [CREATE_AVAILABILITY_BLOCK] Free slot available, no block requested',
+                );
+                return {
+                    state: 'success',
+                    rescheduledEventCount: 0,
+                    rescheduledEventDetails: [],
+                    message: 'Time slot is already available. No changes made.',
+                };
+            }
+
+            // Case 2: No free slots - need to reschedule existing events
+            console.log(
+                '├─ [CREATE_AVAILABILITY_BLOCK] No free slots available, analyzing events to reschedule...',
+            );
+
+            // Get all events in the time range
+            const { events } = await this.getEvents(
+                primaryCalendarId,
+                timeMinRFC3339,
+                timeMaxRFC3339,
+                {
+                    singleEvents: true,
+                    orderBy: 'startTime',
+                },
+            );
+
+            console.log('├─ [CREATE_AVAILABILITY_BLOCK] Found events:', events.length);
+
+            if (events.length === 0) {
+                throw new Error('No events found in the specified time range');
+            }
+
+            // Find the best event(s) to reschedule
+            const eventsToReschedule = this.findOptimalEventsToReschedule(
+                events,
+                duration,
+                timeMinRFC3339,
+                timeMaxRFC3339,
+            );
+
+            if (eventsToReschedule.length === 0) {
+                throw new Error('No suitable events found to reschedule');
+            }
+
+            console.log(
+                '├─ [CREATE_AVAILABILITY_BLOCK] Events to reschedule:',
+                eventsToReschedule.length,
+            );
+
+            // Calculate the exact block start and end based on events being replaced
+            const firstEventStart = eventsToReschedule[0].start?.dateTime
+                ? new Date(eventsToReschedule[0].start.dateTime)
+                : new Date(eventsToReschedule[0].start?.date || timeMinRFC3339);
+
+            // If we're replacing multiple events, use the end of the last event or duration, whichever is smaller
+            const lastEvent = eventsToReschedule[eventsToReschedule.length - 1];
+            const lastEventEnd = lastEvent.end?.dateTime
+                ? new Date(lastEvent.end.dateTime)
+                : new Date(lastEvent.end?.date || timeMaxRFC3339);
+
+            const blockStart = firstEventStart;
+            const blockEnd = new Date(
+                Math.min(blockStart.getTime() + duration * 60 * 1000, lastEventEnd.getTime()),
+            );
+
+            // Delete the selected events
+            for (const event of eventsToReschedule) {
+                console.log('├─ [CREATE_AVAILABILITY_BLOCK] Deleting event:', event.summary);
+
+                await this.deleteEvent(primaryCalendarId, event.id!, {
+                    sendUpdates: 'all',
+                });
+
+                rescheduledEventDetails.push(event);
+            }
+
+            console.log('├─ [CREATE_AVAILABILITY_BLOCK] Creating block event:', {
+                start: blockStart.toISOString(),
+                end: blockEnd.toISOString(),
+            });
+
+            // Create the block event only if requested
+            if (shouldCreateBlock) {
+                const response = await calendar.events.insert({
+                    calendarId: primaryCalendarId,
+                    conferenceDataVersion: options.eventConference ? 1 : undefined,
+                    requestBody: {
+                        ...eventRequestBody,
+                        start: {
+                            dateTime: blockStart.toISOString(),
+                            timeZone: responseTimezone,
+                        },
+                        end: {
+                            dateTime: blockEnd.toISOString(),
+                            timeZone: responseTimezone,
+                        },
+                    },
+                });
+
+                blockEventDetails = this.transformGoogleEvent(response.data);
+                console.log('├─ [CREATE_AVAILABILITY_BLOCK] Block event created');
+            }
+
+            console.log('└─ [CREATE_AVAILABILITY_BLOCK] Processing completed');
+
+            return {
+                state: 'success',
+                rescheduledEventCount: rescheduledEventDetails.length,
+                rescheduledEventDetails,
+                blockEventDetails: blockEventDetails || undefined,
+                message: shouldCreateBlock
+                    ? `Successfully created block by rescheduling ${rescheduledEventDetails.length} event(s).`
+                    : `Successfully cleared time slot by removing ${rescheduledEventDetails.length} event(s).`,
+            };
+        } catch (error) {
+            console.error('└─ [CREATE_AVAILABILITY_BLOCK] Error:', error);
+
+            return {
+                state: 'error',
+                message: error instanceof Error ? error.message : 'Unknown error occurred',
+            };
+        }
+    }
+
+    /**
+     * Find optimal events to reschedule based on criteria
+     */
+    private findOptimalEventsToReschedule(
+        events: CalendarEvent[],
+        requiredDurationMinutes: number,
+        timeMin: string,
+        timeMax: string,
+    ): CalendarEvent[] {
+        const requiredDurationMs = requiredDurationMinutes * 60 * 1000;
+
+        // Score events based on disruption impact
+        const scoredEvents = events.map((event) => {
+            const startTime = event.start?.dateTime
+                ? new Date(event.start.dateTime).getTime()
+                : new Date(event.start?.date || timeMin).getTime();
+
+            const endTime = event.end?.dateTime
+                ? new Date(event.end.dateTime).getTime()
+                : new Date(event.end?.date || timeMax).getTime();
+
+            const duration = endTime - startTime;
+            const attendeeCount = event.attendees?.length || 0;
+
+            // Lower score is better (less disruptive)
+            let score = 0;
+
+            // Penalize based on number of attendees
+            score += attendeeCount * 100;
+
+            // Penalize longer events
+            score += duration / (60 * 1000); // Add 1 point per minute
+
+            return {
+                event,
+                score,
+                duration,
+            };
+        });
+
+        // Sort by score (ascending - least disruptive first)
+        scoredEvents.sort((a, b) => a.score - b.score);
+
+        // First, try to find a single event that fits
+        const singleEvent = scoredEvents.find((item) => item.duration >= requiredDurationMs);
+        if (singleEvent) {
+            return [singleEvent.event];
+        }
+
+        // If no single event fits, find contiguous events
+        return this.findMinimalContiguousEvents(scoredEvents, requiredDurationMs);
+    }
+
+    /**
+     * Find minimal contiguous events that meet duration requirement
+     */
+    private findMinimalContiguousEvents(
+        scoredEvents: Array<{ event: CalendarEvent; score: number; duration: number }>,
+        requiredDurationMs: number,
+    ): CalendarEvent[] {
+        // Sort by start time for contiguous checking
+        const sortedByTime = [...scoredEvents].sort((a, b) => {
+            const aStart = new Date(a.event.start?.dateTime || a.event.start?.date || 0).getTime();
+            const bStart = new Date(b.event.start?.dateTime || b.event.start?.date || 0).getTime();
+            return aStart - bStart;
+        });
+
+        let bestCombination: CalendarEvent[] = [];
+        let bestScore = Infinity;
+
+        // Try different starting points
+        for (let i = 0; i < sortedByTime.length; i++) {
+            let currentDuration = 0;
+            let currentScore = 0;
+            const currentCombination: CalendarEvent[] = [];
+
+            // Build contiguous block starting from index i
+            for (let j = i; j < sortedByTime.length; j++) {
+                const current = sortedByTime[j];
+
+                // Check if events are contiguous (within 30 minutes)
+                if (currentCombination.length > 0) {
+                    const lastEvent = currentCombination[currentCombination.length - 1];
+                    const lastEnd = new Date(
+                        lastEvent.end?.dateTime || lastEvent.end?.date || 0,
+                    ).getTime();
+                    const currentStart = new Date(
+                        current.event.start?.dateTime || current.event.start?.date || 0,
+                    ).getTime();
+
+                    if (currentStart - lastEnd > 30 * 60 * 1000) {
+                        break; // Not contiguous
+                    }
+                }
+
+                currentCombination.push(current.event);
+                currentDuration += current.duration;
+                currentScore += current.score;
+
+                // If we've met the duration requirement
+                if (currentDuration >= requiredDurationMs) {
+                    if (currentScore < bestScore) {
+                        bestScore = currentScore;
+                        bestCombination = [...currentCombination];
+                    }
+                    break;
+                }
+            }
+        }
+
+        return bestCombination;
     }
 
     /**

@@ -8,6 +8,7 @@ import {
     handleDeleteCalendarAccount,
     handleCheckAvailability,
     handleSyncAllCalendars,
+    handleBlockAvailability,
 } from '@/app/api/handlers/calendar';
 
 const calendar = new Hono();
@@ -27,10 +28,21 @@ calendar.get('/', handleGetCalendarConnections);
  */
 calendar.get('/accounts', handleGetCalendarAccounts);
 
+// ==================================================
+// Availability Routes - Check and Block Availability
+// ==================================================
+
 /**
  * POST /api/v1/calendar/availability
  */
 calendar.post('/availability', handleCheckAvailability);
+
+/**
+ * PATCH /api/v1/calendar/availability
+ */
+calendar.patch('/availability', handleBlockAvailability);
+
+// ==================================================
 
 /**
  * POST /api/v1/calendar/sync-all
