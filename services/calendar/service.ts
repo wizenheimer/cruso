@@ -80,6 +80,9 @@ export class GoogleCalendarService extends BaseCalendarService {
             showDeleted?: boolean;
             singleEvents?: boolean;
             orderBy?: 'startTime' | 'updated';
+            timeZone?: string;
+            alwaysIncludeEmail?: boolean;
+            iCalUID?: string;
         },
     ): Promise<{ events: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
         return this.eventsService.getEventsFromPrimaryCalendar(timeMin, timeMax, options);
@@ -114,6 +117,17 @@ export class GoogleCalendarService extends BaseCalendarService {
         },
     ): Promise<CalendarEvent> {
         return this.eventsService.getEvent(calendarId, eventId, options);
+    }
+
+    async getEventFromPrimaryCalendar(
+        eventId: string,
+        options?: {
+            timeZone?: string;
+            alwaysIncludeEmail?: boolean;
+            maxAttendees?: number;
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        return this.eventsService.getEventFromPrimaryCalendar(eventId, options);
     }
 
     async findEventsByICalUID(

@@ -1,6 +1,7 @@
 import { Context } from 'hono';
 import { createCalendarService } from '@/services/calendar/service';
 import { getUser } from './connections';
+import { CalendarEvent } from '@/services/calendar/base';
 
 /**
  * Handle the GET request to fetch events from primary calendar
@@ -12,8 +13,19 @@ export async function handleGetEventsFromPrimaryCalendar(c: Context) {
         const user = getUser(c);
         const query = c.req.query();
 
-        const { timeMin, timeMax, maxResults, pageToken, q, showDeleted, singleEvents, orderBy } =
-            query;
+        const {
+            timeMin,
+            timeMax,
+            maxResults,
+            pageToken,
+            q,
+            showDeleted,
+            singleEvents,
+            orderBy,
+            timeZone,
+            alwaysIncludeEmail,
+            iCalUID,
+        } = query;
 
         if (!timeMin || !timeMax) {
             return c.json({ error: 'timeMin and timeMax are required' }, 400);
@@ -28,6 +40,9 @@ export async function handleGetEventsFromPrimaryCalendar(c: Context) {
             showDeleted: showDeleted ? showDeleted === 'true' : undefined,
             singleEvents: singleEvents ? singleEvents === 'true' : undefined,
             orderBy: orderBy as 'startTime' | 'updated' | undefined,
+            timeZone: timeZone || undefined,
+            alwaysIncludeEmail: alwaysIncludeEmail ? alwaysIncludeEmail === 'true' : undefined,
+            iCalUID: iCalUID || undefined,
         });
 
         return c.json(result);
@@ -273,6 +288,9 @@ export async function handleGetEvents(c: Context) {
         const showDeleted = c.req.query('showDeleted');
         const singleEvents = c.req.query('singleEvents');
         const orderBy = c.req.query('orderBy');
+        const timeZone = c.req.query('timeZone');
+        const alwaysIncludeEmail = c.req.query('alwaysIncludeEmail');
+        const iCalUID = c.req.query('iCalUID');
 
         if (!calendarId) {
             return c.json({ error: 'calendarId is required' }, 400);
@@ -291,6 +309,9 @@ export async function handleGetEvents(c: Context) {
             showDeleted: showDeleted ? showDeleted === 'true' : undefined,
             singleEvents: singleEvents ? singleEvents === 'true' : undefined,
             orderBy: orderBy as 'startTime' | 'updated' | undefined,
+            timeZone: timeZone || undefined,
+            alwaysIncludeEmail: alwaysIncludeEmail ? alwaysIncludeEmail === 'true' : undefined,
+            iCalUID: iCalUID || undefined,
         });
 
         return c.json(result);
@@ -400,5 +421,118 @@ export async function handleDeleteEvent(c: Context) {
     } catch (error) {
         console.error('Error deleting event from calendar:', error);
         return c.json({ error: 'Failed to delete event from calendar' }, 500);
+    }
+}
+
+/**
+ * Handle the GET request to fetch a specific event from primary calendar
+ * @param c - The context object
+ * @returns The response object
+ */
+export async function handleGetEventFromPrimaryCalendar(c: Context) {
+    try {
+        const user = getUser(c);
+        const eventId = c.req.param('eventId');
+        const query = c.req.query();
+
+        const { timeZone, alwaysIncludeEmail, maxAttendees } = query;
+
+        if (!eventId) {
+            return c.json({ error: 'eventId is required' }, 400);
+        }
+
+        const calendarService = createCalendarService(user.id);
+
+        const result = await calendarService.getEventFromPrimaryCalendar(eventId, {
+            timeZone: timeZone || undefined,
+            alwaysIncludeEmail: alwaysIncludeEmail ? alwaysIncludeEmail === 'true' : undefined,
+            maxAttendees: maxAttendees ? parseInt(maxAttendees, 10) : undefined,
+        });
+
+        return c.json(result);
+    } catch (error) {
+        console.error('Error getting event from primary calendar:', error);
+        return c.json({ error: 'Failed to get event from primary calendar' }, 500);
+    }
+}
+
+/**
+ * Handle the GET request to fetch a specific event from a specific calendar
+ * @param c - The context object
+ * @returns The response object
+ */
+export async function handleGetEvent(c: Context) {
+    try {
+        const user = getUser(c);
+        const calendarId = c.req.param('calendarId');
+        const eventId = c.req.param('eventId');
+        const query = c.req.query();
+
+        const { timeZone, alwaysIncludeEmail, maxAttendees } = query;
+
+        if (!calendarId) {
+            return c.json({ error: 'calendarId is required' }, 400);
+        }
+
+        if (!eventId) {
+            return c.json({ error: 'eventId is required' }, 400);
+        }
+
+        const calendarService = createCalendarService(user.id);
+
+        const result = await calendarService.getEvent(calendarId, eventId, {
+            timeZone: timeZone || undefined,
+            alwaysIncludeEmail: alwaysIncludeEmail ? alwaysIncludeEmail === 'true' : undefined,
+            maxAttendees: maxAttendees ? parseInt(maxAttendees, 10) : undefined,
+        });
+
+        return c.json(result);
+    } catch (error) {
+        console.error('Error getting event from calendar:', error);
+        return c.json({ error: 'Failed to get event from calendar' }, 500);
+    }
+}
+
+/**
+ * Handle the GET request to find events by iCalUID across all calendars
+ * @param c - The context object
+ * @returns The response object
+ */
+export async function handleFindEventsByICalUID(c: Context) {
+    try {
+        const user = getUser(c);
+        const query = c.req.query();
+
+        const { iCalUID, timeZone, includeDeleted } = query;
+
+        if (!iCalUID) {
+            return c.json({ error: 'iCalUID is required' }, 400);
+        }
+
+        const calendarService = createCalendarService(user.id);
+
+        const result = await calendarService.findEventsByICalUID(iCalUID, {
+            timeZone: timeZone || undefined,
+            includeDeleted: includeDeleted ? includeDeleted === 'true' : undefined,
+        });
+
+        // Convert Map to object for JSON serialization
+        const eventsByCalendar: Record<string, CalendarEvent[]> = {};
+        result.forEach((events, calendarId) => {
+            eventsByCalendar[calendarId] = events;
+        });
+
+        return c.json({
+            iCalUID,
+            eventsByCalendar,
+            totalCalendars: result.size,
+            totalEvents: Array.from(result.values()).reduce(
+                (sum, events) => sum + events.length,
+                0,
+            ),
+        });
+    } catch (error) {
+        console.error('Error finding events by iCalUID:', error);
+        return c.json({ error: 'Failed to find events by iCalUID' }, 500);
     }
 }

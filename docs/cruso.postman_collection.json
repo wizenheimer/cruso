@@ -209,6 +209,347 @@
                         "url": "{{baseUrl}}/api/v1/calendar"
                     },
                     "response": []
+                },
+                {
+                    "name": "Search Primary Calendar Events",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"team meeting\",\n  \"timeMin\": \"2024-01-01T00:00:00Z\",\n  \"timeMax\": \"2024-12-31T23:59:59Z\",\n  \"hasAttendees\": true,\n  \"attendeeEmail\": \"colleague@example.com\",\n  \"location\": \"Conference Room\",\n  \"isRecurring\": false,\n  \"isAllDay\": false,\n  \"minDuration\": 30,\n  \"maxDuration\": 120,\n  \"maxResults\": 50,\n  \"orderBy\": \"startTime\",\n  \"ascending\": true,\n  \"includeDeleted\": false,\n  \"expandRecurring\": true,\n  \"timezone\": \"America/New_York\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/calendar/search"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Quick Search Primary Calendar",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/calendar/search/quick?q=meeting",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "calendar", "search", "quick"],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "meeting"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Quick Search Presets",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/v1/calendar/search/presets"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Execute Search Preset - Today's Meetings",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=todaysMeetings",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "calendar", "search", "presets"],
+                            "query": [
+                                {
+                                    "key": "preset",
+                                    "value": "todaysMeetings"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Execute Search Preset - With Person",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=withPerson&email=colleague@example.com&days=30",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "calendar", "search", "presets"],
+                            "query": [
+                                {
+                                    "key": "preset",
+                                    "value": "withPerson"
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "colleague@example.com"
+                                },
+                                {
+                                    "key": "days",
+                                    "value": "30"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Search Specific Calendar Events",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"team meeting\",\n  \"timeMin\": \"2024-01-01T00:00:00Z\",\n  \"timeMax\": \"2024-12-31T23:59:59Z\",\n  \"hasAttendees\": true,\n  \"maxResults\": 50\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/calendar/{{calendarId}}/search"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Recurring Event - Primary Calendar",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"event\": {\n    \"summary\": \"Weekly Team Meeting\",\n    \"description\": \"Weekly team sync meeting\",\n    \"start\": {\n      \"dateTime\": \"2024-01-15T10:00:00Z\",\n      \"timeZone\": \"America/New_York\"\n    },\n    \"end\": {\n      \"dateTime\": \"2024-01-15T11:00:00Z\",\n      \"timeZone\": \"America/New_York\"\n    },\n    \"location\": \"Conference Room A\",\n    \"attendees\": [\n      {\n        \"email\": \"colleague@example.com\",\n        \"displayName\": \"John Doe\"\n      }\n    ],\n    \"recurrence\": [\n      {\n        \"freq\": \"WEEKLY\",\n        \"interval\": 1,\n        \"byDay\": [\"MO\"],\n        \"until\": \"2024-12-31T23:59:59Z\"\n      }\n    ]\n  },\n  \"sendUpdates\": \"all\",\n  \"conferenceDataVersion\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/calendar/recurring-events"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Recurring Event Instance",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"instanceStartTime\": \"2024-01-15T10:00:00Z\",\n  \"updates\": {\n    \"summary\": \"Special Team Meeting\",\n    \"description\": \"This is a special one-time meeting\",\n    \"location\": \"Conference Room B\"\n  },\n  \"sendUpdates\": \"all\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}/instances"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Future Recurring Events",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"fromDateTime\": \"2024-02-01T10:00:00Z\",\n  \"updates\": {\n    \"summary\": \"Updated Weekly Team Meeting\",\n    \"location\": \"Conference Room C\",\n    \"recurrence\": [\n      {\n        \"freq\": \"WEEKLY\",\n        \"interval\": 1,\n        \"byDay\": [\"WE\"],\n        \"until\": \"2024-12-31T23:59:59Z\"\n      }\n    ]\n  },\n  \"sendUpdates\": \"all\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}/future"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Recurring Event Instance",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"instanceStartTime\": \"2024-01-15T10:00:00Z\",\n  \"sendUpdates\": \"all\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}/instances"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Recurring Event Instances",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}/instances?timeMin=2024-01-01T00:00:00Z&timeMax=2024-12-31T23:59:59Z&maxResults=50",
+                            "host": ["{{baseUrl}}"],
+                            "path": [
+                                "api",
+                                "v1",
+                                "calendar",
+                                "recurring-events",
+                                "{{eventId}}",
+                                "instances"
+                            ],
+                            "query": [
+                                {
+                                    "key": "timeMin",
+                                    "value": "2024-01-01T00:00:00Z"
+                                },
+                                {
+                                    "key": "timeMax",
+                                    "value": "2024-12-31T23:59:59Z"
+                                },
+                                {
+                                    "key": "maxResults",
+                                    "value": "50"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Batch Create Recurring Events",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "cruso.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"events\": [\n    {\n      \"summary\": \"Weekly Team Meeting\",\n      \"start\": {\n        \"dateTime\": \"2024-01-15T10:00:00Z\",\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2024-01-15T11:00:00Z\",\n        \"timeZone\": \"America/New_York\"\n      },\n      \"recurrence\": [\n        {\n          \"freq\": \"WEEKLY\",\n          \"interval\": 1,\n          \"byDay\": [\"MO\"]\n        }\n      ]\n    },\n    {\n      \"summary\": \"Monthly Review\",\n      \"start\": {\n        \"dateTime\": \"2024-01-20T14:00:00Z\",\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2024-01-20T15:00:00Z\",\n        \"timeZone\": \"America/New_York\"\n      },\n      \"recurrence\": [\n        {\n          \"freq\": \"MONTHLY\",\n          \"interval\": 1,\n          \"byMonthDay\": [20]\n        }\n      ]\n    }\n  ],\n  \"sendUpdates\": \"all\",\n  \"conferenceDataVersion\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/v1/calendar/recurring-events/batch"
+                    },
+                    "response": []
                 }
             ]
         },

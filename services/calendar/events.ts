@@ -15,6 +15,9 @@ export class CalendarEventsService extends BaseCalendarService {
             showDeleted?: boolean;
             singleEvents?: boolean;
             orderBy?: 'startTime' | 'updated';
+            timeZone?: string;
+            alwaysIncludeEmail?: boolean;
+            iCalUID?: string;
         },
     ): Promise<{ events: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
         console.log('┌─ [CALENDAR_EVENTS] Getting events from primary calendar...', {
@@ -134,6 +137,41 @@ export class CalendarEventsService extends BaseCalendarService {
         } catch (error) {
             throw new Error(
                 `Failed to get event: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            );
+        }
+    }
+
+    /**
+     * Get a specific event from the primary calendar
+     */
+    async getEventFromPrimaryCalendar(
+        eventId: string,
+        options?: {
+            timeZone?: string;
+            alwaysIncludeEmail?: boolean;
+            maxAttendees?: number;
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        console.log('┌─ [CALENDAR_EVENTS] Getting event from primary calendar...', { eventId });
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [CALENDAR_EVENTS] Primary calendar:', primaryCalendarId);
+
+            const event = await this.getEvent(primaryCalendarId, eventId, options);
+
+            console.log('└─ [CALENDAR_EVENTS] Event retrieved:', event.id);
+
+            return {
+                ...event,
+                calendarId: primaryCalendarId,
+            };
+        } catch (error) {
+            console.error('└─ [CALENDAR_EVENTS] Error:', error);
+            throw new Error(
+                `Failed to get event from primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
             );
         }
     }
