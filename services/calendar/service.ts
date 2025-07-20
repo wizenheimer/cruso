@@ -11,6 +11,58 @@ import { RRule, rrulestr, Frequency, Weekday } from 'rrule';
 import { addMinutes, differenceInMinutes, startOfDay, endOfDay, isWeekend } from 'date-fns';
 
 // ==================================================
+// Search Types and Interfaces
+// ==================================================
+
+export interface SearchOptions {
+    // Text search
+    query?: string; // Search in summary, description, location, attendees
+
+    // Time filters
+    timeMin?: string; // RFC3339
+    timeMax?: string; // RFC3339
+
+    // Common filters
+    hasAttendees?: boolean; // true = meetings, false = focus time
+    attendeeEmail?: string; // Events with specific attendee
+    location?: string; // Partial match on location
+    isRecurring?: boolean; // Filter recurring events
+    isAllDay?: boolean; // Filter all-day events
+
+    // Advanced options
+    createdAfter?: string; // RFC3339 - for finding recently created events
+    updatedAfter?: string; // RFC3339 - for finding recently modified events
+    minDuration?: number; // Minutes
+    maxDuration?: number; // Minutes
+
+    // Response options
+    maxResults?: number; // Default: 50
+    orderBy?: 'startTime' | 'updated';
+    ascending?: boolean; // Default: true
+    includeDeleted?: boolean; // Default: false
+    expandRecurring?: boolean; // Default: true (show instances)
+    timezone?: string; // Response timezone
+}
+
+export interface SearchResult {
+    events: CalendarEvent[];
+    totalResults: number;
+    executionTime: number; // milliseconds
+    nextPageToken?: string;
+}
+
+export interface QuickSearchPresets {
+    todaysMeetings: () => Promise<SearchResult>;
+    upcomingWeek: () => Promise<SearchResult>;
+    recentlyCreated: (days?: number) => Promise<SearchResult>;
+    withPerson: (email: string, days?: number) => Promise<SearchResult>;
+    longMeetings: (minMinutes?: number) => Promise<SearchResult>;
+    recurringEvents: () => Promise<SearchResult>;
+    pastMeetings: (days?: number) => Promise<SearchResult>;
+    freeTextSearch: (query: string) => Promise<SearchResult>;
+}
+
+// ==================================================
 // Recurrence Rule Interface
 // ==================================================
 export interface RecurrenceRule {
@@ -53,6 +105,12 @@ export interface CalendarEvent {
         email: string;
         displayName?: string;
         responseStatus?: string;
+        optional?: boolean;
+        resource?: boolean;
+        organizer?: boolean;
+        self?: boolean;
+        comment?: string;
+        additionalGuests?: number;
     }>;
     location?: string;
     conferenceData?: calendar_v3.Schema$ConferenceData;
@@ -63,6 +121,54 @@ export interface CalendarEvent {
             minutes: number;
         }>;
     };
+    // Additional properties that may be present from Google Calendar API
+    recurringEventId?: string; // ID of the recurring event series
+    originalStartTime?: {
+        dateTime?: string;
+        date?: string;
+        timeZone?: string;
+    };
+    created?: string; // RFC3339 timestamp
+    updated?: string; // RFC3339 timestamp
+    status?: string; // 'confirmed', 'tentative', 'cancelled'
+    organizer?: {
+        email?: string;
+        displayName?: string;
+        self?: boolean;
+    };
+    creator?: {
+        email?: string;
+        displayName?: string;
+        self?: boolean;
+    };
+    htmlLink?: string;
+    transparency?: string; // 'opaque', 'transparent'
+    visibility?: string; // 'default', 'public', 'private', 'confidential'
+    iCalUID?: string;
+    sequence?: number;
+    colorId?: string;
+    extendedProperties?: {
+        private?: { [key: string]: string };
+        shared?: { [key: string]: string };
+    };
+    hangoutLink?: string;
+    anyoneCanAddSelf?: boolean;
+    guestsCanInviteOthers?: boolean;
+    guestsCanModify?: boolean;
+    guestsCanSeeOtherGuests?: boolean;
+    privateCopy?: boolean;
+    locked?: boolean;
+    source?: {
+        url?: string;
+        title?: string;
+    };
+    attachments?: Array<{
+        fileUrl?: string;
+        title?: string;
+        mimeType?: string;
+        iconLink?: string;
+        fileId?: string;
+    }>;
 }
 
 // ==================================================
@@ -1150,9 +1256,8 @@ export class GoogleCalendarService {
                 showDeleted: options?.showDeleted,
             });
 
-            const instances = (response.data.items || []).map(
-                (event) =>
-                    this.transformGoogleEvent(event, options?.timeZone) as RecurringCalendarEvent,
+            const instances = (response.data.items || []).map((event) =>
+                this.transformGoogleEventToRecurringCalendarEvent(event, options?.timeZone),
             );
 
             return {
@@ -1727,6 +1832,275 @@ export class GoogleCalendarService {
                 message: error instanceof Error ? error.message : 'Unknown error occurred',
             };
         }
+    }
+
+    /**
+     * Search events in the primary calendar with smart filtering
+     */
+    async searchPrimaryCalendarEvents(options: SearchOptions = {}): Promise<SearchResult> {
+        const startTime = Date.now();
+
+        console.log('┌─ [SEARCH_PRIMARY_CALENDAR] Starting search...', {
+            query: options.query,
+            filters: Object.keys(options).filter(
+                (k) => options[k as keyof SearchOptions] !== undefined,
+            ),
+        });
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+
+            // Set default time range if not specified
+            const timeMin =
+                options.timeMin || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(); // 90 days ago
+            const timeMax =
+                options.timeMax || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(); // 90 days future
+
+            // Fetch events from Google Calendar with basic filters
+            const { events, nextPageToken } = await this.getEvents(
+                primaryCalendarId,
+                timeMin,
+                timeMax,
+                {
+                    q: options.query, // Google's text search
+                    maxResults: options.maxResults ? Math.min(options.maxResults * 2, 250) : 100, // Fetch extra for post-filtering
+                    orderBy: options.orderBy || 'startTime',
+                    singleEvents: options.expandRecurring !== false,
+                    showDeleted: options.includeDeleted || false,
+                    timeZone: options.timezone,
+                },
+            );
+
+            console.log('├─ [SEARCH_PRIMARY_CALENDAR] Retrieved events:', events.length);
+
+            // Apply additional filters that Google Calendar API doesn't support
+            let filteredEvents = this.applyAdvancedFilters(events, options);
+
+            // Sort results
+            filteredEvents = this.sortSearchResults(filteredEvents, options);
+
+            // Limit results
+            const totalResults = filteredEvents.length;
+            filteredEvents = filteredEvents.slice(0, options.maxResults || 50);
+
+            const executionTime = Date.now() - startTime;
+
+            console.log('└─ [SEARCH_PRIMARY_CALENDAR] Search completed', {
+                totalResults,
+                returnedResults: filteredEvents.length,
+                executionTime,
+            });
+
+            return {
+                events: filteredEvents,
+                totalResults,
+                executionTime,
+                nextPageToken: totalResults > filteredEvents.length ? nextPageToken : undefined,
+            };
+        } catch (error) {
+            console.error('└─ [SEARCH_PRIMARY_CALENDAR] Error:', error);
+            throw new Error(
+                `Failed to search primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Apply filters that Google Calendar API doesn't natively support
+     */
+    private applyAdvancedFilters(events: CalendarEvent[], options: SearchOptions): CalendarEvent[] {
+        return events.filter((event) => {
+            // Filter by attendees
+            if (options.hasAttendees !== undefined) {
+                const hasAttendees = (event.attendees?.length || 0) > 0;
+                if (options.hasAttendees !== hasAttendees) return false;
+            }
+
+            // Filter by specific attendee
+            if (options.attendeeEmail) {
+                const hasAttendee = event.attendees?.some((a) =>
+                    a.email.toLowerCase().includes(options.attendeeEmail!.toLowerCase()),
+                );
+                if (!hasAttendee) return false;
+            }
+
+            // Filter by location
+            if (options.location) {
+                if (!event.location?.toLowerCase().includes(options.location.toLowerCase())) {
+                    return false;
+                }
+            }
+
+            // Filter by recurring status
+            if (options.isRecurring !== undefined) {
+                const isRecurring = !!event.recurringEventId;
+                if (options.isRecurring !== isRecurring) return false;
+            }
+
+            // Filter by all-day status
+            if (options.isAllDay !== undefined) {
+                const isAllDay = !!event.start.date && !event.start.dateTime;
+                if (options.isAllDay !== isAllDay) return false;
+            }
+
+            // Filter by creation date
+            if (options.createdAfter && event.created) {
+                if (new Date(event.created) < new Date(options.createdAfter)) return false;
+            }
+
+            // Filter by update date
+            if (options.updatedAfter && event.updated) {
+                if (new Date(event.updated) < new Date(options.updatedAfter)) return false;
+            }
+
+            // Filter by duration
+            if (event.start.dateTime && event.end.dateTime) {
+                const duration =
+                    (new Date(event.end.dateTime).getTime() -
+                        new Date(event.start.dateTime).getTime()) /
+                    (60 * 1000);
+
+                if (options.minDuration && duration < options.minDuration) return false;
+                if (options.maxDuration && duration > options.maxDuration) return false;
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * Get quick search preset functions for common queries
+     */
+    getQuickSearchPresets(): QuickSearchPresets {
+        return {
+            // Today's meetings
+            todaysMeetings: async () => {
+                const today = new Date();
+                const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+                const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+                return this.searchPrimaryCalendarEvents({
+                    timeMin: startOfDay.toISOString(),
+                    timeMax: endOfDay.toISOString(),
+                    hasAttendees: true,
+                    orderBy: 'startTime',
+                });
+            },
+
+            // Upcoming week
+            upcomingWeek: async () => {
+                const now = new Date();
+                const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+                return this.searchPrimaryCalendarEvents({
+                    timeMin: now.toISOString(),
+                    timeMax: weekFromNow.toISOString(),
+                    orderBy: 'startTime',
+                });
+            },
+
+            // Recently created events
+            recentlyCreated: async (days = 7) => {
+                const daysAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+                return this.searchPrimaryCalendarEvents({
+                    createdAfter: daysAgo.toISOString(),
+                    orderBy: 'updated',
+                    ascending: false,
+                });
+            },
+
+            // Events with specific person
+            withPerson: async (email: string, days = 30) => {
+                const daysAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+                const daysFuture = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+                return this.searchPrimaryCalendarEvents({
+                    timeMin: daysAgo.toISOString(),
+                    timeMax: daysFuture.toISOString(),
+                    attendeeEmail: email,
+                    orderBy: 'startTime',
+                });
+            },
+
+            // Long meetings
+            longMeetings: async (minMinutes = 120) => {
+                return this.searchPrimaryCalendarEvents({
+                    minDuration: minMinutes,
+                    hasAttendees: true,
+                    orderBy: 'startTime',
+                });
+            },
+
+            // Recurring events
+            recurringEvents: async () => {
+                return this.searchPrimaryCalendarEvents({
+                    isRecurring: true,
+                    expandRecurring: false, // Show series, not instances
+                    orderBy: 'startTime',
+                });
+            },
+
+            // Past meetings for review
+            pastMeetings: async (days = 7) => {
+                const now = new Date();
+                const daysAgo = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+                return this.searchPrimaryCalendarEvents({
+                    timeMin: daysAgo.toISOString(),
+                    timeMax: now.toISOString(),
+                    hasAttendees: true,
+                    orderBy: 'startTime',
+                    ascending: false, // Most recent first
+                });
+            },
+
+            // Free text search
+            freeTextSearch: async (query: string) => {
+                return this.searchPrimaryCalendarEvents({
+                    query,
+                    orderBy: 'startTime',
+                });
+            },
+        };
+    }
+
+    /**
+     * Quick search with just a query string
+     */
+    async quickSearchPrimaryCalendar(query: string): Promise<CalendarEvent[]> {
+        const result = await this.searchPrimaryCalendarEvents({ query });
+        return result.events;
+    }
+
+    /**
+     * Sort search results based on options
+     */
+    private sortSearchResults(events: CalendarEvent[], options: SearchOptions): CalendarEvent[] {
+        const orderBy = options.orderBy || 'startTime';
+        const ascending = options.ascending !== false;
+
+        return [...events].sort((a, b) => {
+            let comparison = 0;
+
+            switch (orderBy) {
+                case 'startTime':
+                    const aStart = new Date(a.start.dateTime || a.start.date || 0).getTime();
+                    const bStart = new Date(b.start.dateTime || b.start.date || 0).getTime();
+                    comparison = aStart - bStart;
+                    break;
+
+                case 'updated':
+                    const aUpdated = new Date(a.updated || 0).getTime();
+                    const bUpdated = new Date(b.updated || 0).getTime();
+                    comparison = aUpdated - bUpdated;
+                    break;
+            }
+
+            return ascending ? comparison : -comparison;
+        });
     }
 
     /**
@@ -2461,7 +2835,7 @@ export class GoogleCalendarService {
                 throw new Error(`Failed to create recurring event: ${response.statusText}`);
             }
 
-            return this.transformGoogleEvent(response.data);
+            return this.transformGoogleEventToRecurringCalendarEvent(response.data);
         } catch (error) {
             throw new Error(
                 `Failed to create recurring event: ${
@@ -2608,7 +2982,7 @@ export class GoogleCalendarService {
         options?: {
             sendUpdates?: 'all' | 'externalOnly' | 'none';
         },
-    ): Promise<CalendarEvent> {
+    ): Promise<RecurringCalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -2641,7 +3015,7 @@ export class GoogleCalendarService {
                 sendUpdates: options?.sendUpdates,
             });
 
-            return this.transformGoogleEvent(response.data);
+            return this.transformGoogleEventToRecurringCalendarEvent(response.data);
         } catch (error) {
             throw new Error(
                 `Failed to update recurring event instance: ${
@@ -2662,7 +3036,7 @@ export class GoogleCalendarService {
         options?: {
             sendUpdates?: 'all' | 'externalOnly' | 'none';
         },
-    ): Promise<CalendarEvent> {
+    ): Promise<RecurringCalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -2718,7 +3092,7 @@ export class GoogleCalendarService {
                 sendUpdates: options?.sendUpdates,
             });
 
-            return this.transformGoogleEvent(response.data);
+            return this.transformGoogleEventToRecurringCalendarEvent(response.data);
         } catch (error) {
             throw new Error(
                 `Failed to update future recurring events: ${
@@ -2855,7 +3229,7 @@ export class GoogleCalendarService {
             alwaysIncludeEmail?: boolean;
             maxAttendees?: number;
         },
-    ): Promise<CalendarEvent> {
+    ): Promise<RecurringCalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -2876,7 +3250,7 @@ export class GoogleCalendarService {
                 throw new Error(`Failed to get recurring event: ${response.statusText}`);
             }
 
-            return this.transformGoogleEvent(response.data);
+            return this.transformGoogleEventToRecurringCalendarEvent(response.data);
         } catch (error) {
             throw new Error(
                 `Failed to get recurring event: ${
@@ -2897,7 +3271,7 @@ export class GoogleCalendarService {
         options?: {
             sendUpdates?: 'all' | 'externalOnly' | 'none';
         },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+    ): Promise<RecurringCalendarEvent & { calendarId: string }> {
         console.log('┌─ [CALENDAR_SERVICE] Rescheduling recurring event in primary calendar...', {
             eventId,
             startDateTime,
@@ -2949,7 +3323,7 @@ export class GoogleCalendarService {
         options?: {
             sendUpdates?: 'all' | 'externalOnly' | 'none';
         },
-    ): Promise<CalendarEvent> {
+    ): Promise<RecurringCalendarEvent> {
         console.log('┌─ [CALENDAR_SERVICE] Rescheduling recurring event in specific calendar...', {
             calendarId,
             eventId,
@@ -3006,7 +3380,9 @@ export class GoogleCalendarService {
                 throw new Error('No event data received from Google Calendar API after update');
             }
 
-            const transformedEvent = this.transformGoogleEvent(response.data);
+            const transformedEvent = this.transformGoogleEventToRecurringCalendarEvent(
+                response.data,
+            );
 
             console.log('└─ [CALENDAR_SERVICE] Recurring event rescheduled successfully', {
                 eventId,
@@ -3204,7 +3580,7 @@ export class GoogleCalendarService {
     /**
      * Transform Google Calendar event to our interface
      */
-    private transformGoogleEvent(
+    private transformGoogleEventToRecurringCalendarEvent(
         googleEvent: calendar_v3.Schema$Event,
         requestedTimezone?: string,
     ): RecurringCalendarEvent {
@@ -3254,6 +3630,100 @@ export class GoogleCalendarService {
         };
 
         return { ...base, ...recurrenceFields };
+    }
+
+    private transformGoogleEvent(
+        googleEvent: calendar_v3.Schema$Event,
+        requestedTimezone?: string,
+    ): CalendarEvent {
+        return {
+            id: googleEvent.id || undefined,
+            summary: googleEvent.summary || '',
+            description: googleEvent.description || undefined,
+            start: {
+                dateTime: googleEvent.start?.dateTime || undefined,
+                date: googleEvent.start?.date || undefined,
+                timeZone: googleEvent.start?.timeZone || requestedTimezone || undefined,
+            },
+            end: {
+                dateTime: googleEvent.end?.dateTime || undefined,
+                date: googleEvent.end?.date || undefined,
+                timeZone: googleEvent.end?.timeZone || requestedTimezone || undefined,
+            },
+            attendees: googleEvent.attendees?.map((attendee) => ({
+                email: attendee.email!,
+                displayName: attendee.displayName || undefined,
+                responseStatus: attendee.responseStatus || undefined,
+                optional: attendee.optional || undefined,
+                resource: attendee.resource || undefined,
+                organizer: attendee.organizer || undefined,
+                self: attendee.self || undefined,
+                comment: attendee.comment || undefined,
+                additionalGuests: attendee.additionalGuests || undefined,
+            })),
+            location: googleEvent.location || undefined,
+            conferenceData: googleEvent.conferenceData || undefined,
+            reminders: googleEvent.reminders
+                ? {
+                      useDefault: googleEvent.reminders.useDefault || undefined,
+                      overrides: googleEvent.reminders.overrides?.map((override) => ({
+                          method: override.method || 'email',
+                          minutes: override.minutes || 0,
+                      })),
+                  }
+                : undefined,
+            // Additional properties
+            recurringEventId: googleEvent.recurringEventId || undefined,
+            originalStartTime: googleEvent.originalStartTime
+                ? {
+                      dateTime: googleEvent.originalStartTime.dateTime || undefined,
+                      date: googleEvent.originalStartTime.date || undefined,
+                      timeZone: googleEvent.originalStartTime.timeZone || undefined,
+                  }
+                : undefined,
+            created: googleEvent.created || undefined,
+            updated: googleEvent.updated || undefined,
+            status: googleEvent.status || undefined,
+            organizer: googleEvent.organizer
+                ? {
+                      email: googleEvent.organizer.email || undefined,
+                      displayName: googleEvent.organizer.displayName || undefined,
+                      self: googleEvent.organizer.self || undefined,
+                  }
+                : undefined,
+            creator: googleEvent.creator
+                ? {
+                      email: googleEvent.creator.email || undefined,
+                      displayName: googleEvent.creator.displayName || undefined,
+                      self: googleEvent.creator.self || undefined,
+                  }
+                : undefined,
+            htmlLink: googleEvent.htmlLink || undefined,
+            transparency: googleEvent.transparency || undefined,
+            visibility: googleEvent.visibility || undefined,
+            iCalUID: googleEvent.iCalUID || undefined,
+            sequence: googleEvent.sequence || undefined,
+            colorId: googleEvent.colorId || undefined,
+            recurrence: googleEvent.recurrence || undefined,
+            extendedProperties: googleEvent.extendedProperties || undefined,
+            hangoutLink: googleEvent.hangoutLink || undefined,
+            anyoneCanAddSelf: googleEvent.anyoneCanAddSelf || undefined,
+            guestsCanInviteOthers: googleEvent.guestsCanInviteOthers || undefined,
+            guestsCanModify: googleEvent.guestsCanModify || undefined,
+            guestsCanSeeOtherGuests: googleEvent.guestsCanSeeOtherGuests || undefined,
+            privateCopy: googleEvent.privateCopy || undefined,
+            locked: googleEvent.locked || undefined,
+            source: googleEvent.source || undefined,
+            attachments:
+                googleEvent.attachments?.map((attachment) => ({
+                    fileUrl: attachment.fileUrl || undefined,
+                    title: attachment.title || undefined,
+                    mimeType: attachment.mimeType || undefined,
+                    iconLink: attachment.iconLink || undefined,
+                    fileId: attachment.fileId || undefined,
+                })) || undefined,
+            ...(googleEvent.recurrence && { recurrence: googleEvent.recurrence }),
+        };
     }
 
     /**
