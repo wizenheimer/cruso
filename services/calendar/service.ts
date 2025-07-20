@@ -65,6 +65,19 @@ export interface CalendarEvent {
 }
 
 // ==================================================
+// Recurring Calendar Event Interface
+// ==================================================
+export interface RecurringCalendarEvent extends CalendarEvent {
+    recurrence?: RecurrenceRule[];
+    recurringEventId?: string;
+    originalStartTime?: {
+        dateTime?: string;
+        date?: string;
+        timeZone?: string;
+    };
+}
+
+// ==================================================
 // Calendar Info Interface
 // ==================================================
 export interface CalendarInfo {
@@ -385,18 +398,21 @@ export class GoogleCalendarService {
      * Get events from a specific calendar
      */
     async getEvents(
-        calendarId: string,
-        timeMin: string,
-        timeMax: string,
+        calendarId: string, // calendarId is the id of the calendar to get events from
+        timeMin: string, // timeMin is the start time of the events to get
+        timeMax: string, // timeMax is the end time of the events to get
         options?: {
-            maxResults?: number;
-            pageToken?: string;
-            q?: string;
-            showDeleted?: boolean;
-            singleEvents?: boolean;
-            orderBy?: 'startTime' | 'updated';
+            maxResults?: number; // maxResults is the maximum number of events to return
+            pageToken?: string; // pageToken is the token to get the next page of events
+            q?: string; // q is the query to search for events
+            showDeleted?: boolean; // showDeleted is whether to show deleted events
+            singleEvents?: boolean; // singleEvents is whether to show single events
+            orderBy?: 'startTime' | 'updated'; // orderBy is the order of the events
+            timeZone?: string; // timeZone is the timezone of the events
+            alwaysIncludeEmail?: boolean; // alwaysIncludeEmail is whether to always include the email of the events
+            iCalUID?: string; // iCalUID is the iCalUID of the events
         },
-    ): Promise<{ events: CalendarEvent[]; nextPageToken?: string }> {
+    ): Promise<{ events: CalendarEvent[]; nextPageToken?: string; nextSyncToken?: string }> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -415,17 +431,165 @@ export class GoogleCalendarService {
                 showDeleted: options?.showDeleted ?? false,
                 singleEvents: options?.singleEvents ?? true,
                 orderBy: options?.orderBy || 'startTime',
+                timeZone: options?.timeZone,
+                alwaysIncludeEmail: options?.alwaysIncludeEmail ?? false,
+                iCalUID: options?.iCalUID,
             });
 
-            const events = (response.data.items || []).map(this.transformGoogleEvent);
+            const events = (response.data.items || []).map((event) =>
+                this.transformGoogleEvent(event, options?.timeZone),
+            );
 
             return {
                 events,
                 nextPageToken: response.data.nextPageToken || undefined,
+                nextSyncToken: response.data.nextSyncToken || undefined,
             };
         } catch (error) {
             throw new Error(
                 `Failed to get events: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            );
+        }
+    }
+
+    /**
+     * Get single event from a specific calendar
+     */
+    async getEvent(
+        calendarId: string,
+        eventId: string,
+        options?: {
+            timeZone?: string;
+            alwaysIncludeEmail?: boolean;
+            maxAttendees?: number;
+        },
+    ): Promise<CalendarEvent> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            const response = await calendar.events.get({
+                calendarId,
+                eventId,
+                timeZone: options?.timeZone,
+                alwaysIncludeEmail: options?.alwaysIncludeEmail,
+                maxAttendees: options?.maxAttendees,
+            });
+
+            if (!response.data) {
+                throw new Error('Event not found');
+            }
+
+            return this.transformGoogleEvent(response.data, options?.timeZone);
+        } catch (error) {
+            throw new Error(
+                `Failed to get event: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            );
+        }
+    }
+
+    /**
+     * Find events by iCalUID
+     */
+    async findEventsByICalUID(
+        iCalUID: string,
+        options?: {
+            timeZone?: string;
+            includeDeleted?: boolean;
+        },
+    ): Promise<Map<string, CalendarEvent[]>> {
+        const connections = await this.getActiveConnections();
+        const eventsByCalendar = new Map<string, CalendarEvent[]>();
+
+        for (const { connection, account } of connections) {
+            if (!account) continue;
+
+            try {
+                const { events } = await this.getEvents(
+                    connection.calendarId,
+                    new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year ago
+                    new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year future
+                    {
+                        iCalUID,
+                        timeZone: options?.timeZone,
+                        showDeleted: options?.includeDeleted,
+                        singleEvents: false, // Get recurring events as well
+                    },
+                );
+
+                if (events.length > 0) {
+                    eventsByCalendar.set(connection.calendarId, events);
+                }
+            } catch (error) {
+                console.error(`Error searching calendar ${connection.calendarId}:`, error);
+            }
+        }
+
+        return eventsByCalendar;
+    }
+
+    /**
+     * Get events that have been updated since a specific time
+     */
+    async getUpdatedEvents(
+        calendarId: string,
+        updatedMin: string,
+        options?: {
+            maxResults?: number;
+            pageToken?: string;
+            syncToken?: string;
+            timeZone?: string;
+        },
+    ): Promise<{
+        events: CalendarEvent[];
+        deletedEvents: string[];
+        nextPageToken?: string;
+        nextSyncToken?: string;
+    }> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            const response = await calendar.events.list({
+                calendarId,
+                updatedMin,
+                maxResults: options?.maxResults || 250,
+                pageToken: options?.pageToken,
+                syncToken: options?.syncToken,
+                timeZone: options?.timeZone,
+                showDeleted: true, // Important for sync operations
+            });
+
+            const events: CalendarEvent[] = [];
+            const deletedEvents: string[] = [];
+
+            for (const item of response.data.items || []) {
+                if (item.status === 'cancelled') {
+                    deletedEvents.push(item.id!);
+                } else {
+                    events.push(this.transformGoogleEvent(item, options?.timeZone));
+                }
+            }
+
+            return {
+                events,
+                deletedEvents,
+                nextPageToken: response.data.nextPageToken || undefined,
+                nextSyncToken: response.data.nextSyncToken || undefined,
+            };
+        } catch (error) {
+            throw new Error(
+                `Failed to get updated events: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
             );
         }
     }
@@ -870,6 +1034,58 @@ export class GoogleCalendarService {
             console.error('└─ [BATCH_PRIMARY_OPERATIONS] Fatal error:', error);
             throw new Error(
                 `Failed to execute batch operations: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Get all the instances of a recurring event
+     */
+    async getRecurringEventInstances(
+        calendarId: string,
+        recurringEventId: string,
+        timeMin: string,
+        timeMax: string,
+        options?: {
+            maxResults?: number;
+            pageToken?: string;
+            timeZone?: string;
+            showDeleted?: boolean;
+        },
+    ): Promise<{ instances: RecurringCalendarEvent[]; nextPageToken?: string }> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            const response = await calendar.events.instances({
+                calendarId,
+                eventId: recurringEventId,
+                timeMin,
+                timeMax,
+                maxResults: options?.maxResults || 250,
+                pageToken: options?.pageToken,
+                timeZone: options?.timeZone,
+                showDeleted: options?.showDeleted,
+            });
+
+            const instances = (response.data.items || []).map(
+                (event) =>
+                    this.transformGoogleEvent(event, options?.timeZone) as RecurringCalendarEvent,
+            );
+
+            return {
+                instances,
+                nextPageToken: response.data.nextPageToken || undefined,
+            };
+        } catch (error) {
+            throw new Error(
+                `Failed to get recurring event instances: ${
                     error instanceof Error ? error.message : 'Unknown error'
                 }`,
             );
@@ -2180,6 +2396,38 @@ export class GoogleCalendarService {
     }
 
     /**
+     * Batch create recurring events in primary calendar
+     */
+    async batchCreateRecurringEventsInPrimaryCalendar(
+        events: Array<CalendarEvent & { recurrence?: RecurrenceRule[] }>,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+            conferenceDataVersion?: number;
+        },
+    ): Promise<{
+        successful: Array<{ event: CalendarEvent; result: CalendarEvent }>;
+        failed: Array<{ event: CalendarEvent; error: string }>;
+    }> {
+        const primaryCalendarId = await this.getPrimaryCalendarId();
+        const successful: Array<{ event: CalendarEvent; result: CalendarEvent }> = [];
+        const failed: Array<{ event: CalendarEvent; error: string }> = [];
+
+        for (const event of events) {
+            try {
+                const result = await this.createRecurringEvent(primaryCalendarId, event, options);
+                successful.push({ event, result });
+            } catch (error) {
+                failed.push({
+                    event,
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                });
+            }
+        }
+
+        return { successful, failed };
+    }
+
+    /**
      * Update a recurring event in the primary calendar
      */
     async updateRecurringEventInPrimaryCalendar(
@@ -2274,6 +2522,137 @@ export class GoogleCalendarService {
     }
 
     /**
+     * Update a single instance of a recurring event
+     */
+    async updateRecurringEventInstance(
+        calendarId: string,
+        eventId: string,
+        instanceStartTime: string,
+        updates: Partial<CalendarEvent>,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            // First get the instance
+            const instanceResponse = await calendar.events.get({
+                calendarId,
+                eventId: `${eventId}_${instanceStartTime.replace(/[:\-]/g, '')}`,
+            });
+
+            if (!instanceResponse.data) {
+                throw new Error('Instance not found');
+            }
+
+            // Merge updates
+            const updatedInstance = {
+                ...instanceResponse.data,
+                ...updates,
+            };
+
+            // Update the instance
+            const response = await calendar.events.update({
+                calendarId,
+                eventId: instanceResponse.data.id!,
+                requestBody: updatedInstance as calendar_v3.Schema$Event,
+                sendUpdates: options?.sendUpdates,
+            });
+
+            return this.transformGoogleEvent(response.data);
+        } catch (error) {
+            throw new Error(
+                `Failed to update recurring event instance: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Update all future instances of a recurring event
+     */
+    async updateFutureRecurringEvents(
+        calendarId: string,
+        eventId: string,
+        fromDateTime: string,
+        updates: Partial<CalendarEvent> & { recurrence?: RecurrenceRule[] },
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            // Get the original event
+            const originalEvent = await calendar.events.get({
+                calendarId,
+                eventId,
+            });
+
+            if (!originalEvent.data) {
+                throw new Error('Event not found');
+            }
+
+            // Update the recurrence rule to end before the split point
+            const originalRecurrence = originalEvent.data.recurrence || [];
+            const updatedOriginalRecurrence = this.updateRecurrenceEndDate(
+                originalRecurrence,
+                fromDateTime,
+            );
+
+            // Update the original event with new end date
+            await calendar.events.update({
+                calendarId,
+                eventId,
+                requestBody: {
+                    ...originalEvent.data,
+                    recurrence: updatedOriginalRecurrence,
+                },
+                sendUpdates: options?.sendUpdates,
+            });
+
+            // Create a new recurring event for future instances
+            const recurrenceStrings = updates.recurrence
+                ? this.convertRecurrenceRulesToStrings(updates.recurrence)
+                : originalRecurrence;
+
+            const newEvent: calendar_v3.Schema$Event = {
+                ...originalEvent.data,
+                ...updates,
+                id: undefined, // Let Google generate a new ID
+                recurringEventId: undefined,
+                recurrence: this.updateRecurrenceStartDate(recurrenceStrings, fromDateTime),
+            };
+
+            const response = await calendar.events.insert({
+                calendarId,
+                requestBody: newEvent,
+                sendUpdates: options?.sendUpdates,
+            });
+
+            return this.transformGoogleEvent(response.data);
+        } catch (error) {
+            throw new Error(
+                `Failed to update future recurring events: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
      * Delete a recurring event from the primary calendar
      */
     async deleteRecurringEventFromPrimaryCalendar(
@@ -2325,6 +2704,40 @@ export class GoogleCalendarService {
         } catch (error) {
             throw new Error(
                 `Failed to delete recurring event: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Delete a single instance of a recurring event
+     */
+    async deleteRecurringEventInstance(
+        calendarId: string,
+        eventId: string,
+        instanceStartTime: string,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<void> {
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            if (!connectionData.account) {
+                throw new Error('No account found for calendar connection');
+            }
+
+            const calendar = await this.getCalendarApi(connectionData.account.id);
+
+            // Delete the specific instance
+            await calendar.events.delete({
+                calendarId,
+                eventId: `${eventId}_${instanceStartTime.replace(/[:\-]/g, '')}`,
+                sendUpdates: options?.sendUpdates,
+            });
+        } catch (error) {
+            throw new Error(
+                `Failed to delete recurring event instance: ${
                     error instanceof Error ? error.message : 'Unknown error'
                 }`,
             );
@@ -2539,20 +2952,23 @@ export class GoogleCalendarService {
     /**
      * Transform Google Calendar event to our interface
      */
-    private transformGoogleEvent(googleEvent: calendar_v3.Schema$Event): CalendarEvent {
-        return {
+    private transformGoogleEvent(
+        googleEvent: calendar_v3.Schema$Event,
+        requestedTimezone?: string,
+    ): RecurringCalendarEvent {
+        const base = {
             id: googleEvent.id || undefined,
             summary: googleEvent.summary || '',
             description: googleEvent.description || undefined,
             start: {
                 dateTime: googleEvent.start?.dateTime || undefined,
                 date: googleEvent.start?.date || undefined,
-                timeZone: googleEvent.start?.timeZone || undefined,
+                timeZone: googleEvent.start?.timeZone || requestedTimezone || undefined,
             },
             end: {
                 dateTime: googleEvent.end?.dateTime || undefined,
                 date: googleEvent.end?.date || undefined,
-                timeZone: googleEvent.end?.timeZone || undefined,
+                timeZone: googleEvent.end?.timeZone || requestedTimezone || undefined,
             },
             attendees: googleEvent.attendees?.map((attendee) => ({
                 email: attendee.email!,
@@ -2571,6 +2987,77 @@ export class GoogleCalendarService {
                   }
                 : undefined,
         };
+
+        // Add recurrence-specific fields
+        const recurrenceFields: Partial<RecurringCalendarEvent> = {
+            recurringEventId: googleEvent.recurringEventId || undefined,
+            originalStartTime: googleEvent.originalStartTime
+                ? {
+                      dateTime: googleEvent.originalStartTime.dateTime || undefined,
+                      date: googleEvent.originalStartTime.date || undefined,
+                      timeZone: googleEvent.originalStartTime.timeZone || undefined,
+                  }
+                : undefined,
+            recurrence: this.parseEventRecurrence(googleEvent),
+        };
+
+        return { ...base, ...recurrenceFields };
+    }
+
+    /**
+     * Parse recurrence rules from Google event
+     */
+    private parseEventRecurrence(
+        googleEvent: calendar_v3.Schema$Event,
+    ): RecurrenceRule[] | undefined {
+        if (!googleEvent.recurrence || googleEvent.recurrence.length === 0) {
+            return undefined;
+        }
+
+        return googleEvent.recurrence
+            .filter((rule) => rule.startsWith('RRULE:'))
+            .map((rule) => this.parseRecurrenceRuleString(rule));
+    }
+
+    /**
+     * Update recurrence rule to start from a specific date
+     */
+    private updateRecurrenceStartDate(recurrence: string[], fromDate: string): string[] {
+        return recurrence.map((rule) => {
+            if (rule.startsWith('RRULE:')) {
+                const rrule = rrulestr(rule);
+                const options = rrule.origOptions;
+
+                // Set DTSTART to the new start date
+                options.dtstart = new Date(fromDate);
+
+                const newRRule = new RRule(options);
+                return newRRule.toString();
+            }
+            return rule;
+        });
+    }
+
+    /**
+     * Update recurrence rule to end before a specific date
+     */
+    private updateRecurrenceEndDate(recurrence: string[], beforeDate: string): string[] {
+        return recurrence.map((rule) => {
+            if (rule.startsWith('RRULE:')) {
+                const rrule = rrulestr(rule);
+                const options = rrule.origOptions;
+
+                // Set UNTIL to one day before the split date
+                const until = new Date(beforeDate);
+                until.setDate(until.getDate() - 1);
+
+                options.until = until;
+
+                const newRRule = new RRule(options);
+                return newRRule.toString();
+            }
+            return rule;
+        });
     }
 }
 
