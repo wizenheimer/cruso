@@ -4,11 +4,11 @@ import { getUser } from './connections';
 import { CalendarEvent } from '@/services/calendar/base';
 
 /**
- * Handle the GET request to fetch events from primary calendar
+ * Handle the GET request to list events from primary calendar
  * @param c - The context object
  * @returns The response object
  */
-export async function handleGetEventsFromPrimaryCalendar(c: Context) {
+export async function handleListEventsFromPrimaryCalendar(c: Context) {
     try {
         const user = getUser(c);
         const query = c.req.query();
@@ -47,8 +47,8 @@ export async function handleGetEventsFromPrimaryCalendar(c: Context) {
 
         return c.json(result);
     } catch (error) {
-        console.error('Error getting events from primary calendar:', error);
-        return c.json({ error: 'Failed to get events from primary calendar' }, 500);
+        console.error('Error listing events from primary calendar:', error);
+        return c.json({ error: 'Failed to list events from primary calendar' }, 500);
     }
 }
 
@@ -272,11 +272,11 @@ export async function handlePerformBatchOperationsOnPrimaryCalendar(c: Context) 
 }
 
 /**
- * Handle the GET request to fetch events from a specific calendar
+ * Handle the GET request to list events from a specific calendar
  * @param c - The context object
  * @returns The response object
  */
-export async function handleGetEvents(c: Context) {
+export async function handleListEvents(c: Context) {
     try {
         const user = getUser(c);
         const calendarId = c.req.param('calendarId');
@@ -316,8 +316,8 @@ export async function handleGetEvents(c: Context) {
 
         return c.json(result);
     } catch (error) {
-        console.error('Error getting events from calendar:', error);
-        return c.json({ error: 'Failed to get events from calendar' }, 500);
+        console.error('Error listing events from calendar:', error);
+        return c.json({ error: 'Failed to list events from calendar' }, 500);
     }
 }
 

@@ -21,11 +21,11 @@ export const getUser = (requestContext: Context) => {
 };
 
 /**
- * Handle the GET request to fetch calendar connections
+ * Handle the GET request to list calendar connections
  * @param requestContext - The Hono context object containing request data
  * @returns JSON response with calendar connections or error message
  */
-export async function handleGetCalendarConnections(requestContext: Context) {
+export async function handleListCalendarConnections(requestContext: Context) {
     try {
         const authenticatedUser = getUser(requestContext);
         const userCalendarConnections = await db
@@ -61,11 +61,11 @@ export async function handleGetCalendarConnections(requestContext: Context) {
 }
 
 /**
- * Handle the GET request to fetch calendar accounts
+ * Handle the GET request to list calendar accounts
  * @param requestContext - The Hono context object containing request data
  * @returns JSON response with calendar accounts and their calendars or error message
  */
-export async function handleGetCalendarAccounts(requestContext: Context) {
+export async function handleListCalendarAccounts(requestContext: Context) {
     try {
         const authenticatedUser = getUser(requestContext);
         // Get all Google accounts for the user with their calendars
@@ -129,7 +129,7 @@ export async function handleGetCalendarAccounts(requestContext: Context) {
  */
 export async function handleSyncCalendar(c: Context) {
     try {
-        const connectionId = c.req.param('id');
+        const calendarId = c.req.param('id');
         const user = getUser(c);
 
         // Get the connection with its account
@@ -142,7 +142,7 @@ export async function handleSyncCalendar(c: Context) {
             .leftJoin(account, eq(calendarConnections.accountId, account.id))
             .where(
                 and(
-                    eq(calendarConnections.id, connectionId),
+                    eq(calendarConnections.calendarId, calendarId),
                     eq(calendarConnections.userId, user.id),
                     eq(calendarConnections.isActive, true),
                 ),
@@ -191,7 +191,7 @@ export async function handleSyncCalendar(c: Context) {
                 })
                 .where(
                     and(
-                        eq(calendarConnections.id, connectionId),
+                        eq(calendarConnections.calendarId, calendarId),
                         eq(calendarConnections.isActive, true),
                     ),
                 );
@@ -211,7 +211,7 @@ export async function handleSyncCalendar(c: Context) {
  */
 export async function handleUpdateCalendarConnection(requestContext: Context) {
     try {
-        const targetConnectionId = requestContext.req.param('id');
+        const targetCalendarId = requestContext.req.param('id');
         const authenticatedUser = getUser(requestContext);
         const connectionUpdatePayload = await requestContext.req.json();
 
@@ -221,7 +221,7 @@ export async function handleUpdateCalendarConnection(requestContext: Context) {
             .from(calendarConnections)
             .where(
                 and(
-                    eq(calendarConnections.id, targetConnectionId),
+                    eq(calendarConnections.calendarId, targetCalendarId),
                     eq(calendarConnections.userId, authenticatedUser.id),
                     eq(calendarConnections.isActive, true),
                 ),
@@ -229,7 +229,10 @@ export async function handleUpdateCalendarConnection(requestContext: Context) {
             .limit(1);
 
         if (existingConnection.length === 0) {
-            return requestContext.json({ error: 'Connection not found' }, 404);
+            return requestContext.json(
+                { error: 'Connection not found', calendarId: targetCalendarId },
+                404,
+            );
         }
 
         // If setting as primary, unset other primary calendars first
@@ -254,7 +257,7 @@ export async function handleUpdateCalendarConnection(requestContext: Context) {
             })
             .where(
                 and(
-                    eq(calendarConnections.id, targetConnectionId),
+                    eq(calendarConnections.calendarId, targetCalendarId),
                     eq(calendarConnections.isActive, true),
                 ),
             );
@@ -265,7 +268,7 @@ export async function handleUpdateCalendarConnection(requestContext: Context) {
                 const updatedCalendarConnection = await db
                     .select({ accountId: calendarConnections.accountId })
                     .from(calendarConnections)
-                    .where(eq(calendarConnections.id, targetConnectionId))
+                    .where(eq(calendarConnections.calendarId, targetCalendarId))
                     .limit(1);
 
                 if (updatedCalendarConnection.length > 0) {
@@ -298,8 +301,7 @@ export async function handleUpdateCalendarConnection(requestContext: Context) {
 export async function handleDeleteCalendarAccount(requestContext: Context) {
     try {
         const authenticatedUser = getUser(requestContext);
-        const deleteAccountPayload = await requestContext.req.json();
-        const { accountId: targetAccountId } = deleteAccountPayload;
+        const targetAccountId = requestContext.req.param('id');
 
         if (!targetAccountId) {
             return requestContext.json({ error: 'accountId is required' }, 400);

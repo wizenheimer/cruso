@@ -9,8 +9,8 @@ import sync from './sync';
 const calendar = new Hono();
 
 // Mount all route modules
-calendar.route('/', connections);
 calendar.route('/availability', availability);
+calendar.route('/', connections);
 calendar.route('/events', events);
 calendar.route('/recurring-events', recurringEvents);
 calendar.route('/search', search);

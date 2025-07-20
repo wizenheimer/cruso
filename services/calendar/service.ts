@@ -546,6 +546,71 @@ export class GoogleCalendarService extends BaseCalendarService {
         );
     }
 
+    async updateRecurringEventInstanceInPrimaryCalendar(
+        eventId: string,
+        instanceStartTime: string,
+        updates: Partial<CalendarEvent>,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        return this.recurringEventsService.updateRecurringEventInstanceInPrimaryCalendar(
+            eventId,
+            instanceStartTime,
+            updates,
+            options,
+        );
+    }
+
+    async updateFutureRecurringEventsInPrimaryCalendar(
+        eventId: string,
+        fromDateTime: string,
+        updates: Partial<CalendarEvent> & { recurrence?: RecurrenceRule[] },
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        return this.recurringEventsService.updateFutureRecurringEventsInPrimaryCalendar(
+            eventId,
+            fromDateTime,
+            updates,
+            options,
+        );
+    }
+
+    async deleteRecurringEventInstanceInPrimaryCalendar(
+        eventId: string,
+        instanceStartTime: string,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<{ calendarId: string }> {
+        return this.recurringEventsService.deleteRecurringEventInstanceInPrimaryCalendar(
+            eventId,
+            instanceStartTime,
+            options,
+        );
+    }
+
+    async getRecurringEventInstancesInPrimaryCalendar(
+        eventId: string,
+        timeMin: string,
+        timeMax: string,
+        options?: {
+            maxResults?: number;
+            pageToken?: string;
+            timeZone?: string;
+            showDeleted?: boolean;
+        },
+    ): Promise<{ instances: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
+        return this.recurringEventsService.getRecurringEventInstancesInPrimaryCalendar(
+            eventId,
+            timeMin,
+            timeMax,
+            options,
+        );
+    }
+
     async getRecurringEventFromPrimaryCalendar(
         eventId: string,
         options?: {

@@ -1,6 +1,7 @@
 import { calendar_v3 } from 'googleapis';
 import { db } from '@/db';
 import { calendarConnections } from '@/db/schema/calendars';
+import { user } from '@/db/schema/auth';
 import { eq } from 'drizzle-orm';
 import { BaseCalendarService, CalendarInfo } from './base';
 
@@ -198,6 +199,18 @@ export class CalendarConnectionsService extends BaseCalendarService {
                 }
             }
 
+            // Get user's email
+            const [userRecord] = await db
+                .select({ email: user.email })
+                .from(user)
+                .where(eq(user.id, this.userId))
+                .limit(1);
+
+            if (!userRecord) {
+                results.errors.push('User not found');
+                return results;
+            }
+
             // Process each unique account
             for (const accountData of Array.from(uniqueAccounts.values())) {
                 try {
@@ -224,7 +237,7 @@ export class CalendarConnectionsService extends BaseCalendarService {
                                 userId: this.userId,
                                 accountId: accountData.id,
                                 googleAccountId: accountData.accountId,
-                                googleEmail: accountData.accountId, // We'll use the Google account ID as email for now
+                                googleEmail: userRecord.email, // Use the user's email from the database
                                 calendarId: calendarInfo.id!,
                                 calendarName: calendarInfo.summary!,
                                 calendarTimeZone: calendarInfo.timeZone,
@@ -236,12 +249,12 @@ export class CalendarConnectionsService extends BaseCalendarService {
                             .onConflictDoUpdate({
                                 target: [
                                     calendarConnections.userId,
+                                    calendarConnections.googleAccountId,
                                     calendarConnections.calendarId,
                                 ],
                                 set: {
                                     calendarName: calendarInfo.summary!,
                                     calendarTimeZone: calendarInfo.timeZone,
-                                    isPrimary: calendarInfo.primary || false,
                                     lastSyncAt: new Date(),
                                     syncStatus: 'active',
                                 },

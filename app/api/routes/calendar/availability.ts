@@ -10,13 +10,13 @@ const availability = new Hono();
 availability.use('*', requireAuth);
 
 /**
- * POST /api/v1/calendar/availability
+ * POST /api/v1/calendar/availability/check
  */
-availability.post('/', handleCheckAvailability);
+availability.post('/check', handleCheckAvailability);
 
 /**
- * PATCH /api/v1/calendar/availability
+ * POST /api/v1/calendar/availability/create
  */
-availability.patch('/', handleBlockAvailability);
+availability.post('/create', handleBlockAvailability);
 
 export default availability;

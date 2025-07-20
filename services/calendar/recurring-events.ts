@@ -229,7 +229,7 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
                 recurrence: recurrenceStrings,
             };
 
-            const response = await calendar.events.update({
+            const response = await calendar.events.patch({
                 calendarId,
                 eventId,
                 requestBody: updateData,
@@ -723,6 +723,204 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
             console.error('└─ [CALENDAR_RECURRING_EVENTS] Error:', error);
             throw new Error(
                 `Failed to reschedule recurring event in primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Update a specific instance of a recurring event in the primary calendar
+     */
+    async updateRecurringEventInstanceInPrimaryCalendar(
+        eventId: string,
+        instanceStartTime: string,
+        updates: Partial<CalendarEvent>,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        console.log(
+            '┌─ [CALENDAR_RECURRING_EVENTS] Updating recurring event instance in primary calendar...',
+            {
+                eventId,
+                instanceStartTime,
+            },
+        );
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [CALENDAR_RECURRING_EVENTS] Primary calendar:', primaryCalendarId);
+
+            const updatedEvent = await this.updateRecurringEventInstance(
+                primaryCalendarId,
+                eventId,
+                instanceStartTime,
+                updates,
+                options,
+            );
+
+            console.log(
+                '└─ [CALENDAR_RECURRING_EVENTS] Recurring event instance updated:',
+                updatedEvent.id,
+            );
+
+            return {
+                ...updatedEvent,
+                calendarId: primaryCalendarId,
+            };
+        } catch (error) {
+            console.error('└─ [CALENDAR_RECURRING_EVENTS] Error:', error);
+            throw new Error(
+                `Failed to update recurring event instance in primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Update future instances of a recurring event in the primary calendar
+     */
+    async updateFutureRecurringEventsInPrimaryCalendar(
+        eventId: string,
+        fromDateTime: string,
+        updates: Partial<CalendarEvent> & { recurrence?: RecurrenceRule[] },
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<CalendarEvent & { calendarId: string }> {
+        console.log(
+            '┌─ [CALENDAR_RECURRING_EVENTS] Updating future recurring events in primary calendar...',
+            {
+                eventId,
+                fromDateTime,
+            },
+        );
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [CALENDAR_RECURRING_EVENTS] Primary calendar:', primaryCalendarId);
+
+            const updatedEvent = await this.updateFutureRecurringEvents(
+                primaryCalendarId,
+                eventId,
+                fromDateTime,
+                updates,
+                options,
+            );
+
+            console.log(
+                '└─ [CALENDAR_RECURRING_EVENTS] Future recurring events updated:',
+                updatedEvent.id,
+            );
+
+            return {
+                ...updatedEvent,
+                calendarId: primaryCalendarId,
+            };
+        } catch (error) {
+            console.error('└─ [CALENDAR_RECURRING_EVENTS] Error:', error);
+            throw new Error(
+                `Failed to update future recurring events in primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Delete a specific instance of a recurring event in the primary calendar
+     */
+    async deleteRecurringEventInstanceInPrimaryCalendar(
+        eventId: string,
+        instanceStartTime: string,
+        options?: {
+            sendUpdates?: 'all' | 'externalOnly' | 'none';
+        },
+    ): Promise<{ calendarId: string }> {
+        console.log(
+            '┌─ [CALENDAR_RECURRING_EVENTS] Deleting recurring event instance in primary calendar...',
+            {
+                eventId,
+                instanceStartTime,
+            },
+        );
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [CALENDAR_RECURRING_EVENTS] Primary calendar:', primaryCalendarId);
+
+            await this.deleteRecurringEventInstance(
+                primaryCalendarId,
+                eventId,
+                instanceStartTime,
+                options,
+            );
+
+            console.log(
+                '└─ [CALENDAR_RECURRING_EVENTS] Recurring event instance deleted successfully',
+            );
+
+            return { calendarId: primaryCalendarId };
+        } catch (error) {
+            console.error('└─ [CALENDAR_RECURRING_EVENTS] Error:', error);
+            throw new Error(
+                `Failed to delete recurring event instance in primary calendar: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Get recurring event instances from the primary calendar
+     */
+    async getRecurringEventInstancesInPrimaryCalendar(
+        eventId: string,
+        timeMin: string,
+        timeMax: string,
+        options?: {
+            maxResults?: number;
+            pageToken?: string;
+            timeZone?: string;
+            showDeleted?: boolean;
+        },
+    ): Promise<{ instances: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
+        console.log(
+            '┌─ [CALENDAR_RECURRING_EVENTS] Getting recurring event instances from primary calendar...',
+            {
+                eventId,
+                timeMin,
+                timeMax,
+            },
+        );
+
+        try {
+            const primaryCalendarId = await this.getPrimaryCalendarId();
+            console.log('├─ [CALENDAR_RECURRING_EVENTS] Primary calendar:', primaryCalendarId);
+
+            const result = await this.getRecurringEventInstances(
+                primaryCalendarId,
+                eventId,
+                timeMin,
+                timeMax,
+                options,
+            );
+
+            console.log(
+                '└─ [CALENDAR_RECURRING_EVENTS] Recurring event instances retrieved:',
+                result.instances.length,
+            );
+
+            return {
+                ...result,
+                calendarId: primaryCalendarId,
+            };
+        } catch (error) {
+            console.error('└─ [CALENDAR_RECURRING_EVENTS] Error:', error);
+            throw new Error(
+                `Failed to get recurring event instances from primary calendar: ${
                     error instanceof Error ? error.message : 'Unknown error'
                 }`,
             );

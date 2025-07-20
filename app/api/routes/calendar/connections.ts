@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { requireAuth } from '@/app/api/middleware/auth';
 import {
-    handleGetCalendarConnections,
-    handleGetCalendarAccounts,
+    handleListCalendarConnections,
+    handleListCalendarAccounts,
     handleUpdateCalendarConnection,
     handleDeleteCalendarAccount,
 } from '@/app/api/handlers/calendar';
@@ -15,23 +15,23 @@ const connections = new Hono();
 connections.use('*', requireAuth);
 
 /**
- * GET /api/v1/calendar - Fetch user's calendar connections
+ * GET /api/v1/calendar - List user's calendar connections
  */
-connections.get('/', handleGetCalendarConnections);
+connections.get('/', handleListCalendarConnections);
 
 /**
- * GET /api/v1/calendar/accounts
+ * DELETE /api/v1/calendar/:id - Delete a user's calendar account
  */
-connections.get('/accounts', handleGetCalendarAccounts);
+connections.delete('/:id', handleDeleteCalendarAccount);
 
 /**
- * PATCH /api/v1/calendar/:id
+ * GET /api/v1/calendar/accounts - List user's calendar accounts
+ */
+connections.get('/accounts', handleListCalendarAccounts);
+
+/**
+ * PATCH /api/v1/calendar/:id - Update a user's calendar connection
  */
 connections.patch('/:id', handleUpdateCalendarConnection);
-
-/**
- * DELETE /api/v1/calendar
- */
-connections.delete('/', handleDeleteCalendarAccount);
 
 export default connections;

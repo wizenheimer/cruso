@@ -5,10 +5,10 @@ import {
     handleCreateEventInPrimaryCalendar,
     handleUpdateEventInPrimaryCalendar,
     handleDeleteEventFromPrimaryCalendar,
-    handleGetEventsFromPrimaryCalendar,
+    handleListEventsFromPrimaryCalendar,
     handleGetEventFromPrimaryCalendar,
     handleRescheduleEventInPrimaryCalendar,
-    handleGetEvents,
+    handleListEvents,
     handleGetEvent,
     handleCreateEvent,
     handleUpdateEvent,
@@ -45,7 +45,7 @@ events.post('/', handleCreateEventInPrimaryCalendar);
 /**
  * GET /api/v1/calendar/events
  */
-events.get('/', handleGetEventsFromPrimaryCalendar);
+events.get('/', handleListEventsFromPrimaryCalendar);
 
 /**
  * GET /api/v1/calendar/events/:eventId
@@ -85,7 +85,7 @@ events.delete('/:eventId', handleDeleteEventFromPrimaryCalendar);
 /**
  * GET /api/v1/calendar/:calendarId/events
  */
-events.get('/:calendarId', handleGetEvents);
+events.get('/:calendarId', handleListEvents);
 
 /**
  * GET /api/v1/calendar/:calendarId/events/:eventId
