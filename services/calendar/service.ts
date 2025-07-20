@@ -8,6 +8,7 @@ import { GoogleAuthManager } from './manager';
 import { formatInTimeZone } from 'date-fns-tz';
 import { preferenceService } from '../preferences';
 import { RRule, rrulestr, Frequency, Weekday } from 'rrule';
+import { addMinutes, differenceInMinutes, startOfDay, endOfDay, isWeekend } from 'date-fns';
 
 // ==================================================
 // Recurrence Rule Interface
@@ -130,6 +131,81 @@ export interface ClearAvailabilityResult {
     state: 'success' | 'error';
     rescheduledEventCount?: number;
     rescheduledEventDetails?: CalendarEvent[];
+}
+
+// ==================================================
+// Conflict, Scheduling and Stats related Interfaces
+// ==================================================
+
+export interface ConflictResult {
+    baseEvent: CalendarEvent;
+    conflictingEvents: Array<{
+        event: CalendarEvent;
+        overlapMinutes: number;
+        overlapPercentage: number;
+        calendarId: string;
+        calendarName: string;
+    }>;
+    totalConflicts: number;
+    severity: 'low' | 'medium' | 'high'; // Based on overlap percentage
+}
+
+export interface TimeRange {
+    start: string; // RFC3339
+    end: string; // RFC3339
+}
+
+export interface WorkingHours {
+    dayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday
+    startTime: string; // HH:MM format
+    endTime: string; // HH:MM format
+    timezone: string;
+}
+
+export interface SuggestedTimeSlot {
+    start: string; // RFC3339
+    end: string; // RFC3339
+    score: number; // 0-100, higher is better
+    reasoning: string[];
+    conflictingAttendees: string[];
+    availableAttendees: string[];
+    workingHoursCompliance: boolean;
+}
+
+export interface CalendarStats {
+    calendarId: string;
+    calendarName: string;
+    periodStart: string;
+    periodEnd: string;
+    totalEvents: number;
+    totalDurationMinutes: number;
+    averageEventDurationMinutes: number;
+    busiestDay: {
+        date: string;
+        eventCount: number;
+        totalMinutes: number;
+    };
+    eventsByType: {
+        meetings: number; // Events with attendees
+        focusTime: number; // Events without attendees
+        recurring: number;
+        allDay: number;
+    };
+    attendeeStats: {
+        totalUniqueAttendees: number;
+        mostFrequentAttendees: Array<{
+            email: string;
+            eventCount: number;
+            totalMinutes: number;
+        }>;
+    };
+    timeDistribution: {
+        morningEvents: number; // Before 12 PM
+        afternoonEvents: number; // 12 PM - 5 PM
+        eveningEvents: number; // After 5 PM
+        weekendEvents: number;
+    };
+    utilizationRate: number; // Percentage of working hours occupied
 }
 
 // ==================================================
@@ -2950,6 +3026,182 @@ export class GoogleCalendarService {
     }
 
     /**
+     * Detect scheduling conflicts across calendars
+     */
+    async detectConflicts(
+        timeMin: string,
+        timeMax: string,
+        options?: {
+            excludeEventIds?: string[];
+            includeCalendarIds?: string[];
+            excludeCalendarIds?: string[];
+            minimumOverlapMinutes?: number;
+            includeAllDayEvents?: boolean;
+        },
+    ): Promise<ConflictResult[]> {
+        console.log('┌─ [DETECT_CONFLICTS] Starting conflict detection...', {
+            timeMin,
+            timeMax,
+            options,
+        });
+
+        const minimumOverlap = options?.minimumOverlapMinutes || 1;
+        const conflicts: ConflictResult[] = [];
+
+        try {
+            // Get all events from relevant calendars
+            let connections = await db
+                .select({
+                    connection: calendarConnections,
+                    account: account,
+                })
+                .from(calendarConnections)
+                .leftJoin(account, eq(calendarConnections.accountId, account.id))
+                .where(
+                    and(
+                        eq(calendarConnections.userId, this.userId),
+                        eq(calendarConnections.isActive, true),
+                    ),
+                );
+
+            // Apply calendar filters
+            if (options?.includeCalendarIds?.length) {
+                connections = connections.filter(({ connection }) =>
+                    options.includeCalendarIds!.includes(connection.calendarId),
+                );
+            }
+
+            if (options?.excludeCalendarIds?.length) {
+                connections = connections.filter(
+                    ({ connection }) =>
+                        !options.excludeCalendarIds!.includes(connection.calendarId),
+                );
+            }
+
+            // Collect all events
+            const allEvents: Array<{
+                event: CalendarEvent;
+                calendarId: string;
+                calendarName: string;
+            }> = [];
+
+            for (const { connection, account } of connections) {
+                if (!account) continue;
+
+                try {
+                    const { events } = await this.getEvents(
+                        connection.calendarId,
+                        timeMin,
+                        timeMax,
+                        {
+                            singleEvents: true,
+                            orderBy: 'startTime',
+                        },
+                    );
+
+                    for (const event of events) {
+                        // Skip excluded events
+                        if (options?.excludeEventIds?.includes(event.id!)) continue;
+
+                        // Skip all-day events if not included
+                        if (!options?.includeAllDayEvents && event.start.date) continue;
+
+                        allEvents.push({
+                            event,
+                            calendarId: connection.calendarId,
+                            calendarName: connection.calendarName || 'Unknown Calendar',
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Error fetching events from ${connection.calendarId}:`, error);
+                }
+            }
+
+            console.log('├─ [DETECT_CONFLICTS] Total events to check:', allEvents.length);
+
+            // Check each event for conflicts
+            for (let i = 0; i < allEvents.length; i++) {
+                const baseEventData = allEvents[i];
+                const baseEvent = baseEventData.event;
+                const conflictingEvents: ConflictResult['conflictingEvents'] = [];
+
+                // Skip if event has no time (all-day event)
+                if (!baseEvent.start.dateTime || !baseEvent.end.dateTime) continue;
+
+                const baseStart = new Date(baseEvent.start.dateTime);
+                const baseEnd = new Date(baseEvent.end.dateTime);
+                const baseDuration = differenceInMinutes(baseEnd, baseStart);
+
+                // Check against all other events
+                for (let j = 0; j < allEvents.length; j++) {
+                    if (i === j) continue; // Skip self
+
+                    const checkEventData = allEvents[j];
+                    const checkEvent = checkEventData.event;
+
+                    // Skip if event has no time
+                    if (!checkEvent.start.dateTime || !checkEvent.end.dateTime) continue;
+
+                    const checkStart = new Date(checkEvent.start.dateTime);
+                    const checkEnd = new Date(checkEvent.end.dateTime);
+
+                    // Check for overlap
+                    const overlapStart = new Date(
+                        Math.max(baseStart.getTime(), checkStart.getTime()),
+                    );
+                    const overlapEnd = new Date(Math.min(baseEnd.getTime(), checkEnd.getTime()));
+                    const overlapMinutes = differenceInMinutes(overlapEnd, overlapStart);
+
+                    if (overlapMinutes >= minimumOverlap) {
+                        const overlapPercentage = Math.round((overlapMinutes / baseDuration) * 100);
+
+                        conflictingEvents.push({
+                            event: checkEvent,
+                            overlapMinutes,
+                            overlapPercentage,
+                            calendarId: checkEventData.calendarId,
+                            calendarName: checkEventData.calendarName,
+                        });
+                    }
+                }
+
+                // Add to conflicts if any found
+                if (conflictingEvents.length > 0) {
+                    const maxOverlapPercentage = Math.max(
+                        ...conflictingEvents.map((c) => c.overlapPercentage),
+                    );
+
+                    conflicts.push({
+                        baseEvent,
+                        conflictingEvents,
+                        totalConflicts: conflictingEvents.length,
+                        severity:
+                            maxOverlapPercentage >= 80
+                                ? 'high'
+                                : maxOverlapPercentage >= 50
+                                  ? 'medium'
+                                  : 'low',
+                    });
+                }
+            }
+
+            // Remove duplicate conflicts (A conflicts with B, B conflicts with A)
+            const uniqueConflicts = this.deduplicateConflicts(conflicts);
+
+            console.log('└─ [DETECT_CONFLICTS] Conflicts found:', uniqueConflicts.length);
+
+            return uniqueConflicts;
+        } catch (error) {
+            console.error('└─ [DETECT_CONFLICTS] Error:', error);
+            throw new Error(
+                `Failed to detect conflicts: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
      * Transform Google Calendar event to our interface
      */
     private transformGoogleEvent(
@@ -3002,6 +3254,343 @@ export class GoogleCalendarService {
         };
 
         return { ...base, ...recurrenceFields };
+    }
+
+    /**
+     * Remove duplicate conflicts from the list
+     */
+    private deduplicateConflicts(conflicts: ConflictResult[]): ConflictResult[] {
+        const seen = new Set<string>();
+        const unique: ConflictResult[] = [];
+
+        for (const conflict of conflicts) {
+            const eventIds = [
+                conflict.baseEvent.id,
+                ...conflict.conflictingEvents.map((c) => c.event.id),
+            ]
+                .sort()
+                .join('-');
+
+            if (!seen.has(eventIds)) {
+                seen.add(eventIds);
+                unique.push(conflict);
+            }
+        }
+
+        return unique;
+    }
+
+    async findBestTimeForMeeting(
+        durationMinutes: number,
+        attendeeEmails: string[],
+        options?: {
+            searchRangeStart?: string; // Default: now
+            searchRangeEnd?: string; // Default: 2 weeks from now
+            preferredTimeRanges?: TimeRange[];
+            workingHoursOnly?: boolean;
+            workingHours?: WorkingHours[]; // Custom working hours
+            minimumNoticeHours?: number; // Default: 24
+            maxSuggestions?: number; // Default: 5
+            timezone?: string; // Default: UTC
+            excludeWeekends?: boolean; // Default: true
+            preferMornings?: boolean;
+            preferAfternoons?: boolean;
+            bufferMinutes?: number; // Buffer time before/after meetings
+        },
+    ): Promise<SuggestedTimeSlot[]> {
+        console.log('┌─ [SMART_SCHEDULING] Finding best meeting times...', {
+            durationMinutes,
+            attendeeCount: attendeeEmails.length,
+            options,
+        });
+
+        const timezone = options?.timezone || 'UTC';
+        const bufferMinutes = options?.bufferMinutes || 0;
+        const effectiveDuration = durationMinutes + 2 * bufferMinutes;
+
+        // Set search range
+        const searchStart = options?.searchRangeStart
+            ? new Date(options.searchRangeStart)
+            : addMinutes(new Date(), (options?.minimumNoticeHours || 24) * 60);
+
+        const searchEnd = options?.searchRangeEnd
+            ? new Date(options.searchRangeEnd)
+            : addMinutes(searchStart, 14 * 24 * 60); // 2 weeks
+
+        try {
+            // Get availability for all attendees including the organizer
+            const allAttendees = [...new Set([...attendeeEmails, this.userId])];
+            const attendeeAvailability = new Map<string, AvailabilityResult>();
+
+            // Check each attendee's availability
+            for (const attendee of allAttendees) {
+                try {
+                    // For external attendees, we can only check if they're in our system
+                    // In a real implementation, you might want to use Google's FreeBusy API
+                    const availability = await this.checkAvailabilityBlock(
+                        searchStart.toISOString(),
+                        searchEnd.toISOString(),
+                        {
+                            responseTimezone: timezone,
+                            timeDurationMinutes: effectiveDuration,
+                        },
+                    );
+
+                    attendeeAvailability.set(attendee, availability);
+                } catch (error) {
+                    console.warn(`Could not check availability for ${attendee}:`, error);
+                }
+            }
+
+            // Generate potential time slots
+            const potentialSlots = this.generatePotentialTimeSlots(
+                searchStart,
+                searchEnd,
+                durationMinutes,
+                {
+                    workingHoursOnly: options?.workingHoursOnly ?? true,
+                    workingHours: options?.workingHours || this.getDefaultWorkingHours(timezone),
+                    excludeWeekends: options?.excludeWeekends ?? true,
+                    bufferMinutes,
+                },
+            );
+
+            console.log('├─ [SMART_SCHEDULING] Potential slots generated:', potentialSlots.length);
+
+            // Score each potential slot
+            const scoredSlots: SuggestedTimeSlot[] = [];
+
+            for (const slot of potentialSlots) {
+                const slotScore = this.scoreTimeSlot(
+                    slot,
+                    attendeeAvailability,
+                    allAttendees,
+                    options,
+                );
+
+                if (slotScore.score > 0) {
+                    scoredSlots.push(slotScore);
+                }
+            }
+
+            // Sort by score and return top suggestions
+            scoredSlots.sort((a, b) => b.score - a.score);
+
+            const topSuggestions = scoredSlots.slice(0, options?.maxSuggestions || 5);
+
+            console.log('└─ [SMART_SCHEDULING] Top suggestions found:', topSuggestions.length);
+
+            return topSuggestions;
+        } catch (error) {
+            console.error('└─ [SMART_SCHEDULING] Error:', error);
+            throw new Error(
+                `Failed to find meeting times: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Generate potential time slots within the search range
+     */
+    private generatePotentialTimeSlots(
+        searchStart: Date,
+        searchEnd: Date,
+        durationMinutes: number,
+        options: {
+            workingHoursOnly: boolean;
+            workingHours: WorkingHours[];
+            excludeWeekends: boolean;
+            bufferMinutes: number;
+        },
+    ): TimeRange[] {
+        const slots: TimeRange[] = [];
+        const slotDuration = durationMinutes + 2 * options.bufferMinutes;
+
+        // Start from the next hour boundary
+        const current = new Date(searchStart);
+        current.setMinutes(0, 0, 0);
+        if (current < searchStart) {
+            current.setHours(current.getHours() + 1);
+        }
+
+        while (current < searchEnd) {
+            const slotEnd = addMinutes(current, slotDuration);
+
+            // Check if slot is within working hours
+            if (this.isWithinWorkingHours(current, slotEnd, options)) {
+                slots.push({
+                    start: current.toISOString(),
+                    end: slotEnd.toISOString(),
+                });
+            }
+
+            // Move to next slot (30-minute intervals)
+            current.setMinutes(current.getMinutes() + 30);
+        }
+
+        return slots;
+    }
+
+    /**
+     * Check if a time range is within working hours
+     */
+    private isWithinWorkingHours(
+        start: Date,
+        end: Date,
+        options: {
+            workingHoursOnly: boolean;
+            workingHours: WorkingHours[];
+            excludeWeekends: boolean;
+        },
+    ): boolean {
+        if (!options.workingHoursOnly) return true;
+
+        // Check weekend
+        if (options.excludeWeekends && (isWeekend(start) || isWeekend(end))) {
+            return false;
+        }
+
+        // Check working hours
+        const dayOfWeek = start.getDay();
+        const workingHoursForDay = options.workingHours.find((wh) => wh.dayOfWeek === dayOfWeek);
+
+        if (!workingHoursForDay) return false;
+
+        const startTime = start.getHours() * 60 + start.getMinutes();
+        const endTime = end.getHours() * 60 + end.getMinutes();
+        const workStart =
+            parseInt(workingHoursForDay.startTime.split(':')[0]) * 60 +
+            parseInt(workingHoursForDay.startTime.split(':')[1]);
+        const workEnd =
+            parseInt(workingHoursForDay.endTime.split(':')[0]) * 60 +
+            parseInt(workingHoursForDay.endTime.split(':')[1]);
+
+        return startTime >= workStart && endTime <= workEnd;
+    }
+
+    /**
+     * Score a time slot based on various factors
+     */
+    private scoreTimeSlot(
+        slot: TimeRange,
+        attendeeAvailability: Map<string, AvailabilityResult>,
+        allAttendees: string[],
+        options?: {
+            preferredTimeRanges?: TimeRange[];
+            preferMornings?: boolean;
+            preferAfternoons?: boolean;
+        },
+    ): SuggestedTimeSlot {
+        let score = 100; // Start with perfect score
+        const reasoning: string[] = [];
+        const availableAttendees: string[] = [];
+        const conflictingAttendees: string[] = [];
+
+        // Check each attendee's availability
+        for (const [attendee, availability] of attendeeAvailability) {
+            const isAvailable = this.isSlotAvailableForAttendee(slot, availability);
+
+            if (isAvailable) {
+                availableAttendees.push(attendee);
+            } else {
+                conflictingAttendees.push(attendee);
+                score -= 20; // Significant penalty for each unavailable attendee
+            }
+        }
+
+        // Bonus for all attendees available
+        if (conflictingAttendees.length === 0) {
+            score += 20;
+            reasoning.push('All attendees available');
+        }
+
+        // Check preferred time ranges
+        if (options?.preferredTimeRanges) {
+            const inPreferredRange = options.preferredTimeRanges.some((range) =>
+                this.isSlotWithinRange(slot, range),
+            );
+            if (inPreferredRange) {
+                score += 10;
+                reasoning.push('Within preferred time range');
+            }
+        }
+
+        // Time of day preferences
+        const slotHour = new Date(slot.start).getHours();
+        if (options?.preferMornings && slotHour < 12) {
+            score += 5;
+            reasoning.push('Morning slot (preferred)');
+        } else if (options?.preferAfternoons && slotHour >= 12 && slotHour < 17) {
+            score += 5;
+            reasoning.push('Afternoon slot (preferred)');
+        }
+
+        // Working hours compliance
+        const workingHoursCompliance = !isWeekend(new Date(slot.start));
+        if (!workingHoursCompliance) {
+            score -= 10;
+            reasoning.push('Weekend slot');
+        }
+
+        // Ensure score is between 0 and 100
+        score = Math.max(0, Math.min(100, score));
+
+        return {
+            start: slot.start,
+            end: slot.end,
+            score,
+            reasoning,
+            conflictingAttendees,
+            availableAttendees,
+            workingHoursCompliance,
+        };
+    }
+
+    /**
+     * Check if a slot is available for a specific attendee
+     */
+    private isSlotAvailableForAttendee(slot: TimeRange, availability: AvailabilityResult): boolean {
+        const slotStart = new Date(slot.start).getTime();
+        const slotEnd = new Date(slot.end).getTime();
+
+        // Check if slot overlaps with any busy period
+        for (const busy of availability.busySlots) {
+            const busyStart = new Date(busy.start).getTime();
+            const busyEnd = new Date(busy.end).getTime();
+
+            if (slotStart < busyEnd && slotEnd > busyStart) {
+                return false; // Overlap found
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if a slot is within a time range
+     */
+    private isSlotWithinRange(slot: TimeRange, range: TimeRange): boolean {
+        const slotStart = new Date(slot.start).getTime();
+        const slotEnd = new Date(slot.end).getTime();
+        const rangeStart = new Date(range.start).getTime();
+        const rangeEnd = new Date(range.end).getTime();
+
+        return slotStart >= rangeStart && slotEnd <= rangeEnd;
+    }
+
+    /**
+     * Get default working hours
+     */
+    private getDefaultWorkingHours(timezone: string): WorkingHours[] {
+        return [
+            { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', timezone }, // Monday
+            { dayOfWeek: 2, startTime: '09:00', endTime: '17:00', timezone }, // Tuesday
+            { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', timezone }, // Wednesday
+            { dayOfWeek: 4, startTime: '09:00', endTime: '17:00', timezone }, // Thursday
+            { dayOfWeek: 5, startTime: '09:00', endTime: '17:00', timezone }, // Friday
+        ];
     }
 
     /**
