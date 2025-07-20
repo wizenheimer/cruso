@@ -9,7 +9,7 @@ import {
     handleUpdatePrimaryAccount,
     handleGetPrimaryOptions,
     handleGeneratePreferencesDocument,
-} from '@/app/api/handlers/preferences';
+} from '@/app/api/handlers/preference/preferences';
 
 const preferences = new Hono();
 
