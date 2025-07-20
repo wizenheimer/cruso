@@ -3392,6 +3392,222 @@ export class GoogleCalendarService {
     }
 
     /**
+     * Get comprehensive statistics for a calendar
+     */
+    async getCalendarStatistics(
+        calendarId: string,
+        timeMin: string,
+        timeMax: string,
+        options?: {
+            includeAttendeeDetails?: boolean;
+            timezone?: string;
+        },
+    ): Promise<CalendarStats> {
+        console.log('┌─ [CALENDAR_STATS] Generating statistics...', {
+            calendarId,
+            timeMin,
+            timeMax,
+        });
+
+        try {
+            const connectionData = await this.getCalendarConnection(calendarId);
+            const calendarName = connectionData.connection.calendarName || 'Unknown Calendar';
+
+            // Get all events in the time range
+            const { events } = await this.getEvents(calendarId, timeMin, timeMax, {
+                singleEvents: true,
+                orderBy: 'startTime',
+                timeZone: options?.timezone,
+            });
+
+            console.log('├─ [CALENDAR_STATS] Events found:', events.length);
+
+            // Initialize statistics
+            const stats: CalendarStats = {
+                calendarId,
+                calendarName,
+                periodStart: timeMin,
+                periodEnd: timeMax,
+                totalEvents: events.length,
+                totalDurationMinutes: 0,
+                averageEventDurationMinutes: 0,
+                busiestDay: {
+                    date: '',
+                    eventCount: 0,
+                    totalMinutes: 0,
+                },
+                eventsByType: {
+                    meetings: 0,
+                    focusTime: 0,
+                    recurring: 0,
+                    allDay: 0,
+                },
+                attendeeStats: {
+                    totalUniqueAttendees: 0,
+                    mostFrequentAttendees: [],
+                },
+                timeDistribution: {
+                    morningEvents: 0,
+                    afternoonEvents: 0,
+                    eveningEvents: 0,
+                    weekendEvents: 0,
+                },
+                utilizationRate: 0,
+            };
+
+            if (events.length === 0) {
+                return stats;
+            }
+
+            // Process events
+            const dayStats = new Map<string, { count: number; minutes: number }>();
+            const attendeeStats = new Map<string, { count: number; minutes: number }>();
+
+            for (const event of events) {
+                // Calculate duration
+                let durationMinutes = 0;
+                if (event.start.dateTime && event.end.dateTime) {
+                    const start = new Date(event.start.dateTime);
+                    const end = new Date(event.end.dateTime);
+                    durationMinutes = differenceInMinutes(end, start);
+                    stats.totalDurationMinutes += durationMinutes;
+
+                    // Time distribution
+                    const hour = start.getHours();
+                    if (hour < 12) {
+                        stats.timeDistribution.morningEvents++;
+                    } else if (hour < 17) {
+                        stats.timeDistribution.afternoonEvents++;
+                    } else {
+                        stats.timeDistribution.eveningEvents++;
+                    }
+
+                    if (isWeekend(start)) {
+                        stats.timeDistribution.weekendEvents++;
+                    }
+
+                    // Daily statistics
+                    const dayKey = formatInTimeZone(
+                        start,
+                        options?.timezone || 'UTC',
+                        'yyyy-MM-dd',
+                    );
+                    const dayData = dayStats.get(dayKey) || { count: 0, minutes: 0 };
+                    dayData.count++;
+                    dayData.minutes += durationMinutes;
+                    dayStats.set(dayKey, dayData);
+                } else if (event.start.date) {
+                    // All-day event
+                    stats.eventsByType.allDay++;
+                    durationMinutes = 24 * 60; // Count as full day
+                    stats.totalDurationMinutes += durationMinutes;
+                }
+
+                // Event type classification
+                if (event.attendees && event.attendees.length > 0) {
+                    stats.eventsByType.meetings++;
+
+                    // Attendee statistics
+                    for (const attendee of event.attendees) {
+                        const attendeeData = attendeeStats.get(attendee.email) || {
+                            count: 0,
+                            minutes: 0,
+                        };
+                        attendeeData.count++;
+                        attendeeData.minutes += durationMinutes;
+                        attendeeStats.set(attendee.email, attendeeData);
+                    }
+                } else {
+                    stats.eventsByType.focusTime++;
+                }
+
+                // Check if recurring
+                // if (event.recurrence) {
+                //     stats.eventsByType.recurring++;
+                // }
+            }
+
+            // Calculate averages and find busiest day
+            stats.averageEventDurationMinutes = Math.round(
+                stats.totalDurationMinutes / stats.totalEvents,
+            );
+
+            let busiestDay = { date: '', eventCount: 0, totalMinutes: 0 };
+            for (const [date, data] of dayStats) {
+                if (data.count > busiestDay.eventCount) {
+                    busiestDay = { date, eventCount: data.count, totalMinutes: data.minutes };
+                }
+            }
+            stats.busiestDay = busiestDay;
+
+            // Process attendee statistics
+            stats.attendeeStats.totalUniqueAttendees = attendeeStats.size;
+
+            if (options?.includeAttendeeDetails) {
+                const attendeeArray = Array.from(attendeeStats.entries())
+                    .map(([email, data]) => ({
+                        email,
+                        eventCount: data.count,
+                        totalMinutes: data.minutes,
+                    }))
+                    .sort((a, b) => b.eventCount - a.eventCount);
+
+                stats.attendeeStats.mostFrequentAttendees = attendeeArray.slice(0, 10);
+            }
+
+            // Calculate utilization rate (assuming 8-hour work days)
+            const totalDays = differenceInMinutes(new Date(timeMax), new Date(timeMin)) / (24 * 60);
+            const workDays = Math.floor(totalDays * (5 / 7)); // Rough estimate
+            const totalWorkMinutes = workDays * 8 * 60;
+            stats.utilizationRate = Math.round(
+                (stats.totalDurationMinutes / totalWorkMinutes) * 100,
+            );
+
+            console.log('└─ [CALENDAR_STATS] Statistics generated successfully');
+
+            return stats;
+        } catch (error) {
+            console.error('└─ [CALENDAR_STATS] Error:', error);
+            throw new Error(
+                `Failed to generate calendar statistics: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`,
+            );
+        }
+    }
+
+    /**
+     * Get statistics for all calendars
+     */
+    async getAllCalendarStatistics(
+        timeMin: string,
+        timeMax: string,
+        options?: {
+            includeAttendeeDetails?: boolean;
+            timezone?: string;
+        },
+    ): Promise<CalendarStats[]> {
+        const connections = await this.getActiveConnections();
+        const allStats: CalendarStats[] = [];
+
+        for (const { connection } of connections) {
+            try {
+                const stats = await this.getCalendarStatistics(
+                    connection.calendarId,
+                    timeMin,
+                    timeMax,
+                    options,
+                );
+                allStats.push(stats);
+            } catch (error) {
+                console.error(`Error getting stats for ${connection.calendarId}:`, error);
+            }
+        }
+
+        return allStats;
+    }
+
+    /**
      * Generate potential time slots within the search range
      */
     private generatePotentialTimeSlots(
