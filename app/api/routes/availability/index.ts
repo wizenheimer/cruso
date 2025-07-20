@@ -6,7 +6,7 @@ import {
     handleUpdateAvailability,
     handleDeleteAvailability,
     handleCheckUserAvailability,
-} from '@/app/api/handlers/availability/availability';
+} from '@/app/api/handlers/availability';
 
 const availability = new Hono();
 

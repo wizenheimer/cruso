@@ -5,7 +5,7 @@ import {
     handleAddUserEmail,
     handleUpdateUserEmail,
     handleDeleteUserEmail,
-} from '@/app/api/handlers/user-email/user-emails';
+} from '@/app/api/handlers/user-email';
 
 const userEmails = new Hono();
 

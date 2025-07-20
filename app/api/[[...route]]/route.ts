@@ -7,8 +7,8 @@ import health from '../routes/health';
 import inbox from '../routes/inbox';
 import auth from '../routes/auth';
 import calendar from '../routes/calendar';
-import preferences from '../routes/preferences';
-import userEmails from '../routes/user-emails';
+import preferences from '../routes/preference';
+import userEmails from '../routes/user-email';
 import availability from '../routes/availability';
 
 /**
