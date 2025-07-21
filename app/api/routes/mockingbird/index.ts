@@ -1,6 +1,6 @@
 import { Context, Hono } from 'hono';
 import { requireAuth } from '../../middleware/auth';
-import { EmailDataSchema } from '@/services/inbox/types';
+import { EmailDataSchema } from '@/services/exchange/types';
 import { mastra } from '@/mastra';
 import { User } from '@/types/api/users';
 import { RuntimeContext } from '@mastra/core/runtime-context';

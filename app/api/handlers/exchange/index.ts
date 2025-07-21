@@ -1,7 +1,6 @@
 import { Context } from 'hono';
-import { EmailData } from '@/services/inbox/types';
+import { EmailData } from '@/services/exchange/types';
 import { User } from '@/types/api/users';
-import { InboxService } from '@/services/inbox/index';
 import { ExchangeService } from '@/services/exchange';
 
 /**
@@ -24,13 +23,13 @@ export const handleInboxRequest = async (requestContext: Context) => {
         throw new Error('Email data not found in context');
     }
 
-    const inboxService = InboxService.getInstance();
+    const exchangeService = ExchangeService.getInstance();
 
     // Check if the email is the first message in the exchange
-    const isEmailThreadOpener = await inboxService.isFirstMessageInExchange(incomingEmailData);
+    const isEmailThreadOpener = await exchangeService.isFirstMessageInExchange(incomingEmailData);
 
     // Check if the email is a valid reply to the exchange
-    const isValidEmailEngagement = await inboxService.isValidEngagement(incomingEmailData);
+    const isValidEmailEngagement = await exchangeService.isValidEngagement(incomingEmailData);
 
     // Determine the action based on user status and thread conditions
     const determinedAction = determineAction(

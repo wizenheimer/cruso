@@ -1,4 +1,4 @@
-import type { EmailData } from '@/services/inbox/types';
+import type { EmailData } from '@/services/exchange/types';
 import type { User } from '@/types/api/users';
 
 /**

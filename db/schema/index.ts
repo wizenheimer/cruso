@@ -1,7 +1,6 @@
 import { account, session, user, verification } from './auth';
 import { availability } from './availability';
-import { exchangeOwners } from './exchange-owners';
-import { inboxData } from './inbox';
+import { exchangeData } from './exchange';
 import { preferences } from './preferences';
 import { userEmails } from './user-emails';
 import { userRelations, accountRelations, sessionRelations } from './auth-relations';
@@ -12,8 +11,7 @@ export const schema = {
     session: session,
     verification: verification,
     availability: availability,
-    exchangeOwners: exchangeOwners,
-    inboxData: inboxData,
+    exchangeData: exchangeData,
     preferences: preferences,
     userEmails: userEmails,
 };

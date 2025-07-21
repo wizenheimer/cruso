@@ -4,7 +4,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
 import health from '../routes/health';
-import inbox from '../routes/inbox';
+import inbox from '../routes/exchange';
 import auth from '../routes/auth';
 import calendar from '../routes/calendar';
 import preferences from '../routes/preference';

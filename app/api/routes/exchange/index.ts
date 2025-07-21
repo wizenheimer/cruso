@@ -4,7 +4,7 @@ import {
     parseUserFromEmailMiddleware,
     rejectDisallowedDomainsMiddleware,
 } from '@/app/api/middleware/inbox';
-import { handleInboxRequest } from '@/app/api/handlers/inbox';
+import { handleInboxRequest } from '@/app/api/handlers/exchange';
 
 /**
  * The inbox router

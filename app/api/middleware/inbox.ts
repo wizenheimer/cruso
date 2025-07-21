@@ -1,5 +1,5 @@
 import { Context, Next } from 'hono';
-import { InboxService } from '@/services/inbox/index';
+import { ExchangeService } from '@/services/exchange';
 import { getUserByEmail } from '@/db/queries/users';
 import { isDisallowedAddress, isDisallowedDomain } from '@/lib/email';
 
@@ -21,9 +21,9 @@ const rejectDisallowedDomainFlag = process.env.NODE_ENV === 'production';
 export const parseEmailDataMiddleware = async (c: Context, next: Next) => {
     console.log('parsing email data');
     try {
-        // Get the inbox service instance
-        const inboxService = InboxService.getInstance();
-        const emailData = await inboxService.processEmail(c);
+        // Get the exchange service instance
+        const exchangeService = ExchangeService.getInstance();
+        const emailData = await exchangeService.processEmail(c);
 
         // Store email data in context for downstream handlers to use
         c.set('emailData', emailData);
