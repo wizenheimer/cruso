@@ -1,6 +1,6 @@
 import { cleanTextContent } from './text';
 import { parseEmailAddress, parseEmailAddressList } from './email';
-import { RawEmailData } from '@/services/inbox/types';
+import { RawEmailData } from '@/services/exchange/types';
 
 /**
  * Get a value from a FormData object.

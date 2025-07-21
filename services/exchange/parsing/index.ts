@@ -2,8 +2,8 @@ import { Context } from 'hono';
 import {
     parseInboundWebhookWithAttachments,
     parseInboundWebhookWithoutAttachments,
-} from '@/services/inbox/parsing/inbound';
-import { RawEmailData } from '@/services/inbox/types';
+} from '@/services/exchange/parsing/inbound';
+import { RawEmailData } from '@/services/exchange/types';
 
 /**
  * EmailParsingService class for parsing emails from inbound webhooks

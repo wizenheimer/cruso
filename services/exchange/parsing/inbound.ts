@@ -1,13 +1,13 @@
 import {
     verifyMailgunWebhookFromFormData,
     verifyMailgunWebhookSpamThresholdFromFormData,
-} from '@/services/inbox/parsing/verify';
-import { RawEmailData } from '@/services/inbox/types';
+} from '@/services/exchange/parsing/verify';
+import { RawEmailData } from '@/services/exchange/types';
 import {
     parseURLEncodedToFormData,
     parseMultipartToFormData,
     parseEmailDataFromMailgunWebhookFormData,
-} from '@/services/inbox/parsing/form';
+} from '@/services/exchange/parsing/form';
 
 /**
  * Tolerance options for business emails with higher tolerance settings.

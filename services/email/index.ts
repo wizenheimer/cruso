@@ -1,6 +1,6 @@
 import Mailgun from 'mailgun.js';
 import formData from 'form-data';
-import { EmailData } from '../inbox/types';
+import { EmailData } from '../exchange/types';
 import { MailgunMessageData } from 'mailgun.js/definitions';
 import { randomUUID } from 'crypto';
 
