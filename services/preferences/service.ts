@@ -329,6 +329,18 @@ export class PreferenceService {
     }
 
     /**
+     * Update user preference document
+     */
+    async updatePreferencesDocument(
+        userId: string,
+        document: string,
+    ): Promise<UpdatePreferencesResult> {
+        console.log('[PREFERENCE_SERVICE] Updating preferences document for user:', userId);
+        const updateResult = await this.updatePreferences(userId, { document });
+        return updateResult;
+    }
+
+    /**
      * Delete user preferences (soft delete)
      */
     async deletePreferences(userId: string): Promise<DeletePreferencesResult> {
