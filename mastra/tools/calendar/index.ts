@@ -1,17 +1,14 @@
-import { createEventTool } from './create-event';
-import { deleteEventTool } from './delete-event';
-import { listEventsTool } from './list-event';
-import { updateEventTool } from './update-event';
-// import { createAvailabilityTool } from './create-availability';
-// import { deleteAvailabilityTool } from './delete-availability';
-import { listAvailabilityTool } from './list-availability';
+import { availabilityTools } from './availability';
+import { nonRecurringEventTools } from './non-recurring-event';
+import { recurringEventTools } from './recurring-event';
+import { searchTools } from './search';
 
+// ==================================================
+// All Calendar Tools
+// ==================================================
 export const calendarTools = {
-    createEventTool,
-    deleteEventTool,
-    listEventsTool,
-    updateEventTool,
-    // createAvailabilityTool,
-    // deleteAvailabilityTool,
-    listAvailabilityTool,
+    ...availabilityTools, // Availability Tools
+    ...nonRecurringEventTools, // Non-Recurring Event Tools
+    ...recurringEventTools, // Recurring Event Tools
+    ...searchTools, // Search Tools
 };
