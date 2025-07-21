@@ -10,6 +10,7 @@ import calendar from '../routes/calendar';
 import preferences from '../routes/preference';
 import userEmails from '../routes/user-email';
 import availability from '../routes/availability';
+import mockingbird from '../routes/mockingbird';
 
 /**
  * The runtime
@@ -43,6 +44,11 @@ app.route('/health', health);
  * Stable Routes (requires no backwards compatibility)
  */
 app.route('/auth', auth);
+
+/**
+ * Stable Routes (requires no backwards compatibility)
+ */
+app.route('/mockingbird', mockingbird);
 
 /**
  * API versioning
