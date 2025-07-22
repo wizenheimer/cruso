@@ -72,5 +72,4 @@ export type EventFilters = z.infer<typeof schemas.eventFiltersSchema>;
 export type EventSyncResult = z.infer<typeof schemas.eventSyncResultSchema>;
 export type EventSyncOptions = z.infer<typeof schemas.eventSyncOptionsSchema>;
 
-// Re-export schemas for runtime validation
-export { schemas };
+// Schemas are re-exported from the index file

@@ -58,5 +58,4 @@ export type CalendarConnectionHealthCheck = z.infer<
     typeof schemas.calendarConnectionHealthCheckSchema
 >;
 
-// Re-export schemas for runtime validation
-export { schemas };
+// Schemas are re-exported from the index file

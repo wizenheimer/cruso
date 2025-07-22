@@ -105,5 +105,4 @@ export type RecurringEventSyncResult = z.infer<typeof schemas.recurringEventSync
 export type RecurringEventQuery = z.infer<typeof schemas.recurringEventQuerySchema>;
 export type RecurringEventQueryResult = z.infer<typeof schemas.recurringEventQueryResultSchema>;
 
-// Re-export schemas for runtime validation
-export { schemas };
+// Schemas are re-exported from the index file

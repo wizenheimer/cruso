@@ -46,5 +46,4 @@ export type MeetingSchedulingResponse = z.infer<typeof schemas.meetingScheduling
 export type WorkingHoursConfig = z.infer<typeof schemas.workingHoursConfigSchema>;
 export type DefaultWorkingHours = z.infer<typeof schemas.defaultWorkingHoursSchema>;
 
-// Re-export schemas for runtime validation
-export { schemas };
+// Schemas are re-exported from the index file

@@ -48,8 +48,6 @@ export const calendarSyncStatusSchema = z.object({
     lastError: z.string().optional(),
 });
 
-
-
 // ==================================================
 // Calendar Connection Schemas
 // ==================================================

@@ -1,14 +1,9 @@
 // Export all service-related types
 export * from './availability';
-export * from './availability-schemas';
 export * from './connections';
-export * from './connections-schemas';
 export * from './events';
-export * from './events-schemas';
 export * from './recurring-events';
-export * from './recurring-events-schemas';
 export * from './search';
-export * from './search-schemas';
 
 // Re-export commonly used availability types for convenience
 export type {

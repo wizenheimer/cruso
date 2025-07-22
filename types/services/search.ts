@@ -43,5 +43,4 @@ export type SearchSuggestionsResult = z.infer<typeof schemas.searchSuggestionsRe
 export type SearchAnalytics = z.infer<typeof schemas.searchAnalyticsSchema>;
 export type SearchAnalyticsOptions = z.infer<typeof schemas.searchAnalyticsOptionsSchema>;
 
-// Re-export schemas for runtime validation
-export { schemas };
+// Schemas are re-exported from the index file

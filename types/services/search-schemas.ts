@@ -4,8 +4,8 @@ import { z } from 'zod';
 // Base Zod Schemas
 // ==================================================
 
-const orderBySchema = z.enum(['startTime', 'updated']);
-const sortFieldSchema = z.enum([
+export const orderBySchema = z.enum(['startTime', 'updated']);
+export const sortFieldSchema = z.enum([
     'startTime',
     'endTime',
     'created',
@@ -13,12 +13,12 @@ const sortFieldSchema = z.enum([
     'summary',
     'duration',
 ]);
-const sortDirectionSchema = z.enum(['asc', 'desc']);
-const responseStatusSchema = z.enum(['needsAction', 'declined', 'tentative', 'accepted']);
-const searchFieldSchema = z.enum(['summary', 'description', 'location', 'attendees']);
-const presetCategorySchema = z.enum(['time', 'people', 'type', 'custom']);
-const suggestionTypeSchema = z.enum(['query', 'filter', 'field']);
-const groupBySchema = z.enum(['day', 'week', 'month']);
+export const sortDirectionSchema = z.enum(['asc', 'desc']);
+export const responseStatusSchema = z.enum(['needsAction', 'declined', 'tentative', 'accepted']);
+export const searchFieldSchema = z.enum(['summary', 'description', 'location', 'attendees']);
+export const presetCategorySchema = z.enum(['time', 'people', 'type', 'custom']);
+export const suggestionTypeSchema = z.enum(['query', 'filter', 'field']);
+export const groupBySchema = z.enum(['day', 'week', 'month']);
 
 // ==================================================
 // Search Service Schemas
@@ -170,7 +170,7 @@ export const searchSortConfigSchema = z.object({
 // Search Result Schemas
 // ==================================================
 
-export const searchResultItemSchema = z.any().extend({
+export const searchResultItemSchema = z.object({
     relevanceScore: z.number().min(0).max(1).optional(),
     matchedFields: z.array(z.string()).optional(),
     highlightSnippets: z
@@ -181,7 +181,8 @@ export const searchResultItemSchema = z.any().extend({
             }),
         )
         .optional(),
-}); // CalendarEvent type
+    // ... other CalendarEvent properties would be here
+});
 
 export const searchFacetsSchema = z.object({
     attendees: z

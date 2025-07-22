@@ -4,13 +4,18 @@ import { z } from 'zod';
 // Base Zod Schemas
 // ==================================================
 
-const sendUpdatesSchema = z.enum(['all', 'externalOnly', 'none']);
-const eventStatusSchema = z.enum(['confirmed', 'tentative', 'cancelled']);
-const eventTransparencySchema = z.enum(['opaque', 'transparent']);
-const eventVisibilitySchema = z.enum(['default', 'public', 'private', 'confidential']);
-const reminderMethodSchema = z.enum(['email', 'popup']);
-const attendeeResponseStatusSchema = z.enum(['needsAction', 'declined', 'tentative', 'accepted']);
-const orderBySchema = z.enum(['startTime', 'updated']);
+export const sendUpdatesSchema = z.enum(['all', 'externalOnly', 'none']);
+export const eventStatusSchema = z.enum(['confirmed', 'tentative', 'cancelled']);
+export const eventTransparencySchema = z.enum(['opaque', 'transparent']);
+export const eventVisibilitySchema = z.enum(['default', 'public', 'private', 'confidential']);
+export const reminderMethodSchema = z.enum(['email', 'popup']);
+export const attendeeResponseStatusSchema = z.enum([
+    'needsAction',
+    'declined',
+    'tentative',
+    'accepted',
+]);
+export const orderBySchema = z.enum(['startTime', 'updated']);
 
 // ==================================================
 // Event Options Schemas
@@ -100,9 +105,10 @@ export const getEventsFromPrimaryCalendarResultSchema = getEventsResultSchema.ex
     calendarId: z.string(),
 });
 
-export const getEventFromPrimaryCalendarResultSchema = z.any().extend({
+export const getEventFromPrimaryCalendarResultSchema = z.object({
     calendarId: z.string(),
-}); // CalendarEvent type
+    event: z.any(), // CalendarEvent type
+});
 
 export const getUpdatedEventsResultSchema = z.object({
     events: z.array(z.any()), // CalendarEvent type
@@ -111,25 +117,29 @@ export const getUpdatedEventsResultSchema = z.object({
     nextSyncToken: z.string().optional(),
 });
 
-export const createEventInPrimaryCalendarResultSchema = z.any().extend({
+export const createEventInPrimaryCalendarResultSchema = z.object({
     calendarId: z.string(),
-}); // CalendarEvent type
+    event: z.any(), // CalendarEvent type
+});
 
-export const updateEventInPrimaryCalendarResultSchema = z.any().extend({
+export const updateEventInPrimaryCalendarResultSchema = z.object({
     calendarId: z.string(),
-}); // CalendarEvent type
+    event: z.any(), // CalendarEvent type
+});
 
 export const deleteEventFromPrimaryCalendarResultSchema = z.object({
     calendarId: z.string(),
 });
 
-export const rescheduleEventInPrimaryCalendarResultSchema = z.any().extend({
+export const rescheduleEventInPrimaryCalendarResultSchema = z.object({
     calendarId: z.string(),
-}); // CalendarEvent type
+    event: z.any(), // CalendarEvent type
+});
 
-export const quickCreateEventInPrimaryCalendarResultSchema = z.any().extend({
+export const quickCreateEventInPrimaryCalendarResultSchema = z.object({
     calendarId: z.string(),
-}); // CalendarEvent type
+    event: z.any(), // CalendarEvent type
+});
 
 // ==================================================
 // Event Reminder Schemas
@@ -184,9 +194,8 @@ export const eventDateTimeSchema = z.object({
 // Event Status Schemas
 // ==================================================
 
-export const eventStatusSchema = z.enum(['confirmed', 'tentative', 'cancelled']);
-export const eventTransparencySchema = z.enum(['opaque', 'transparent']);
-export const eventVisibilitySchema = z.enum(['default', 'public', 'private', 'confidential']);
+// These schemas are already defined as constants at the top of the file
+// and are used throughout this file
 
 // ==================================================
 // Event Response Schemas
