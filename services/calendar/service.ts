@@ -1,6 +1,30 @@
 import { auth } from '@/lib/auth';
 import { BaseCalendarService } from './base';
-import type { CalendarEvent, CalendarInfo, TimeRange } from '@/types/services';
+import type {
+    CalendarEvent,
+    CalendarInfo,
+    TimeRange,
+    ListEventsOptions,
+    GetEventOptions,
+    FindEventsByICalUIDOptions,
+    GetUpdatedEventsOptions,
+    CreateEventOptions,
+    UpdateEventOptions,
+    DeleteEventOptions,
+    RescheduleEventOptions,
+    QuickCreateEventOptions,
+    BatchOperationsOptions,
+    GetRecurringEventInstancesOptions,
+    GetRecurringEventOptions,
+    CreateRecurringEventOptions,
+    UpdateRecurringEventOptions,
+    DeleteRecurringEventOptions,
+    RescheduleRecurringEventOptions,
+    UpdateRecurringEventInstanceOptions,
+    UpdateFutureRecurringEventsOptions,
+    DeleteRecurringEventInstanceOptions,
+    ListEventsFromPrimaryCalendarResult,
+} from '@/types/services';
 import { CalendarConnectionsService } from './connections';
 import { CalendarEventsService } from './events';
 import { CalendarAvailabilityService } from './availability';
@@ -71,72 +95,30 @@ export class GoogleCalendarService extends BaseCalendarService {
     // Events Methods
     // ==================================================
 
-    async getEventsFromPrimaryCalendar(
-        timeMin: string,
-        timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            q?: string;
-            showDeleted?: boolean;
-            singleEvents?: boolean;
-            orderBy?: 'startTime' | 'updated';
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            iCalUID?: string;
-        },
-    ): Promise<{ events: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
-        return this.eventsService.getEventsFromPrimaryCalendar(timeMin, timeMax, options);
+    async listEventsFromPrimaryCalendar(
+        options?: ListEventsOptions,
+    ): Promise<ListEventsFromPrimaryCalendarResult> {
+        return this.eventsService.listEventsFromPrimaryCalendar(options);
     }
 
-    async getEvents(
+    async listEvents(
         calendarId: string,
-        timeMin: string,
-        timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            q?: string;
-            showDeleted?: boolean;
-            singleEvents?: boolean;
-            orderBy?: 'startTime' | 'updated';
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            iCalUID?: string;
-        },
+        options?: ListEventsOptions,
     ): Promise<{ events: CalendarEvent[]; nextPageToken?: string; nextSyncToken?: string }> {
-        return this.eventsService.getEvents(calendarId, timeMin, timeMax, options);
+        return this.eventsService.listEvents(calendarId, options);
     }
 
-    async getEvent(
-        calendarId: string,
-        eventId: string,
-        options?: {
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            maxAttendees?: number;
-        },
-    ): Promise<CalendarEvent> {
-        return this.eventsService.getEvent(calendarId, eventId, options);
+    async getEvent(calendarId: string, options: GetEventOptions): Promise<CalendarEvent> {
+        return this.eventsService.getEvent(calendarId, options);
     }
 
-    async getEventFromPrimaryCalendar(
-        eventId: string,
-        options?: {
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            maxAttendees?: number;
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
-        return this.eventsService.getEventFromPrimaryCalendar(eventId, options);
+    async getEventFromPrimaryCalendar(options: GetEventOptions): Promise<CalendarEvent> {
+        return this.eventsService.getEventFromPrimaryCalendar(options);
     }
 
     async findEventsByICalUID(
         iCalUID: string,
-        options?: {
-            timeZone?: string;
-            includeDeleted?: boolean;
-        },
+        options?: FindEventsByICalUIDOptions,
     ): Promise<Map<string, CalendarEvent[]>> {
         return this.eventsService.findEventsByICalUID(iCalUID, options);
     }
@@ -144,12 +126,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async getUpdatedEvents(
         calendarId: string,
         updatedMin: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            syncToken?: string;
-            timeZone?: string;
-        },
+        options?: GetUpdatedEventsOptions,
     ): Promise<{
         events: CalendarEvent[];
         deletedEvents: string[];
@@ -161,10 +138,7 @@ export class GoogleCalendarService extends BaseCalendarService {
 
     async createEventInPrimaryCalendar(
         event: CalendarEvent,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
+        options?: CreateEventOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.eventsService.createEventInPrimaryCalendar(event, options);
     }
@@ -172,10 +146,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async createEvent(
         calendarId: string,
         event: CalendarEvent,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
+        options?: CreateEventOptions,
     ): Promise<CalendarEvent> {
         return this.eventsService.createEvent(calendarId, event, options);
     }
@@ -183,9 +154,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async updateEventInPrimaryCalendar(
         eventId: string,
         event: Partial<CalendarEvent>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateEventOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.eventsService.updateEventInPrimaryCalendar(eventId, event, options);
     }
@@ -194,18 +163,14 @@ export class GoogleCalendarService extends BaseCalendarService {
         calendarId: string,
         eventId: string,
         event: Partial<CalendarEvent>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateEventOptions,
     ): Promise<CalendarEvent> {
         return this.eventsService.updateEvent(calendarId, eventId, event, options);
     }
 
     async deleteEventFromPrimaryCalendar(
         eventId: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteEventOptions,
     ): Promise<{ calendarId: string }> {
         return this.eventsService.deleteEventFromPrimaryCalendar(eventId, options);
     }
@@ -213,9 +178,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async deleteEvent(
         calendarId: string,
         eventId: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteEventOptions,
     ): Promise<void> {
         return this.eventsService.deleteEvent(calendarId, eventId, options);
     }
@@ -225,9 +188,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         startDateTime: string,
         endDateTime: string,
         timeZone: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: RescheduleEventOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.eventsService.rescheduleEventInPrimaryCalendar(
             eventId,
@@ -244,9 +205,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         startDateTime: string,
         endDateTime: string,
         timeZone: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: RescheduleEventOptions,
     ): Promise<CalendarEvent> {
         return this.eventsService.rescheduleEvent(
             calendarId,
@@ -262,22 +221,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         summary: string,
         startDateTime: string,
         endDateTime: string,
-        options?: {
-            description?: string;
-            location?: string;
-            attendees?: string[];
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-            createConference?: boolean;
-            colorId?: string;
-            reminders?: {
-                useDefault?: boolean;
-                overrides?: Array<{
-                    method: 'email' | 'popup';
-                    minutes: number;
-                }>;
-            };
-        },
+        options?: QuickCreateEventOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.eventsService.quickCreateEventInPrimaryCalendar(
             summary,
@@ -293,9 +237,7 @@ export class GoogleCalendarService extends BaseCalendarService {
             eventId?: string;
             event?: CalendarEvent | Partial<CalendarEvent>;
         }>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: BatchOperationsOptions,
     ): Promise<{
         successful: Array<{
             operation: BatchOperation;
@@ -350,19 +292,14 @@ export class GoogleCalendarService extends BaseCalendarService {
     // Recurring Events Methods
     // ==================================================
 
-    async getRecurringEventInstances(
+    async listRecurringEventInstances(
         calendarId: string,
         recurringEventId: string,
         timeMin: string,
         timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            timeZone?: string;
-            showDeleted?: boolean;
-        },
+        options?: GetRecurringEventInstancesOptions,
     ): Promise<{ instances: CalendarEvent[]; nextPageToken?: string }> {
-        return this.recurringEventsService.getRecurringEventInstances(
+        return this.recurringEventsService.listRecurringEventInstances(
             calendarId,
             recurringEventId,
             timeMin,
@@ -375,10 +312,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         event: CalendarEvent & {
             recurrence?: RecurrenceRule[];
         },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
+        options?: CreateRecurringEventOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.recurringEventsService.createRecurringEventInPrimaryCalendar(event, options);
     }
@@ -388,20 +322,14 @@ export class GoogleCalendarService extends BaseCalendarService {
         event: CalendarEvent & {
             recurrence?: RecurrenceRule[];
         },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
+        options?: CreateRecurringEventOptions,
     ): Promise<CalendarEvent> {
         return this.recurringEventsService.createRecurringEvent(calendarId, event, options);
     }
 
     async batchCreateRecurringEventsInPrimaryCalendar(
         events: Array<CalendarEvent & { recurrence?: RecurrenceRule[] }>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
+        options?: CreateRecurringEventOptions,
     ): Promise<BatchCreateRecurringEventsResult> {
         return this.recurringEventsService.batchCreateRecurringEventsInPrimaryCalendar(
             events,
@@ -414,9 +342,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         event: Partial<CalendarEvent> & {
             recurrence?: RecurrenceRule[];
         },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateRecurringEventOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.recurringEventsService.updateRecurringEventInPrimaryCalendar(
             eventId,
@@ -431,9 +357,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         event: Partial<CalendarEvent> & {
             recurrence?: RecurrenceRule[];
         },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateRecurringEventOptions,
     ): Promise<CalendarEvent> {
         return this.recurringEventsService.updateRecurringEvent(
             calendarId,
@@ -448,9 +372,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         eventId: string,
         instanceStartTime: string,
         updates: Partial<CalendarEvent>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateRecurringEventInstanceOptions,
     ): Promise<CalendarEvent> {
         return this.recurringEventsService.updateRecurringEventInstance(
             calendarId,
@@ -466,9 +388,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         eventId: string,
         fromDateTime: string,
         updates: Partial<CalendarEvent> & { recurrence?: RecurrenceRule[] },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateFutureRecurringEventsOptions,
     ): Promise<CalendarEvent> {
         return this.recurringEventsService.updateFutureRecurringEvents(
             calendarId,
@@ -481,9 +401,7 @@ export class GoogleCalendarService extends BaseCalendarService {
 
     async deleteRecurringEventFromPrimaryCalendar(
         eventId: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteRecurringEventOptions,
     ): Promise<{ calendarId: string }> {
         return this.recurringEventsService.deleteRecurringEventFromPrimaryCalendar(
             eventId,
@@ -494,9 +412,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async deleteRecurringEvent(
         calendarId: string,
         eventId: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteRecurringEventOptions,
     ): Promise<void> {
         return this.recurringEventsService.deleteRecurringEvent(calendarId, eventId, options);
     }
@@ -505,9 +421,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         calendarId: string,
         eventId: string,
         instanceStartTime: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteRecurringEventInstanceOptions,
     ): Promise<void> {
         return this.recurringEventsService.deleteRecurringEventInstance(
             calendarId,
@@ -521,9 +435,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         eventId: string,
         instanceStartTime: string,
         updates: Partial<CalendarEvent>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateRecurringEventInstanceOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.recurringEventsService.updateRecurringEventInstanceInPrimaryCalendar(
             eventId,
@@ -537,9 +449,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         eventId: string,
         fromDateTime: string,
         updates: Partial<CalendarEvent> & { recurrence?: RecurrenceRule[] },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateFutureRecurringEventsOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.recurringEventsService.updateFutureRecurringEventsInPrimaryCalendar(
             eventId,
@@ -552,9 +462,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async deleteRecurringEventInstanceInPrimaryCalendar(
         eventId: string,
         instanceStartTime: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteRecurringEventInstanceOptions,
     ): Promise<{ calendarId: string }> {
         return this.recurringEventsService.deleteRecurringEventInstanceInPrimaryCalendar(
             eventId,
@@ -563,18 +471,13 @@ export class GoogleCalendarService extends BaseCalendarService {
         );
     }
 
-    async getRecurringEventInstancesInPrimaryCalendar(
+    async listRecurringEventInstancesInPrimaryCalendar(
         eventId: string,
         timeMin: string,
         timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            timeZone?: string;
-            showDeleted?: boolean;
-        },
+        options?: GetRecurringEventInstancesOptions,
     ): Promise<{ instances: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
-        return this.recurringEventsService.getRecurringEventInstancesInPrimaryCalendar(
+        return this.recurringEventsService.listRecurringEventInstancesInPrimaryCalendar(
             eventId,
             timeMin,
             timeMax,
@@ -584,11 +487,7 @@ export class GoogleCalendarService extends BaseCalendarService {
 
     async getRecurringEventFromPrimaryCalendar(
         eventId: string,
-        options?: {
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            maxAttendees?: number;
-        },
+        options?: GetRecurringEventOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.recurringEventsService.getRecurringEventFromPrimaryCalendar(eventId, options);
     }
@@ -596,11 +495,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async getRecurringEvent(
         calendarId: string,
         eventId: string,
-        options?: {
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            maxAttendees?: number;
-        },
+        options?: GetRecurringEventOptions,
     ): Promise<CalendarEvent> {
         return this.recurringEventsService.getRecurringEvent(calendarId, eventId, options);
     }
@@ -610,9 +505,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         startDateTime: string,
         endDateTime: string,
         timeZone: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: RescheduleRecurringEventOptions,
     ): Promise<CalendarEvent & { calendarId: string }> {
         return this.recurringEventsService.rescheduleRecurringEventInPrimaryCalendar(
             eventId,
@@ -629,9 +522,7 @@ export class GoogleCalendarService extends BaseCalendarService {
         startDateTime: string,
         endDateTime: string,
         timeZone: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: RescheduleRecurringEventOptions,
     ): Promise<CalendarEvent> {
         return this.recurringEventsService.rescheduleRecurringEvent(
             calendarId,

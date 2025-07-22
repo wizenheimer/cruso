@@ -36,11 +36,13 @@ export type {
 // Re-export commonly used events types for convenience
 export type {
     GetEventsResult,
+    ListEventsFromPrimaryCalendarResult,
     EventResponse,
     EventFilters,
     EventSyncResult,
     BatchOperation,
-    GetEventsOptions,
+    ListEventsOptions,
+    GetEventOptions,
     CreateEventOptions,
     UpdateEventOptions,
     DeleteEventOptions,
@@ -109,10 +111,12 @@ export {
 // Re-export events schemas for runtime validation
 export {
     getEventsResultSchema,
+    listEventsFromPrimaryCalendarResultSchema,
     eventResponseSchema,
     eventFiltersSchema,
     batchOperationSchema,
-    getEventsOptionsSchema,
+    listEventsOptionsSchema,
+    getEventOptionsSchema,
     createEventOptionsSchema,
     updateEventOptionsSchema,
     deleteEventOptionsSchema,

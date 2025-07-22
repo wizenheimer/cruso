@@ -15,10 +15,10 @@ import * as schemas from './events-schemas';
 // ==================================================
 
 // Events Service Types
-export type GetEventsOptions = z.infer<typeof schemas.getEventsOptionsSchema>;
+export type ListEventsOptions = z.infer<typeof schemas.listEventsOptionsSchema>;
 export type GetEventsResult = z.infer<typeof schemas.getEventsResultSchema>;
-export type GetEventsFromPrimaryCalendarResult = z.infer<
-    typeof schemas.getEventsFromPrimaryCalendarResultSchema
+export type ListEventsFromPrimaryCalendarResult = z.infer<
+    typeof schemas.listEventsFromPrimaryCalendarResultSchema
 >;
 export type GetEventOptions = z.infer<typeof schemas.getEventOptionsSchema>;
 export type GetEventFromPrimaryCalendarResult = z.infer<

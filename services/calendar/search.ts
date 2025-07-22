@@ -4,7 +4,7 @@ import {
     SearchOptions,
     SearchResult,
     QuickSearchPresets,
-    GetEventsOptions,
+    ListEventsOptions,
     GetEventsResult,
 } from '@/types/services';
 
@@ -13,7 +13,7 @@ export type {
     SearchOptions,
     SearchResult,
     QuickSearchPresets,
-    GetEventsOptions,
+    ListEventsOptions,
     GetEventsResult,
 } from '@/types/services';
 
@@ -314,13 +314,11 @@ export class CalendarSearchService extends BaseCalendarService {
     }
 
     /**
-     * Get events from a specific calendar (helper method for search)
+     * List events from a specific calendar (helper method for search)
      */
-    private async getEvents(
+    private async listEvents(
         calendarId: string,
-        timeMin: string,
-        timeMax: string,
-        options?: GetEventsOptions,
+        options?: ListEventsOptions,
     ): Promise<GetEventsResult> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -332,8 +330,8 @@ export class CalendarSearchService extends BaseCalendarService {
 
             const response = await calendar.events.list({
                 calendarId,
-                timeMin,
-                timeMax,
+                timeMin: options?.timeMin,
+                timeMax: options?.timeMax,
                 maxResults: options?.maxResults || 250,
                 pageToken: options?.pageToken,
                 q: options?.q,
@@ -342,6 +340,9 @@ export class CalendarSearchService extends BaseCalendarService {
                 orderBy: options?.orderBy || 'startTime',
                 timeZone: options?.timeZone,
                 alwaysIncludeEmail: options?.alwaysIncludeEmail ?? false,
+                maxAttendees: options?.maxAttendees,
+                syncToken: options?.syncToken,
+                updatedMin: options?.updatedMin,
                 iCalUID: options?.iCalUID,
             });
 

@@ -34,19 +34,40 @@ export {
 // Event Options Schemas
 // ==================================================
 
-export const getEventsOptionsSchema = z.object({
+export const listEventsOptionsSchema = z.object({
+    // Time range
+    timeMin: z.string().optional(),
+    timeMax: z.string().optional(),
+
+    // Pagination and limits
     maxResults: z.number().min(1).max(2500).optional(),
     pageToken: z.string().optional(),
+
+    // Search and filtering
     q: z.string().optional(),
+    iCalUID: z.string().optional(),
+
+    // Event display options
     showDeleted: z.boolean().optional(),
     singleEvents: z.boolean().optional(),
     orderBy: orderBySchema.optional(),
+
+    // Time and timezone
     timeZone: z.string().optional(),
+
+    // Attendee options
     alwaysIncludeEmail: z.boolean().optional(),
-    iCalUID: z.string().optional(),
+    maxAttendees: z.number().min(1).max(100).optional(),
+
+    // Sync options
+    syncToken: z.string().optional(),
+
+    // Additional filters
+    updatedMin: z.string().optional(),
 });
 
 export const getEventOptionsSchema = z.object({
+    eventId: z.string(),
     timeZone: z.string().optional(),
     alwaysIncludeEmail: z.boolean().optional(),
     maxAttendees: z.number().min(1).max(100).optional(),
@@ -106,7 +127,7 @@ export const getEventsResultSchema = z.object({
     nextSyncToken: z.string().optional(),
 });
 
-export const getEventsFromPrimaryCalendarResultSchema = z.object({
+export const listEventsFromPrimaryCalendarResultSchema = z.object({
     events: z.array(calendarEventSchema),
     nextPageToken: z.string().optional(),
     updated: z.string().optional(),

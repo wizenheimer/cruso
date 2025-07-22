@@ -35,7 +35,7 @@ export const getRecurringEventInstancesTool = createTool({
 
         try {
             const calendarService = new GoogleCalendarService(user.id);
-            const result = await calendarService.getRecurringEventInstancesInPrimaryCalendar(
+            const result = await calendarService.listRecurringEventInstancesInPrimaryCalendar(
                 eventId,
                 timeMin,
                 timeMax,

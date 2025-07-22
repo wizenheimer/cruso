@@ -2,9 +2,9 @@ import { calendar_v3 } from 'googleapis';
 import { BaseCalendarService } from './base';
 import type { CalendarEvent } from '@/types/services';
 import {
-    GetEventsOptions,
+    ListEventsOptions,
     GetEventsResult,
-    GetEventsFromPrimaryCalendarResult,
+    ListEventsFromPrimaryCalendarResult,
     GetEventOptions,
     GetEventFromPrimaryCalendarResult,
     FindEventsByICalUIDOptions,
@@ -27,23 +27,21 @@ import {
 
 export class CalendarEventsService extends BaseCalendarService {
     /**
-     * Get events from the primary calendar
+     * List events from the primary calendar
      */
-    async getEventsFromPrimaryCalendar(
-        timeMin: string,
-        timeMax: string,
-        options?: GetEventsOptions,
-    ): Promise<GetEventsFromPrimaryCalendarResult> {
+    async listEventsFromPrimaryCalendar(
+        options?: ListEventsOptions,
+    ): Promise<ListEventsFromPrimaryCalendarResult> {
         console.log('┌─ [CALENDAR_EVENTS] Getting events from primary calendar...', {
-            timeMin,
-            timeMax,
+            timeMin: options?.timeMin,
+            timeMax: options?.timeMax,
         });
 
         try {
             const primaryCalendarId = await this.getPrimaryCalendarId();
             console.log('├─ [CALENDAR_EVENTS] Primary calendar:', primaryCalendarId);
 
-            const result = await this.getEvents(primaryCalendarId, timeMin, timeMax, options);
+            const result = await this.listEvents(primaryCalendarId, options);
 
             console.log('└─ [CALENDAR_EVENTS] Retrieved events:', result.events.length);
 
@@ -62,14 +60,9 @@ export class CalendarEventsService extends BaseCalendarService {
     }
 
     /**
-     * Get events from a specific calendar
+     * List events from a specific calendar
      */
-    async getEvents(
-        calendarId: string,
-        timeMin: string,
-        timeMax: string,
-        options?: GetEventsOptions,
-    ): Promise<GetEventsResult> {
+    async listEvents(calendarId: string, options?: ListEventsOptions): Promise<GetEventsResult> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -80,8 +73,8 @@ export class CalendarEventsService extends BaseCalendarService {
 
             const response = await calendar.events.list({
                 calendarId,
-                timeMin,
-                timeMax,
+                timeMin: options?.timeMin,
+                timeMax: options?.timeMax,
                 maxResults: options?.maxResults || 250,
                 pageToken: options?.pageToken,
                 q: options?.q,
@@ -90,6 +83,9 @@ export class CalendarEventsService extends BaseCalendarService {
                 orderBy: options?.orderBy || 'startTime',
                 timeZone: options?.timeZone,
                 alwaysIncludeEmail: options?.alwaysIncludeEmail ?? false,
+                maxAttendees: options?.maxAttendees,
+                syncToken: options?.syncToken,
+                updatedMin: options?.updatedMin,
                 iCalUID: options?.iCalUID,
             });
 
@@ -112,11 +108,7 @@ export class CalendarEventsService extends BaseCalendarService {
     /**
      * Get a specific event
      */
-    async getEvent(
-        calendarId: string,
-        eventId: string,
-        options?: GetEventOptions,
-    ): Promise<CalendarEvent> {
+    async getEvent(calendarId: string, options: GetEventOptions): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -127,10 +119,10 @@ export class CalendarEventsService extends BaseCalendarService {
 
             const response = await calendar.events.get({
                 calendarId,
-                eventId,
-                timeZone: options?.timeZone,
-                alwaysIncludeEmail: options?.alwaysIncludeEmail,
-                maxAttendees: options?.maxAttendees,
+                eventId: options.eventId,
+                timeZone: options.timeZone,
+                alwaysIncludeEmail: options.alwaysIncludeEmail,
+                maxAttendees: options.maxAttendees,
             });
 
             return this.transformGoogleEvent(response.data, options?.timeZone);
@@ -144,24 +136,20 @@ export class CalendarEventsService extends BaseCalendarService {
     /**
      * Get a specific event from the primary calendar
      */
-    async getEventFromPrimaryCalendar(
-        eventId: string,
-        options?: GetEventOptions,
-    ): Promise<GetEventFromPrimaryCalendarResult> {
-        console.log('┌─ [CALENDAR_EVENTS] Getting event from primary calendar...', { eventId });
+    async getEventFromPrimaryCalendar(options: GetEventOptions): Promise<CalendarEvent> {
+        console.log('┌─ [CALENDAR_EVENTS] Getting event from primary calendar...', {
+            eventId: options.eventId,
+        });
 
         try {
             const primaryCalendarId = await this.getPrimaryCalendarId();
             console.log('├─ [CALENDAR_EVENTS] Primary calendar:', primaryCalendarId);
 
-            const event = await this.getEvent(primaryCalendarId, eventId, options);
+            const event = await this.getEvent(primaryCalendarId, options);
 
             console.log('└─ [CALENDAR_EVENTS] Event retrieved:', event.id);
 
-            return {
-                ...event,
-                calendarId: primaryCalendarId,
-            };
+            return event;
         } catch (error) {
             console.error('└─ [CALENDAR_EVENTS] Error:', error);
             throw new Error(
@@ -611,7 +599,10 @@ export class CalendarEventsService extends BaseCalendarService {
         });
 
         const results = {
-            successful: [] as Array<{ operation: BatchOperation; result?: CalendarEvent | { deleted: boolean } }>,
+            successful: [] as Array<{
+                operation: BatchOperation;
+                result?: CalendarEvent | { deleted: boolean };
+            }>,
             failed: [] as Array<{ operation: BatchOperation; error: string }>,
         };
 

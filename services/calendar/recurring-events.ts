@@ -43,9 +43,9 @@ export type { RecurrenceRule } from '@/lib/recurrence';
 
 export class CalendarRecurringEventsService extends BaseCalendarService {
     /**
-     * Get recurring event instances from a specific calendar
+     * List recurring event instances from a specific calendar
      */
-    async getRecurringEventInstances(
+    async listRecurringEventInstances(
         calendarId: string,
         recurringEventId: string,
         timeMin: string,
@@ -850,9 +850,9 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
     }
 
     /**
-     * Get recurring event instances from the primary calendar
+     * List recurring event instances from the primary calendar
      */
-    async getRecurringEventInstancesInPrimaryCalendar(
+    async listRecurringEventInstancesInPrimaryCalendar(
         eventId: string,
         timeMin: string,
         timeMax: string,
@@ -871,7 +871,7 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
             const primaryCalendarId = await this.getPrimaryCalendarId();
             console.log('├─ [CALENDAR_RECURRING_EVENTS] Primary calendar:', primaryCalendarId);
 
-            const result = await this.getRecurringEventInstances(
+            const result = await this.listRecurringEventInstances(
                 primaryCalendarId,
                 eventId,
                 timeMin,

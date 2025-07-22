@@ -595,7 +595,7 @@ export async function handleListRecurringEventInstances(c: Context) {
 
         const calendarService = createCalendarService(user.id);
 
-        const result = await calendarService.getRecurringEventInstances(
+        const result = await calendarService.listRecurringEventInstances(
             calendarId,
             eventId,
             timeMin,
@@ -768,7 +768,7 @@ export async function handleListRecurringEventInstancesInPrimaryCalendar(c: Cont
 
         const calendarService = createCalendarService(user.id);
 
-        const result = await calendarService.getRecurringEventInstancesInPrimaryCalendar(
+        const result = await calendarService.listRecurringEventInstancesInPrimaryCalendar(
             eventId,
             timeMin,
             timeMax,

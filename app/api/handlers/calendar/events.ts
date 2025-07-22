@@ -24,6 +24,9 @@ export async function handleListEventsFromPrimaryCalendar(c: Context) {
             orderBy,
             timeZone,
             alwaysIncludeEmail,
+            maxAttendees,
+            syncToken,
+            updatedMin,
             iCalUID,
         } = query;
 
@@ -33,7 +36,9 @@ export async function handleListEventsFromPrimaryCalendar(c: Context) {
 
         const calendarService = createCalendarService(user.id);
 
-        const result = await calendarService.getEventsFromPrimaryCalendar(timeMin, timeMax, {
+        const result = await calendarService.listEventsFromPrimaryCalendar({
+            timeMin,
+            timeMax,
             maxResults: maxResults ? parseInt(maxResults, 10) : undefined,
             pageToken,
             q,
@@ -42,6 +47,9 @@ export async function handleListEventsFromPrimaryCalendar(c: Context) {
             orderBy: orderBy as 'startTime' | 'updated' | undefined,
             timeZone: timeZone || undefined,
             alwaysIncludeEmail: alwaysIncludeEmail ? alwaysIncludeEmail === 'true' : undefined,
+            maxAttendees: maxAttendees ? parseInt(maxAttendees, 10) : undefined,
+            syncToken: syncToken || undefined,
+            updatedMin: updatedMin || undefined,
             iCalUID: iCalUID || undefined,
         });
 
@@ -290,6 +298,9 @@ export async function handleListEvents(c: Context) {
         const orderBy = c.req.query('orderBy');
         const timeZone = c.req.query('timeZone');
         const alwaysIncludeEmail = c.req.query('alwaysIncludeEmail');
+        const maxAttendees = c.req.query('maxAttendees');
+        const syncToken = c.req.query('syncToken');
+        const updatedMin = c.req.query('updatedMin');
         const iCalUID = c.req.query('iCalUID');
 
         if (!calendarId) {
@@ -302,7 +313,9 @@ export async function handleListEvents(c: Context) {
 
         const calendarService = createCalendarService(user.id);
 
-        const result = await calendarService.getEvents(calendarId, timeMin, timeMax, {
+        const result = await calendarService.listEvents(calendarId, {
+            timeMin,
+            timeMax,
             maxResults: maxResults ? parseInt(maxResults) : undefined,
             pageToken: pageToken || undefined,
             q: q || undefined,
@@ -311,6 +324,9 @@ export async function handleListEvents(c: Context) {
             orderBy: orderBy as 'startTime' | 'updated' | undefined,
             timeZone: timeZone || undefined,
             alwaysIncludeEmail: alwaysIncludeEmail ? alwaysIncludeEmail === 'true' : undefined,
+            maxAttendees: maxAttendees ? parseInt(maxAttendees) : undefined,
+            syncToken: syncToken || undefined,
+            updatedMin: updatedMin || undefined,
             iCalUID: iCalUID || undefined,
         });
 
@@ -443,7 +459,8 @@ export async function handleGetEventFromPrimaryCalendar(c: Context) {
 
         const calendarService = createCalendarService(user.id);
 
-        const result = await calendarService.getEventFromPrimaryCalendar(eventId, {
+        const result = await calendarService.getEventFromPrimaryCalendar({
+            eventId,
             timeZone: timeZone || undefined,
             alwaysIncludeEmail: alwaysIncludeEmail ? alwaysIncludeEmail === 'true' : undefined,
             maxAttendees: maxAttendees ? parseInt(maxAttendees, 10) : undefined,
@@ -480,7 +497,8 @@ export async function handleGetEvent(c: Context) {
 
         const calendarService = createCalendarService(user.id);
 
-        const result = await calendarService.getEvent(calendarId, eventId, {
+        const result = await calendarService.getEvent(calendarId, {
+            eventId,
             timeZone: timeZone || undefined,
             alwaysIncludeEmail: alwaysIncludeEmail ? alwaysIncludeEmail === 'true' : undefined,
             maxAttendees: maxAttendees ? parseInt(maxAttendees, 10) : undefined,
