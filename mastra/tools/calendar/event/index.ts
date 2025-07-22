@@ -12,7 +12,7 @@ import { rescheduleEventTool } from './reschedule-event';
 // ==================================================
 // Non-Recurring Event Tools
 // ==================================================
-export const nonRecurringEventTools = {
+export const eventTools = {
     performBatchEventTool,
     createEventTool,
     deleteEventTool,

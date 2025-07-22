@@ -34,29 +34,6 @@ import {
 } from './shared';
 
 // ==================================================
-// Recurrence Rule Schema
-// ==================================================
-
-export const recurrenceRuleSchema = z.object({
-    freq: frequencySchema,
-    dtstart: z.date().optional(),
-    interval: z.number().positive().optional(),
-    wkst: weekdaySchema.optional(),
-    count: z.number().positive().optional(),
-    until: z.date().optional(),
-    bysetpos: z.array(z.number()).optional(),
-    bymonth: z.array(z.number().min(1).max(12)).optional(),
-    bymonthday: z.array(z.number().min(1).max(31)).optional(),
-    byyearday: z.array(z.number().min(1).max(366)).optional(),
-    byweekno: z.array(z.number().min(1).max(53)).optional(),
-    byweekday: z.array(weekdaySchema).optional(),
-    byhour: z.array(z.number().min(0).max(23)).optional(),
-    byminute: z.array(z.number().min(0).max(59)).optional(),
-    bysecond: z.array(z.number().min(0).max(59)).optional(),
-    byeaster: z.number().nullable().optional(),
-});
-
-// ==================================================
 // Conference Data Schema
 // ==================================================
 
@@ -126,7 +103,7 @@ export const calendarEventSchema = z.object({
     iCalUID: z.string().optional(),
     sequence: z.number().nonnegative().optional(),
     colorId: z.string().optional(),
-    recurrence: z.union([z.array(z.string()), z.array(recurrenceRuleSchema)]).optional(),
+    recurrence: z.array(z.string()).optional(),
     extendedProperties: z
         .object({
             private: z.record(z.string()).optional(),
@@ -166,7 +143,6 @@ export const calendarInfoSchema = z.object({
 // Type Exports
 // ==================================================
 
-export type RecurrenceRule = z.infer<typeof recurrenceRuleSchema>;
 export type CalendarEvent = z.infer<typeof calendarEventSchema>;
 export type CalendarInfo = z.infer<typeof calendarInfoSchema>;
 export type ConferenceData = z.infer<typeof conferenceDataSchema>;

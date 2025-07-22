@@ -1,10 +1,7 @@
 import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { GoogleCalendarService } from '@/services/calendar';
 import { createTool } from '@mastra/core/tools';
-import {
-    performBatchEventInputSchema,
-    performBatchEventOutputSchema,
-} from '@/types/tools/non-recurring-event';
+import { performBatchEventInputSchema, performBatchEventOutputSchema } from '@/types/tools/event';
 
 export const performBatchEventTool = createTool({
     id: 'perform-batch-event',

@@ -66,10 +66,6 @@ export const searchEventsOutputSchema = z.object({
                     .string()
                     .optional()
                     .describe('Event status: confirmed, tentative, cancelled'),
-                recurringEventId: z
-                    .string()
-                    .optional()
-                    .describe('ID of the recurring event series'),
                 originalStartTime: z
                     .string()
                     .optional()

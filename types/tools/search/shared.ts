@@ -46,7 +46,6 @@ export const calendarEventSchema = z.object({
         .optional()
         .describe('Reminder settings'),
     // Additional optional fields
-    recurringEventId: z.string().optional().describe('ID of the recurring event series'),
     originalStartTime: calendarEventDateTimeSchema
         .optional()
         .describe('Original start time for recurring events'),

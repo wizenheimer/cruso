@@ -1,6 +1,5 @@
 import { availabilityTools } from './availability';
-import { nonRecurringEventTools } from './non-recurring-event';
-import { recurringEventTools } from './recurring-event';
+import { eventTools } from './event';
 import { searchTools } from './search';
 
 // ==================================================
@@ -8,7 +7,6 @@ import { searchTools } from './search';
 // ==================================================
 export const calendarTools = {
     ...availabilityTools, // Availability Tools
-    ...nonRecurringEventTools, // Non-Recurring Event Tools
-    ...recurringEventTools, // Recurring Event Tools
+    ...eventTools, // Event Tools
     ...searchTools, // Search Tools
 };

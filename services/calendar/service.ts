@@ -15,15 +15,6 @@ import type {
     RescheduleEventOptions,
     QuickCreateEventOptions,
     BatchOperationsOptions,
-    GetRecurringEventInstancesOptions,
-    GetRecurringEventOptions,
-    CreateRecurringEventOptions,
-    UpdateRecurringEventOptions,
-    DeleteRecurringEventOptions,
-    RescheduleRecurringEventOptions,
-    UpdateRecurringEventInstanceOptions,
-    UpdateFutureRecurringEventsOptions,
-    DeleteRecurringEventInstanceOptions,
     ListEventsFromPrimaryCalendarResult,
 } from '@/types/services';
 import { CalendarConnectionsService } from './connections';
@@ -39,16 +30,8 @@ import {
     FindBestTimeForMeetingOptions,
     BatchOperation,
 } from '@/types/services';
-import { CalendarRecurringEventsService } from './recurring-events';
 import { CalendarSearchService } from './search';
-import {
-    SearchOptions,
-    SearchResult,
-    QuickSearchPresets,
-    RecurringEvent,
-    BatchCreateRecurringEventsResult,
-} from '@/types/services';
-import { RecurrenceRule } from '@/lib/recurrence';
+import { SearchOptions, SearchResult, QuickSearchPresets } from '@/types/services';
 
 // ==================================================
 // Main Calendar Service Class
@@ -58,7 +41,6 @@ export class GoogleCalendarService extends BaseCalendarService {
     private connectionsService: CalendarConnectionsService;
     private eventsService: CalendarEventsService;
     private availabilityService: CalendarAvailabilityService;
-    private recurringEventsService: CalendarRecurringEventsService;
     private searchService: CalendarSearchService;
 
     constructor(userId: string) {
@@ -68,7 +50,6 @@ export class GoogleCalendarService extends BaseCalendarService {
         this.connectionsService = new CalendarConnectionsService(userId);
         this.eventsService = new CalendarEventsService(userId);
         this.availabilityService = new CalendarAvailabilityService(userId);
-        this.recurringEventsService = new CalendarRecurringEventsService(userId);
         this.searchService = new CalendarSearchService(userId);
     }
 
@@ -283,252 +264,6 @@ export class GoogleCalendarService extends BaseCalendarService {
     }
 
     // ==================================================
-    // Recurring Events Methods
-    // ==================================================
-
-    async listRecurringEventInstances(
-        calendarId: string,
-        recurringEventId: string,
-        timeMin: string,
-        timeMax: string,
-        options?: GetRecurringEventInstancesOptions,
-    ): Promise<{ instances: CalendarEvent[]; nextPageToken?: string }> {
-        return this.recurringEventsService.listRecurringEventInstances(
-            calendarId,
-            recurringEventId,
-            timeMin,
-            timeMax,
-            options,
-        );
-    }
-
-    async createRecurringEventInPrimaryCalendar(
-        event: CalendarEvent & {
-            recurrence?: RecurrenceRule[];
-        },
-        options?: CreateRecurringEventOptions,
-    ): Promise<CalendarEvent & { calendarId: string }> {
-        return this.recurringEventsService.createRecurringEventInPrimaryCalendar(event, options);
-    }
-
-    async createRecurringEvent(
-        calendarId: string,
-        event: CalendarEvent & {
-            recurrence?: RecurrenceRule[];
-        },
-        options?: CreateRecurringEventOptions,
-    ): Promise<CalendarEvent> {
-        return this.recurringEventsService.createRecurringEvent(calendarId, event, options);
-    }
-
-    async batchCreateRecurringEventsInPrimaryCalendar(
-        events: Array<CalendarEvent & { recurrence?: RecurrenceRule[] }>,
-        options?: CreateRecurringEventOptions,
-    ): Promise<BatchCreateRecurringEventsResult> {
-        return this.recurringEventsService.batchCreateRecurringEventsInPrimaryCalendar(
-            events,
-            options,
-        );
-    }
-
-    async updateRecurringEventInPrimaryCalendar(
-        eventId: string,
-        event: Partial<CalendarEvent> & {
-            recurrence?: RecurrenceRule[];
-        },
-        options?: UpdateRecurringEventOptions,
-    ): Promise<CalendarEvent & { calendarId: string }> {
-        return this.recurringEventsService.updateRecurringEventInPrimaryCalendar(
-            eventId,
-            event,
-            options,
-        );
-    }
-
-    async updateRecurringEvent(
-        calendarId: string,
-        eventId: string,
-        event: Partial<CalendarEvent> & {
-            recurrence?: RecurrenceRule[];
-        },
-        options?: UpdateRecurringEventOptions,
-    ): Promise<CalendarEvent> {
-        return this.recurringEventsService.updateRecurringEvent(
-            calendarId,
-            eventId,
-            event,
-            options,
-        );
-    }
-
-    async updateRecurringEventInstance(
-        calendarId: string,
-        eventId: string,
-        instanceStartTime: string,
-        updates: Partial<CalendarEvent>,
-        options?: UpdateRecurringEventInstanceOptions,
-    ): Promise<CalendarEvent> {
-        return this.recurringEventsService.updateRecurringEventInstance(
-            calendarId,
-            eventId,
-            instanceStartTime,
-            updates,
-            options,
-        );
-    }
-
-    async updateFutureRecurringEvents(
-        calendarId: string,
-        eventId: string,
-        fromDateTime: string,
-        updates: Partial<CalendarEvent> & { recurrence?: RecurrenceRule[] },
-        options?: UpdateFutureRecurringEventsOptions,
-    ): Promise<CalendarEvent> {
-        return this.recurringEventsService.updateFutureRecurringEvents(
-            calendarId,
-            eventId,
-            fromDateTime,
-            updates,
-            options,
-        );
-    }
-
-    async deleteRecurringEventFromPrimaryCalendar(
-        eventId: string,
-        options?: DeleteRecurringEventOptions,
-    ): Promise<{ calendarId: string }> {
-        return this.recurringEventsService.deleteRecurringEventFromPrimaryCalendar(
-            eventId,
-            options,
-        );
-    }
-
-    async deleteRecurringEvent(
-        calendarId: string,
-        eventId: string,
-        options?: DeleteRecurringEventOptions,
-    ): Promise<void> {
-        return this.recurringEventsService.deleteRecurringEvent(calendarId, eventId, options);
-    }
-
-    async deleteRecurringEventInstance(
-        calendarId: string,
-        eventId: string,
-        instanceStartTime: string,
-        options?: DeleteRecurringEventInstanceOptions,
-    ): Promise<void> {
-        return this.recurringEventsService.deleteRecurringEventInstance(
-            calendarId,
-            eventId,
-            instanceStartTime,
-            options,
-        );
-    }
-
-    async updateRecurringEventInstanceInPrimaryCalendar(
-        eventId: string,
-        instanceStartTime: string,
-        updates: Partial<CalendarEvent>,
-        options?: UpdateRecurringEventInstanceOptions,
-    ): Promise<CalendarEvent & { calendarId: string }> {
-        return this.recurringEventsService.updateRecurringEventInstanceInPrimaryCalendar(
-            eventId,
-            instanceStartTime,
-            updates,
-            options,
-        );
-    }
-
-    async updateFutureRecurringEventsInPrimaryCalendar(
-        eventId: string,
-        fromDateTime: string,
-        updates: Partial<CalendarEvent> & { recurrence?: RecurrenceRule[] },
-        options?: UpdateFutureRecurringEventsOptions,
-    ): Promise<CalendarEvent & { calendarId: string }> {
-        return this.recurringEventsService.updateFutureRecurringEventsInPrimaryCalendar(
-            eventId,
-            fromDateTime,
-            updates,
-            options,
-        );
-    }
-
-    async deleteRecurringEventInstanceInPrimaryCalendar(
-        eventId: string,
-        instanceStartTime: string,
-        options?: DeleteRecurringEventInstanceOptions,
-    ): Promise<{ calendarId: string }> {
-        return this.recurringEventsService.deleteRecurringEventInstanceInPrimaryCalendar(
-            eventId,
-            instanceStartTime,
-            options,
-        );
-    }
-
-    async listRecurringEventInstancesInPrimaryCalendar(
-        eventId: string,
-        timeMin: string,
-        timeMax: string,
-        options?: GetRecurringEventInstancesOptions,
-    ): Promise<{ instances: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
-        return this.recurringEventsService.listRecurringEventInstancesInPrimaryCalendar(
-            eventId,
-            timeMin,
-            timeMax,
-            options,
-        );
-    }
-
-    async getRecurringEventFromPrimaryCalendar(
-        eventId: string,
-        options?: GetRecurringEventOptions,
-    ): Promise<CalendarEvent & { calendarId: string }> {
-        return this.recurringEventsService.getRecurringEventFromPrimaryCalendar(eventId, options);
-    }
-
-    async getRecurringEvent(
-        calendarId: string,
-        eventId: string,
-        options?: GetRecurringEventOptions,
-    ): Promise<CalendarEvent> {
-        return this.recurringEventsService.getRecurringEvent(calendarId, eventId, options);
-    }
-
-    async rescheduleRecurringEventInPrimaryCalendar(
-        eventId: string,
-        startDateTime: string,
-        endDateTime: string,
-        timeZone: string,
-        options?: RescheduleRecurringEventOptions,
-    ): Promise<CalendarEvent & { calendarId: string }> {
-        return this.recurringEventsService.rescheduleRecurringEventInPrimaryCalendar(
-            eventId,
-            startDateTime,
-            endDateTime,
-            timeZone,
-            options,
-        );
-    }
-
-    async rescheduleRecurringEvent(
-        calendarId: string,
-        eventId: string,
-        startDateTime: string,
-        endDateTime: string,
-        timeZone: string,
-        options?: RescheduleRecurringEventOptions,
-    ): Promise<CalendarEvent> {
-        return this.recurringEventsService.rescheduleRecurringEvent(
-            calendarId,
-            eventId,
-            startDateTime,
-            endDateTime,
-            timeZone,
-            options,
-        );
-    }
-
-    // ==================================================
     // Search Methods
     // ==================================================
 
@@ -580,7 +315,6 @@ export type {
     BlockAvailabilityResult,
     SuggestedTimeSlot,
     WorkingHours,
-    RecurrenceRule,
     SearchOptions,
     SearchResult,
     QuickSearchPresets,

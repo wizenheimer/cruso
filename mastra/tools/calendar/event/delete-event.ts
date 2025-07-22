@@ -1,7 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { GoogleCalendarService } from '@/services/calendar';
-import { deleteEventInputSchema, deleteEventOutputSchema } from '@/types/tools/non-recurring-event';
+import { deleteEventInputSchema, deleteEventOutputSchema } from '@/types/tools/event';
 
 export const deleteEventTool = createTool({
     id: 'delete-event',

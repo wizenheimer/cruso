@@ -1,10 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { GoogleCalendarService } from '@/services/calendar';
-import {
-    rescheduleEventInputSchema,
-    rescheduleEventOutputSchema,
-} from '@/types/tools/non-recurring-event';
+import { rescheduleEventInputSchema, rescheduleEventOutputSchema } from '@/types/tools/event';
 
 /**
  * Reschedule an event in google calendar for the current user

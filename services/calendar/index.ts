@@ -32,12 +32,6 @@ export type {
 } from './availability';
 
 // ==================================================
-// Calendar Recurring Events Service
-// ==================================================
-export { CalendarRecurringEventsService } from './recurring-events';
-export type { RecurrenceRule } from '@/lib/recurrence';
-
-// ==================================================
 // Calendar Search Service
 // ==================================================
 export { CalendarSearchService } from './search';

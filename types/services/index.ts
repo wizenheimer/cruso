@@ -4,7 +4,6 @@ export * from './base';
 export * from './availability';
 export * from './connections';
 export * from './events';
-export * from './recurring-events';
 export * from './search';
 
 // Re-export commonly used availability types for convenience
@@ -49,21 +48,6 @@ export type {
     DeleteResponse,
 } from './events';
 
-// Re-export commonly used recurring events types for convenience
-export type {
-    RecurringEventInstance,
-    RecurringEventPattern,
-    RecurringEventException,
-    RecurringEventExpansionResult,
-    RecurringEventValidationResult,
-    RecurringEventSyncResult,
-    RecurringEventQueryResult,
-    GetRecurringEventInstancesResult,
-    CreateRecurringEventOptions,
-    UpdateRecurringEventOptions,
-    DeleteRecurringEventOptions,
-} from './recurring-events';
-
 // Re-export commonly used search types for convenience
 export type {
     SearchOptions,
@@ -84,7 +68,7 @@ export type {
 } from './search';
 
 // Re-export commonly used base types for convenience
-export type { RecurrenceRule, CalendarEvent, CalendarInfo } from './base';
+export type { CalendarEvent, CalendarInfo } from './base';
 
 // Re-export availability schemas for runtime validation
 export {
@@ -124,21 +108,6 @@ export {
     deleteResponseSchema,
 } from './events-schemas';
 
-// Re-export recurring events schemas for runtime validation
-export {
-    recurringEventInstanceSchema,
-    recurringEventPatternSchema,
-    recurringEventExceptionSchema,
-    recurringEventExpansionResultSchema,
-    recurringEventValidationResultSchema,
-    recurringEventSyncResultSchema,
-    recurringEventQueryResultSchema,
-    getRecurringEventInstancesResultSchema,
-    createRecurringEventOptionsSchema,
-    updateRecurringEventOptionsSchema,
-    deleteRecurringEventOptionsSchema,
-} from './recurring-events-schemas';
-
 // Re-export search schemas for runtime validation
 export {
     searchOptionsSchema,
@@ -159,4 +128,4 @@ export {
 } from './search-schemas';
 
 // Re-export base schemas for runtime validation
-export { recurrenceRuleSchema, calendarEventSchema, calendarInfoSchema } from './base';
+export { calendarEventSchema, calendarInfoSchema } from './base';

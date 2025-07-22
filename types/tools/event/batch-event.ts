@@ -1,5 +1,4 @@
 import z from 'zod';
-import { calendarEventSchema } from './shared';
 import {
     batchOperationSchema,
     batchOperationsOptionsSchema,

@@ -45,19 +45,16 @@ export class CalendarSearchService extends BaseCalendarService {
                 options.timeMax || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(); // 90 days future
 
             // Fetch events from Google Calendar with basic filters
-            const { events, nextPageToken } = await this.getEvents(
-                primaryCalendarId,
+            const { events, nextPageToken } = await this.listEvents(primaryCalendarId, {
                 timeMin,
                 timeMax,
-                {
-                    q: options.query, // Google's text search
-                    maxResults: options.maxResults ? Math.min(options.maxResults * 2, 250) : 100, // Fetch extra for post-filtering
-                    orderBy: options.orderBy || 'startTime',
-                    singleEvents: options.expandRecurring !== false,
-                    showDeleted: options.includeDeleted || false,
-                    timeZone: options.timezone,
-                },
-            );
+                q: options.query, // Google's text search
+                maxResults: options.maxResults ? Math.min(options.maxResults * 2, 250) : 100, // Fetch extra for post-filtering
+                orderBy: options.orderBy || 'startTime',
+                singleEvents: options.expandRecurring !== false,
+                showDeleted: options.includeDeleted || false,
+                timeZone: options.timezone,
+            });
 
             console.log('├─ [CALENDAR_SEARCH] Retrieved events:', events.length);
 

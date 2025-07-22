@@ -81,33 +81,6 @@ export const calendarEventExtendedPropertiesSchema = z.object({
 });
 
 /**
- * Schema for calendar event recurrence rule
- */
-export const recurrenceRuleSchema = z.object({
-    freq: z
-        .enum(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', 'HOURLY', 'MINUTELY', 'SECONDLY'])
-        .describe('Frequency of the recurring event'),
-    dtstart: z.date().optional().describe('Start date of the recurrence'),
-    interval: z.number().optional().describe('Interval between recurrences'),
-    wkst: z.enum(['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']).optional().describe('Week start day'),
-    count: z.number().optional().describe('Number of occurrences'),
-    until: z.date().optional().describe('End date of the recurrence'),
-    bysetpos: z.array(z.number()).optional().describe('Position within the set'),
-    bymonth: z.array(z.number()).optional().describe('Months when the event occurs'),
-    bymonthday: z.array(z.number()).optional().describe('Days of the month when the event occurs'),
-    byyearday: z.array(z.number()).optional().describe('Days of the year when the event occurs'),
-    byweekno: z.array(z.number()).optional().describe('Week numbers when the event occurs'),
-    byweekday: z
-        .array(z.enum(['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']))
-        .optional()
-        .describe('Days of the week when the event occurs'),
-    byhour: z.array(z.number()).optional().describe('Hours when the event occurs'),
-    byminute: z.array(z.number()).optional().describe('Minutes when the event occurs'),
-    bysecond: z.array(z.number()).optional().describe('Seconds when the event occurs'),
-    byeaster: z.number().nullable().optional().describe('Easter offset for the recurrence'),
-});
-
-/**
  * Schema for a calendar event
  */
 export const calendarEventSchema = z.object({
@@ -120,7 +93,6 @@ export const calendarEventSchema = z.object({
     location: z.string().optional().describe('Location of the event'),
     conferenceData: conferenceDataSchema.optional().describe('Conference data for video meetings'),
     reminders: calendarEventReminderSchema.optional().describe('Reminder settings for the event'),
-    recurringEventId: z.string().optional().describe('ID of the recurring event series'),
     originalStartTime: calendarEventDateTimeSchema
         .optional()
         .describe('Original start time for recurring events'),
@@ -138,10 +110,7 @@ export const calendarEventSchema = z.object({
     iCalUID: z.string().optional().describe('iCal UID for the event'),
     sequence: z.number().optional().describe('Sequence number for the event'),
     colorId: z.string().optional().describe('Color ID for the event'),
-    recurrence: z
-        .union([z.array(z.string()), z.array(recurrenceRuleSchema)])
-        .optional()
-        .describe('Recurrence rules for the event'),
+    recurrence: z.array(z.string()).optional().describe('Recurrence rules for the event'),
     extendedProperties: calendarEventExtendedPropertiesSchema
         .optional()
         .describe('Extended properties for the event'),

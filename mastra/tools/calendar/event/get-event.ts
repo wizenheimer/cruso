@@ -1,7 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { GoogleCalendarService } from '@/services/calendar';
-import { getEventInputSchema, getEventOutputSchema } from '@/types/tools/non-recurring-event';
+import { getEventInputSchema, getEventOutputSchema } from '@/types/tools/event';
 
 /**
  * Get a specific event from google calendar for the current user

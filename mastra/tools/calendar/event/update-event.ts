@@ -1,7 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { CalendarEvent, GoogleCalendarService } from '@/services/calendar';
-import { updateEventInputSchema, updateEventOutputSchema } from '@/types/tools/non-recurring-event';
+import { updateEventInputSchema, updateEventOutputSchema } from '@/types/tools/event';
 
 export const updateEventTool = createTool({
     id: 'update-event',
