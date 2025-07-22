@@ -1,4 +1,5 @@
 import z from 'zod';
+import { conferenceDataSchema } from '@/types/services/base';
 
 /**
  * Schema for calendar event attendee information
@@ -117,7 +118,7 @@ export const calendarEventSchema = z.object({
     end: calendarEventDateTimeSchema.describe('End date and time of the event'),
     attendees: z.array(calendarEventAttendeeSchema).optional().describe('List of event attendees'),
     location: z.string().optional().describe('Location of the event'),
-    conferenceData: z.any().optional().describe('Conference data for video meetings'),
+    conferenceData: conferenceDataSchema.optional().describe('Conference data for video meetings'),
     reminders: calendarEventReminderSchema.optional().describe('Reminder settings for the event'),
     recurringEventId: z.string().optional().describe('ID of the recurring event series'),
     originalStartTime: calendarEventDateTimeSchema

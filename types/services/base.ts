@@ -57,6 +57,49 @@ export const recurrenceRuleSchema = z.object({
 });
 
 // ==================================================
+// Conference Data Schema
+// ==================================================
+
+export const conferenceDataCreateRequestSchema = z.object({
+    requestId: z.string().nullable().optional(),
+    conferenceSolutionKey: z
+        .object({
+            type: z.string().nullable().optional(),
+        })
+        .optional(),
+    status: z
+        .object({
+            statusCode: z.string().nullable().optional(),
+        })
+        .optional(),
+});
+
+export const conferenceDataEntryPointSchema = z.object({
+    entryPointType: z.string().nullable().optional(),
+    uri: z.string().nullable().optional(),
+    label: z.string().nullable().optional(),
+    pin: z.string().nullable().optional(),
+    accessCode: z.string().nullable().optional(),
+    meetingCode: z.string().nullable().optional(),
+    passcode: z.string().nullable().optional(),
+    password: z.string().nullable().optional(),
+});
+
+export const conferenceDataConferenceSolutionSchema = z.object({
+    name: z.string().nullable().optional(),
+    iconUri: z.string().nullable().optional(),
+});
+
+export const conferenceDataSchema = z.object({
+    createRequest: conferenceDataCreateRequestSchema.optional(),
+    entryPoints: z.array(conferenceDataEntryPointSchema).optional(),
+    conferenceSolution: conferenceDataConferenceSolutionSchema.optional(),
+    conferenceId: z.string().nullable().optional(),
+    signature: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
+});
+
+// ==================================================
 // Calendar Event Schema
 // ==================================================
 
@@ -68,7 +111,7 @@ export const calendarEventSchema = z.object({
     end: eventDateTimeSchema,
     attendees: z.array(eventAttendeeSchema).optional(),
     location: z.string().optional(),
-    conferenceData: z.any().optional(), // Google Calendar API conference data structure
+    conferenceData: conferenceDataSchema.optional(),
     reminders: eventReminderSchema.optional(),
     recurringEventId: z.string().optional(),
     originalStartTime: eventDateTimeSchema.optional(),
@@ -126,6 +169,12 @@ export const calendarInfoSchema = z.object({
 export type RecurrenceRule = z.infer<typeof recurrenceRuleSchema>;
 export type CalendarEvent = z.infer<typeof calendarEventSchema>;
 export type CalendarInfo = z.infer<typeof calendarInfoSchema>;
+export type ConferenceData = z.infer<typeof conferenceDataSchema>;
+export type ConferenceDataCreateRequest = z.infer<typeof conferenceDataCreateRequestSchema>;
+export type ConferenceDataEntryPoint = z.infer<typeof conferenceDataEntryPointSchema>;
+export type ConferenceDataConferenceSolution = z.infer<
+    typeof conferenceDataConferenceSolutionSchema
+>;
 
 // Re-export shared types for convenience
 export type {

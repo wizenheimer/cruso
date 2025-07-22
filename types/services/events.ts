@@ -51,9 +51,6 @@ export type BatchOperation = z.infer<typeof schemas.batchOperationSchema>;
 export type BatchOperationsOptions = z.infer<typeof schemas.batchOperationsOptionsSchema>;
 export type BatchOperationResult = z.infer<typeof schemas.batchOperationResultSchema>;
 
-// Event Conference Types
-export type ConferenceData = z.infer<typeof schemas.conferenceDataSchema>;
-
 // Event Response Types
 export type EventResponse = z.infer<typeof schemas.eventResponseSchema>;
 

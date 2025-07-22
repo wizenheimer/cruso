@@ -1,4 +1,5 @@
 import z from 'zod';
+import { conferenceDataSchema } from '@/types/services/base';
 
 /**
  * The input schema for the list events tool
@@ -49,7 +50,7 @@ export const listEventsOutputSchema = z.object({
                     .array(z.string())
                     .optional()
                     .describe('List of attendee email addresses'),
-                conferenceData: z.any().optional().describe('Conference data'),
+                conferenceData: conferenceDataSchema.optional().describe('Conference data'),
             }),
         )
         .describe('List of events'),
