@@ -1,56 +1,11 @@
 import { BaseCalendarService, CalendarEvent, TimeRange } from './base';
-
-// ==================================================
-// Search Interfaces
-// ==================================================
-
-export interface SearchOptions {
-    // Text search
-    query?: string; // Search in summary, description, location, attendees
-
-    // Time filters
-    timeMin?: string; // RFC3339
-    timeMax?: string; // RFC3339
-
-    // Common filters
-    hasAttendees?: boolean; // true = meetings, false = focus time
-    attendeeEmail?: string; // Events with specific attendee
-    location?: string; // Partial match on location
-    isRecurring?: boolean; // Filter recurring events
-    isAllDay?: boolean; // Filter all-day events
-
-    // Advanced options
-    createdAfter?: string; // RFC3339 - for finding recently created events
-    updatedAfter?: string; // RFC3339 - for finding recently modified events
-    minDuration?: number; // Minutes
-    maxDuration?: number; // Minutes
-
-    // Response options
-    maxResults?: number; // Default: 50
-    orderBy?: 'startTime' | 'updated';
-    ascending?: boolean; // Default: true
-    includeDeleted?: boolean; // Default: false
-    expandRecurring?: boolean; // Default: true (show instances)
-    timezone?: string; // Response timezone
-}
-
-export interface SearchResult {
-    events: CalendarEvent[];
-    totalResults: number;
-    executionTime: number; // milliseconds
-    nextPageToken?: string;
-}
-
-export interface QuickSearchPresets {
-    todaysMeetings: () => Promise<SearchResult>;
-    upcomingWeek: () => Promise<SearchResult>;
-    recentlyCreated: (days?: number) => Promise<SearchResult>;
-    withPerson: (email: string, days?: number) => Promise<SearchResult>;
-    longMeetings: (minMinutes?: number) => Promise<SearchResult>;
-    recurringEvents: () => Promise<SearchResult>;
-    pastMeetings: (days?: number) => Promise<SearchResult>;
-    freeTextSearch: (query: string) => Promise<SearchResult>;
-}
+import {
+    SearchOptions,
+    SearchResult,
+    QuickSearchPresets,
+    GetEventsOptions,
+    GetEventsResult,
+} from '@/types/services';
 
 // ==================================================
 // Search Service Class
@@ -355,18 +310,8 @@ export class CalendarSearchService extends BaseCalendarService {
         calendarId: string,
         timeMin: string,
         timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            q?: string;
-            showDeleted?: boolean;
-            singleEvents?: boolean;
-            orderBy?: 'startTime' | 'updated';
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            iCalUID?: string;
-        },
-    ): Promise<{ events: CalendarEvent[]; nextPageToken?: string; nextSyncToken?: string }> {
+        options?: GetEventsOptions,
+    ): Promise<GetEventsResult> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {

@@ -5,56 +5,22 @@ import { eq, and } from 'drizzle-orm';
 import { preferenceService } from '../preferences';
 import { BaseCalendarService, CalendarEvent, TimeRange } from './base';
 import { addMinutes, differenceInMinutes, startOfDay, endOfDay, isWeekend } from 'date-fns';
-
-// ==================================================
-// Availability Interfaces
-// ==================================================
-
-export interface AvailabilityResult {
-    isAvailable: boolean;
-    timezone: string;
-    busySlots: Array<{ start: string; end: string }>;
-    freeSlots: Array<{ start: string; end: string }>;
-    events: Array<{
-        id: string;
-        summary: string;
-        start: string;
-        end: string;
-        calendarId: string;
-        calendarName: string;
-    }>;
-}
-
-export interface BlockAvailabilityResult {
-    state: 'success' | 'error';
-    rescheduledEventCount?: number;
-    rescheduledEventDetails?: CalendarEvent[];
-    blockEventDetails?: CalendarEvent;
-    message?: string;
-}
-
-export interface ClearAvailabilityResult {
-    state: 'success' | 'error';
-    rescheduledEventCount?: number;
-    rescheduledEventDetails?: CalendarEvent[];
-}
-
-export interface WorkingHours {
-    dayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday
-    startTime: string; // HH:MM format
-    endTime: string; // HH:MM format
-    timezone: string;
-}
-
-export interface SuggestedTimeSlot {
-    start: string; // RFC3339
-    end: string; // RFC3339
-    score: number; // 0-100, higher is better
-    reasoning: string[];
-    conflictingAttendees: string[];
-    availableAttendees: string[];
-    workingHoursCompliance: boolean;
-}
+import {
+    AvailabilityResult,
+    BlockAvailabilityResult,
+    ClearAvailabilityResult,
+    WorkingHours,
+    SuggestedTimeSlot,
+    CheckAvailabilityBlockOptions,
+    CreateAvailabilityBlockOptions,
+    FindBestTimeForMeetingOptions,
+    TimeSlot,
+    ScoredEvent,
+    GenerateTimeSlotsOptions,
+    WorkingHoursOptions,
+    ScoreTimeSlotOptions,
+    CalendarEventDetails,
+} from '@/types/services';
 
 // ==================================================
 // Availability Service Class
@@ -67,13 +33,7 @@ export class CalendarAvailabilityService extends BaseCalendarService {
     async checkAvailabilityBlock(
         timeMinRFC3339: string,
         timeMaxRFC3339: string,
-        options: {
-            includeCalendarIds?: string[];
-            excludeCalendarIds?: string[];
-            responseTimezone?: string;
-            timeDurationMinutes?: number;
-            includeEvents?: boolean;
-        } = {},
+        options: CheckAvailabilityBlockOptions = {},
     ): Promise<AvailabilityResult> {
         console.log('┌─ [CALENDAR_AVAILABILITY] Checking availability block...', {
             timeMin: timeMinRFC3339,
@@ -83,15 +43,8 @@ export class CalendarAvailabilityService extends BaseCalendarService {
 
         try {
             const connections = await this.getActiveConnections();
-            const busySlots: Array<{ start: string; end: string }> = [];
-            const events: Array<{
-                id: string;
-                summary: string;
-                start: string;
-                end: string;
-                calendarId: string;
-                calendarName: string;
-            }> = [];
+            const busySlots: TimeSlot[] = [];
+            const events: CalendarEventDetails[] = [];
 
             // Filter connections based on options
             const filteredConnections = connections.filter(({ connection }) => {
@@ -226,18 +179,7 @@ export class CalendarAvailabilityService extends BaseCalendarService {
     async createAvailabilityBlock(
         timeMinRFC3339: string,
         timeMaxRFC3339: string,
-        options: {
-            responseTimezone?: string;
-            timeDurationMinutes?: number;
-            eventSummary?: string;
-            eventDescription?: string;
-            eventAttendees?: string[];
-            eventLocation?: string;
-            eventConference?: boolean;
-            eventPrivate?: boolean;
-            eventColorId?: string;
-            createBlock?: boolean;
-        } = {},
+        options: CreateAvailabilityBlockOptions = {},
     ): Promise<BlockAvailabilityResult> {
         const duration = options.timeDurationMinutes || 60;
         const responseTimezone = options.responseTimezone || 'UTC';
@@ -433,20 +375,7 @@ export class CalendarAvailabilityService extends BaseCalendarService {
     async findBestTimeForMeeting(
         durationMinutes: number,
         attendeeEmails: string[],
-        options?: {
-            searchRangeStart?: string; // Default: now
-            searchRangeEnd?: string; // Default: 2 weeks from now
-            preferredTimeRanges?: TimeRange[];
-            workingHoursOnly?: boolean;
-            workingHours?: WorkingHours[]; // Custom working hours
-            minimumNoticeHours?: number; // Default: 24
-            maxSuggestions?: number; // Default: 5
-            timezone?: string; // Default: UTC
-            excludeWeekends?: boolean; // Default: true
-            preferMornings?: boolean;
-            preferAfternoons?: boolean;
-            bufferMinutes?: number; // Buffer time before/after meetings
-        },
+        options?: FindBestTimeForMeetingOptions,
     ): Promise<SuggestedTimeSlot[]> {
         console.log('┌─ [CALENDAR_AVAILABILITY] Finding best meeting time...', {
             durationMinutes,
@@ -586,7 +515,7 @@ export class CalendarAvailabilityService extends BaseCalendarService {
     }
 
     private findMinimalContiguousEvents(
-        scoredEvents: Array<{ event: CalendarEvent; score: number; duration: number }>,
+        scoredEvents: ScoredEvent[],
         requiredDurationMs: number,
     ): CalendarEvent[] {
         const eventsToReschedule: CalendarEvent[] = [];
@@ -606,9 +535,7 @@ export class CalendarAvailabilityService extends BaseCalendarService {
         return eventsToReschedule;
     }
 
-    private mergeBusySlots(
-        busySlots: Array<{ start: string; end: string }>,
-    ): Array<{ start: string; end: string }> {
+    private mergeBusySlots(busySlots: TimeSlot[]): TimeSlot[] {
         if (busySlots.length === 0) return [];
 
         // Sort by start time
@@ -616,7 +543,7 @@ export class CalendarAvailabilityService extends BaseCalendarService {
             (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
         );
 
-        const merged: Array<{ start: string; end: string }> = [sorted[0]];
+        const merged: TimeSlot[] = [sorted[0]];
 
         for (let i = 1; i < sorted.length; i++) {
             const current = sorted[i];
@@ -639,11 +566,11 @@ export class CalendarAvailabilityService extends BaseCalendarService {
     private calculateFreeSlots(
         timeMinRFC3339: string,
         timeMaxRFC3339: string,
-        busySlots: Array<{ start: string; end: string }>,
+        busySlots: TimeSlot[],
         durationMinutes: number,
         timezone: string,
-    ): Array<{ start: string; end: string }> {
-        const freeSlots: Array<{ start: string; end: string }> = [];
+    ): TimeSlot[] {
+        const freeSlots: TimeSlot[] = [];
         const timeMin = new Date(timeMinRFC3339);
         const timeMax = new Date(timeMaxRFC3339);
         const durationMs = durationMinutes * 60 * 1000;
@@ -680,12 +607,7 @@ export class CalendarAvailabilityService extends BaseCalendarService {
         searchStart: Date,
         searchEnd: Date,
         durationMinutes: number,
-        options: {
-            workingHoursOnly: boolean;
-            workingHours: WorkingHours[];
-            excludeWeekends: boolean;
-            bufferMinutes: number;
-        },
+        options: GenerateTimeSlotsOptions,
     ): TimeRange[] {
         const slots: TimeRange[] = [];
         const durationMs = durationMinutes * 60 * 1000;
@@ -712,15 +634,7 @@ export class CalendarAvailabilityService extends BaseCalendarService {
         return slots;
     }
 
-    private isWithinWorkingHours(
-        start: Date,
-        end: Date,
-        options: {
-            workingHoursOnly: boolean;
-            workingHours: WorkingHours[];
-            excludeWeekends: boolean;
-        },
-    ): boolean {
+    private isWithinWorkingHours(start: Date, end: Date, options: WorkingHoursOptions): boolean {
         if (!options.workingHoursOnly) {
             return true;
         }
@@ -758,11 +672,7 @@ export class CalendarAvailabilityService extends BaseCalendarService {
         slot: TimeRange,
         attendeeAvailability: Map<string, AvailabilityResult>,
         allAttendees: string[],
-        options?: {
-            preferredTimeRanges?: TimeRange[];
-            preferMornings?: boolean;
-            preferAfternoons?: boolean;
-        },
+        options?: ScoreTimeSlotOptions,
     ): SuggestedTimeSlot {
         const slotStart = new Date(slot.start);
         const slotEnd = new Date(slot.end);

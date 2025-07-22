@@ -6,6 +6,32 @@ import {
     parseRecurrenceRuleStrings,
     validateRecurrenceRule,
 } from '@/lib/recurrence';
+import {
+    GetRecurringEventInstancesOptions,
+    GetRecurringEventInstancesResult,
+    GetRecurringEventInstancesInPrimaryCalendarResult,
+    CreateRecurringEventOptions,
+    CreateRecurringEventInPrimaryCalendarResult,
+    RecurringEvent,
+    UpdateRecurringEventOptions,
+    UpdateRecurringEventInPrimaryCalendarResult,
+    UpdateRecurringEventData,
+    UpdateFutureRecurringEventsOptions,
+    UpdateFutureRecurringEventsData,
+    UpdateFutureRecurringEventsInPrimaryCalendarResult,
+    GetRecurringEventOptions,
+    GetRecurringEventFromPrimaryCalendarResult,
+    RescheduleRecurringEventOptions,
+    RescheduleRecurringEventInPrimaryCalendarResult,
+    UpdateRecurringEventInstanceOptions,
+    UpdateRecurringEventInstanceInPrimaryCalendarResult,
+    DeleteRecurringEventOptions,
+    DeleteRecurringEventFromPrimaryCalendarResult,
+    DeleteRecurringEventInstanceOptions,
+    DeleteRecurringEventInstanceInPrimaryCalendarResult,
+    BatchCreateRecurringEventsOptions,
+    BatchCreateRecurringEventsResult,
+} from '@/types/services';
 
 // Re-export RecurrenceRule for backward compatibility
 export type { RecurrenceRule } from '@/lib/recurrence';
@@ -23,13 +49,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
         recurringEventId: string,
         timeMin: string,
         timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            timeZone?: string;
-            showDeleted?: boolean;
-        },
-    ): Promise<{ instances: CalendarEvent[]; nextPageToken?: string }> {
+        options?: GetRecurringEventInstancesOptions,
+    ): Promise<GetRecurringEventInstancesResult> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -77,14 +98,9 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
      * Create a recurring event in the primary calendar
      */
     async createRecurringEventInPrimaryCalendar(
-        event: CalendarEvent & {
-            recurrence?: RecurrenceRule[];
-        },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        event: RecurringEvent,
+        options?: CreateRecurringEventOptions,
+    ): Promise<CreateRecurringEventInPrimaryCalendarResult> {
         console.log(
             '┌─ [CALENDAR_RECURRING_EVENTS] Creating recurring event in primary calendar...',
             {
@@ -120,13 +136,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
      */
     async createRecurringEvent(
         calendarId: string,
-        event: CalendarEvent & {
-            recurrence?: RecurrenceRule[];
-        },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
+        event: RecurringEvent,
+        options?: CreateRecurringEventOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -157,11 +168,17 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
                 start: event.start,
                 end: event.end,
                 location: event.location,
-                attendees: event.attendees?.map((attendee) => ({
-                    email: attendee.email,
-                    displayName: attendee.displayName,
-                    responseStatus: attendee.responseStatus,
-                })),
+                attendees: event.attendees?.map(
+                    (attendee: {
+                        email: string;
+                        displayName?: string;
+                        responseStatus?: string;
+                    }) => ({
+                        email: attendee.email,
+                        displayName: attendee.displayName,
+                        responseStatus: attendee.responseStatus,
+                    }),
+                ),
                 conferenceData: event.conferenceData,
                 reminders: event.reminders,
                 recurrence: recurrenceStrings,
@@ -188,12 +205,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
     async updateRecurringEvent(
         calendarId: string,
         eventId: string,
-        event: Partial<CalendarEvent> & {
-            recurrence?: RecurrenceRule[];
-        },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        event: UpdateRecurringEventData,
+        options?: UpdateRecurringEventOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -251,10 +264,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
         calendarId: string,
         eventId: string,
         fromDateTime: string,
-        updates: Partial<CalendarEvent> & { recurrence?: RecurrenceRule[] },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        updates: UpdateFutureRecurringEventsData,
+        options?: UpdateFutureRecurringEventsOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -315,11 +326,7 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
     async getRecurringEvent(
         calendarId: string,
         eventId: string,
-        options?: {
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            maxAttendees?: number;
-        },
+        options?: GetRecurringEventOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -354,9 +361,7 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
         startDateTime: string,
         endDateTime: string,
         timeZone: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: RescheduleRecurringEventOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -398,22 +403,16 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
      * Batch create recurring events in primary calendar
      */
     async batchCreateRecurringEventsInPrimaryCalendar(
-        events: Array<CalendarEvent & { recurrence?: RecurrenceRule[] }>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
-    ): Promise<{
-        successful: Array<{ event: CalendarEvent; result: CalendarEvent }>;
-        failed: Array<{ event: CalendarEvent; error: string }>;
-    }> {
+        events: RecurringEvent[],
+        options?: BatchCreateRecurringEventsOptions,
+    ): Promise<BatchCreateRecurringEventsResult> {
         console.log('┌─ [CALENDAR_RECURRING_EVENTS] Batch creating recurring events...', {
             eventCount: events.length,
         });
 
         const results = {
-            successful: [] as Array<{ event: CalendarEvent; result: CalendarEvent }>,
-            failed: [] as Array<{ event: CalendarEvent; error: string }>,
+            successful: [] as Array<{ event: RecurringEvent; result: CalendarEvent }>,
+            failed: [] as Array<{ event: RecurringEvent; error: string }>,
         };
 
         try {
@@ -456,13 +455,9 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
      */
     async updateRecurringEventInPrimaryCalendar(
         eventId: string,
-        event: Partial<CalendarEvent> & {
-            recurrence?: RecurrenceRule[];
-        },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        event: UpdateRecurringEventData,
+        options?: UpdateRecurringEventOptions,
+    ): Promise<UpdateRecurringEventInPrimaryCalendarResult> {
         console.log(
             '┌─ [CALENDAR_RECURRING_EVENTS] Updating recurring event in primary calendar...',
             {
@@ -505,9 +500,7 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
         eventId: string,
         instanceStartTime: string,
         updates: Partial<CalendarEvent>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateRecurringEventInstanceOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -541,10 +534,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
      */
     async deleteRecurringEventFromPrimaryCalendar(
         eventId: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<{ calendarId: string }> {
+        options?: DeleteRecurringEventOptions,
+    ): Promise<DeleteRecurringEventFromPrimaryCalendarResult> {
         console.log(
             '┌─ [CALENDAR_RECURRING_EVENTS] Deleting recurring event from primary calendar...',
             {
@@ -577,9 +568,7 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
     async deleteRecurringEvent(
         calendarId: string,
         eventId: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteRecurringEventOptions,
     ): Promise<void> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -608,9 +597,7 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
         calendarId: string,
         eventId: string,
         instanceStartTime: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteRecurringEventInstanceOptions,
     ): Promise<void> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -641,12 +628,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
      */
     async getRecurringEventFromPrimaryCalendar(
         eventId: string,
-        options?: {
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            maxAttendees?: number;
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        options?: GetRecurringEventOptions,
+    ): Promise<GetRecurringEventFromPrimaryCalendarResult> {
         console.log(
             '┌─ [CALENDAR_RECURRING_EVENTS] Getting recurring event from primary calendar...',
             {
@@ -684,10 +667,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
         startDateTime: string,
         endDateTime: string,
         timeZone: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        options?: RescheduleRecurringEventOptions,
+    ): Promise<RescheduleRecurringEventInPrimaryCalendarResult> {
         console.log(
             '┌─ [CALENDAR_RECURRING_EVENTS] Rescheduling recurring event in primary calendar...',
             {
@@ -736,10 +717,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
         eventId: string,
         instanceStartTime: string,
         updates: Partial<CalendarEvent>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        options?: UpdateRecurringEventInstanceOptions,
+    ): Promise<UpdateRecurringEventInstanceInPrimaryCalendarResult> {
         console.log(
             '┌─ [CALENDAR_RECURRING_EVENTS] Updating recurring event instance in primary calendar...',
             {
@@ -785,11 +764,9 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
     async updateFutureRecurringEventsInPrimaryCalendar(
         eventId: string,
         fromDateTime: string,
-        updates: Partial<CalendarEvent> & { recurrence?: RecurrenceRule[] },
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        updates: UpdateFutureRecurringEventsData,
+        options?: UpdateFutureRecurringEventsOptions,
+    ): Promise<UpdateFutureRecurringEventsInPrimaryCalendarResult> {
         console.log(
             '┌─ [CALENDAR_RECURRING_EVENTS] Updating future recurring events in primary calendar...',
             {
@@ -835,10 +812,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
     async deleteRecurringEventInstanceInPrimaryCalendar(
         eventId: string,
         instanceStartTime: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<{ calendarId: string }> {
+        options?: DeleteRecurringEventInstanceOptions,
+    ): Promise<DeleteRecurringEventInstanceInPrimaryCalendarResult> {
         console.log(
             '┌─ [CALENDAR_RECURRING_EVENTS] Deleting recurring event instance in primary calendar...',
             {
@@ -880,13 +855,8 @@ export class CalendarRecurringEventsService extends BaseCalendarService {
         eventId: string,
         timeMin: string,
         timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            timeZone?: string;
-            showDeleted?: boolean;
-        },
-    ): Promise<{ instances: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
+        options?: GetRecurringEventInstancesOptions,
+    ): Promise<GetRecurringEventInstancesInPrimaryCalendarResult> {
         console.log(
             '┌─ [CALENDAR_RECURRING_EVENTS] Getting recurring event instances from primary calendar...',
             {

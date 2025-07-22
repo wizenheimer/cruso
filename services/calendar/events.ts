@@ -1,5 +1,28 @@
 import { calendar_v3 } from 'googleapis';
 import { BaseCalendarService, CalendarEvent } from './base';
+import {
+    GetEventsOptions,
+    GetEventsResult,
+    GetEventsFromPrimaryCalendarResult,
+    GetEventOptions,
+    GetEventFromPrimaryCalendarResult,
+    FindEventsByICalUIDOptions,
+    GetUpdatedEventsOptions,
+    GetUpdatedEventsResult,
+    CreateEventOptions,
+    CreateEventInPrimaryCalendarResult,
+    UpdateEventOptions,
+    UpdateEventInPrimaryCalendarResult,
+    DeleteEventOptions,
+    DeleteEventFromPrimaryCalendarResult,
+    RescheduleEventOptions,
+    RescheduleEventInPrimaryCalendarResult,
+    QuickCreateEventOptions,
+    QuickCreateEventInPrimaryCalendarResult,
+    BatchOperation,
+    BatchOperationsOptions,
+    BatchOperationResult,
+} from '@/types/services';
 
 export class CalendarEventsService extends BaseCalendarService {
     /**
@@ -8,18 +31,8 @@ export class CalendarEventsService extends BaseCalendarService {
     async getEventsFromPrimaryCalendar(
         timeMin: string,
         timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            q?: string;
-            showDeleted?: boolean;
-            singleEvents?: boolean;
-            orderBy?: 'startTime' | 'updated';
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            iCalUID?: string;
-        },
-    ): Promise<{ events: CalendarEvent[]; nextPageToken?: string; calendarId: string }> {
+        options?: GetEventsOptions,
+    ): Promise<GetEventsFromPrimaryCalendarResult> {
         console.log('┌─ [CALENDAR_EVENTS] Getting events from primary calendar...', {
             timeMin,
             timeMax,
@@ -54,18 +67,8 @@ export class CalendarEventsService extends BaseCalendarService {
         calendarId: string,
         timeMin: string,
         timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            q?: string;
-            showDeleted?: boolean;
-            singleEvents?: boolean;
-            orderBy?: 'startTime' | 'updated';
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            iCalUID?: string;
-        },
-    ): Promise<{ events: CalendarEvent[]; nextPageToken?: string; nextSyncToken?: string }> {
+        options?: GetEventsOptions,
+    ): Promise<GetEventsResult> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -111,11 +114,7 @@ export class CalendarEventsService extends BaseCalendarService {
     async getEvent(
         calendarId: string,
         eventId: string,
-        options?: {
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            maxAttendees?: number;
-        },
+        options?: GetEventOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -146,12 +145,8 @@ export class CalendarEventsService extends BaseCalendarService {
      */
     async getEventFromPrimaryCalendar(
         eventId: string,
-        options?: {
-            timeZone?: string;
-            alwaysIncludeEmail?: boolean;
-            maxAttendees?: number;
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        options?: GetEventOptions,
+    ): Promise<GetEventFromPrimaryCalendarResult> {
         console.log('┌─ [CALENDAR_EVENTS] Getting event from primary calendar...', { eventId });
 
         try {
@@ -181,10 +176,7 @@ export class CalendarEventsService extends BaseCalendarService {
      */
     async findEventsByICalUID(
         iCalUID: string,
-        options?: {
-            timeZone?: string;
-            includeDeleted?: boolean;
-        },
+        options?: FindEventsByICalUIDOptions,
     ): Promise<Map<string, CalendarEvent[]>> {
         try {
             const connections = await this.getActiveConnections();
@@ -231,18 +223,8 @@ export class CalendarEventsService extends BaseCalendarService {
     async getUpdatedEvents(
         calendarId: string,
         updatedMin: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            syncToken?: string;
-            timeZone?: string;
-        },
-    ): Promise<{
-        events: CalendarEvent[];
-        deletedEvents: string[];
-        nextPageToken?: string;
-        nextSyncToken?: string;
-    }> {
+        options?: GetUpdatedEventsOptions,
+    ): Promise<GetUpdatedEventsResult> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -292,11 +274,8 @@ export class CalendarEventsService extends BaseCalendarService {
      */
     async createEventInPrimaryCalendar(
         event: CalendarEvent,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        options?: CreateEventOptions,
+    ): Promise<CreateEventInPrimaryCalendarResult> {
         console.log('┌─ [CALENDAR_EVENTS] Creating event in primary calendar...', {
             summary: event.summary,
             start: event.start,
@@ -331,10 +310,7 @@ export class CalendarEventsService extends BaseCalendarService {
     async createEvent(
         calendarId: string,
         event: CalendarEvent,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
+        options?: CreateEventOptions,
     ): Promise<CalendarEvent> {
         console.log('┌─ [CALENDAR_EVENTS] Creating event...', {
             calendarId,
@@ -379,10 +355,8 @@ export class CalendarEventsService extends BaseCalendarService {
     async updateEventInPrimaryCalendar(
         eventId: string,
         event: Partial<CalendarEvent>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        options?: UpdateEventOptions,
+    ): Promise<UpdateEventInPrimaryCalendarResult> {
         console.log('┌─ [CALENDAR_EVENTS] Updating event in primary calendar...', { eventId });
 
         try {
@@ -414,9 +388,7 @@ export class CalendarEventsService extends BaseCalendarService {
         calendarId: string,
         eventId: string,
         event: Partial<CalendarEvent>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateEventOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -446,10 +418,8 @@ export class CalendarEventsService extends BaseCalendarService {
      */
     async deleteEventFromPrimaryCalendar(
         eventId: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<{ calendarId: string }> {
+        options?: DeleteEventOptions,
+    ): Promise<DeleteEventFromPrimaryCalendarResult> {
         console.log('┌─ [CALENDAR_EVENTS] Deleting event from primary calendar...', { eventId });
 
         try {
@@ -477,9 +447,7 @@ export class CalendarEventsService extends BaseCalendarService {
     async deleteEvent(
         calendarId: string,
         eventId: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteEventOptions,
     ): Promise<void> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -509,10 +477,8 @@ export class CalendarEventsService extends BaseCalendarService {
         startDateTime: string,
         endDateTime: string,
         timeZone: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        options?: RescheduleEventOptions,
+    ): Promise<RescheduleEventInPrimaryCalendarResult> {
         console.log('┌─ [CALENDAR_EVENTS] Rescheduling event in primary calendar...', {
             eventId,
             startDateTime,
@@ -557,9 +523,7 @@ export class CalendarEventsService extends BaseCalendarService {
         startDateTime: string,
         endDateTime: string,
         timeZone: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: RescheduleEventOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -600,23 +564,8 @@ export class CalendarEventsService extends BaseCalendarService {
         summary: string,
         startDateTime: string,
         endDateTime: string,
-        options?: {
-            description?: string;
-            location?: string;
-            attendees?: string[];
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-            createConference?: boolean;
-            colorId?: string;
-            reminders?: {
-                useDefault?: boolean;
-                overrides?: Array<{
-                    method: 'email' | 'popup';
-                    minutes: number;
-                }>;
-            };
-        },
-    ): Promise<CalendarEvent & { calendarId: string }> {
+        options?: QuickCreateEventOptions,
+    ): Promise<QuickCreateEventInPrimaryCalendarResult> {
         const event: CalendarEvent = {
             summary,
             description: options?.description,
@@ -652,18 +601,9 @@ export class CalendarEventsService extends BaseCalendarService {
      * Perform batch operations on primary calendar
      */
     async performBatchOperationsOnPrimaryCalendar(
-        operations: Array<{
-            type: 'create' | 'update' | 'delete';
-            eventId?: string;
-            event?: CalendarEvent | Partial<CalendarEvent>;
-        }>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
-    ): Promise<{
-        successful: Array<{ operation: any; result?: any }>;
-        failed: Array<{ operation: any; error: string }>;
-    }> {
+        operations: BatchOperation[],
+        options?: BatchOperationsOptions,
+    ): Promise<BatchOperationResult> {
         console.log('┌─ [CALENDAR_EVENTS] Performing batch operations on primary calendar...', {
             operationCount: operations.length,
         });

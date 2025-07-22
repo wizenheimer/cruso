@@ -2,15 +2,26 @@ import { auth } from '@/lib/auth';
 import { BaseCalendarService, CalendarEvent, CalendarInfo, TimeRange } from './base';
 import { CalendarConnectionsService } from './connections';
 import { CalendarEventsService } from './events';
+import { CalendarAvailabilityService } from './availability';
 import {
-    CalendarAvailabilityService,
     AvailabilityResult,
     BlockAvailabilityResult,
     SuggestedTimeSlot,
     WorkingHours,
-} from './availability';
-import { CalendarRecurringEventsService, RecurrenceRule } from './recurring-events';
-import { CalendarSearchService, SearchOptions, SearchResult, QuickSearchPresets } from './search';
+    CheckAvailabilityBlockOptions,
+    CreateAvailabilityBlockOptions,
+    FindBestTimeForMeetingOptions,
+} from '@/types/services';
+import { CalendarRecurringEventsService } from './recurring-events';
+import { CalendarSearchService } from './search';
+import {
+    SearchOptions,
+    SearchResult,
+    QuickSearchPresets,
+    RecurringEvent,
+    BatchCreateRecurringEventsResult,
+} from '@/types/services';
+import { RecurrenceRule } from '@/lib/recurrence';
 
 // ==================================================
 // Main Calendar Service Class
@@ -52,18 +63,6 @@ export class GoogleCalendarService extends BaseCalendarService {
         errors: string[];
     }> {
         return this.connectionsService.fetchAllCalendarLists();
-    }
-
-    async watchCalendar(
-        calendarId: string,
-        webhookUrl: string,
-        ttl?: number,
-    ): Promise<{ resourceId: string; expiration: number }> {
-        return this.connectionsService.watchCalendar(calendarId, webhookUrl, ttl);
-    }
-
-    async stopWatchingCalendar(calendarId: string, resourceId: string): Promise<void> {
-        return this.connectionsService.stopWatchingCalendar(calendarId, resourceId);
     }
 
     // ==================================================
@@ -309,13 +308,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async checkAvailabilityBlock(
         timeMinRFC3339: string,
         timeMaxRFC3339: string,
-        options: {
-            includeCalendarIds?: string[];
-            excludeCalendarIds?: string[];
-            responseTimezone?: string;
-            timeDurationMinutes?: number;
-            includeEvents?: boolean;
-        } = {},
+        options: CheckAvailabilityBlockOptions = {},
     ): Promise<AvailabilityResult> {
         return this.availabilityService.checkAvailabilityBlock(
             timeMinRFC3339,
@@ -327,18 +320,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async createAvailabilityBlock(
         timeMinRFC3339: string,
         timeMaxRFC3339: string,
-        options: {
-            responseTimezone?: string;
-            timeDurationMinutes?: number;
-            eventSummary?: string;
-            eventDescription?: string;
-            eventAttendees?: string[];
-            eventLocation?: string;
-            eventConference?: boolean;
-            eventPrivate?: boolean;
-            eventColorId?: string;
-            createBlock?: boolean;
-        } = {},
+        options: CreateAvailabilityBlockOptions = {},
     ): Promise<BlockAvailabilityResult> {
         return this.availabilityService.createAvailabilityBlock(
             timeMinRFC3339,
@@ -350,20 +332,7 @@ export class GoogleCalendarService extends BaseCalendarService {
     async findBestTimeForMeeting(
         durationMinutes: number,
         attendeeEmails: string[],
-        options?: {
-            searchRangeStart?: string;
-            searchRangeEnd?: string;
-            preferredTimeRanges?: TimeRange[];
-            workingHoursOnly?: boolean;
-            workingHours?: WorkingHours[];
-            minimumNoticeHours?: number;
-            maxSuggestions?: number;
-            timezone?: string;
-            excludeWeekends?: boolean;
-            preferMornings?: boolean;
-            preferAfternoons?: boolean;
-            bufferMinutes?: number;
-        },
+        options?: FindBestTimeForMeetingOptions,
     ): Promise<SuggestedTimeSlot[]> {
         return this.availabilityService.findBestTimeForMeeting(
             durationMinutes,
@@ -428,10 +397,7 @@ export class GoogleCalendarService extends BaseCalendarService {
             sendUpdates?: 'all' | 'externalOnly' | 'none';
             conferenceDataVersion?: number;
         },
-    ): Promise<{
-        successful: Array<{ event: CalendarEvent; result: CalendarEvent }>;
-        failed: Array<{ event: CalendarEvent; error: string }>;
-    }> {
+    ): Promise<BatchCreateRecurringEventsResult> {
         return this.recurringEventsService.batchCreateRecurringEventsInPrimaryCalendar(
             events,
             options,

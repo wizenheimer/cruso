@@ -4,6 +4,7 @@ import { calendarConnections } from '@/db/schema/calendars';
 import { user } from '@/db/schema/auth';
 import { eq } from 'drizzle-orm';
 import { BaseCalendarService, CalendarInfo } from './base';
+import { SyncAllCalendarsResult, FetchAllCalendarListsResult } from '@/types/services';
 
 export class CalendarConnectionsService extends BaseCalendarService {
     /**
@@ -105,10 +106,10 @@ export class CalendarConnectionsService extends BaseCalendarService {
     /**
      * Sync all calendars for the user
      */
-    async syncAllCalendars(): Promise<{ success: number; errors: string[] }> {
+    async syncAllCalendars(): Promise<SyncAllCalendarsResult> {
         console.log('┌─ [CALENDAR_CONNECTIONS] Starting calendar sync...', { userId: this.userId });
 
-        const results = { success: 0, errors: [] as string[] };
+        const results: SyncAllCalendarsResult = { success: 0, errors: [] };
 
         try {
             const connections = await this.getActiveConnections();
@@ -172,19 +173,15 @@ export class CalendarConnectionsService extends BaseCalendarService {
     /**
      * Fetch all calendar lists from Google and store them
      */
-    async fetchAllCalendarLists(): Promise<{
-        accountsSynced: number;
-        calendarsSynced: number;
-        errors: string[];
-    }> {
+    async fetchAllCalendarLists(): Promise<FetchAllCalendarListsResult> {
         console.log('┌─ [CALENDAR_CONNECTIONS] Fetching all calendar lists...', {
             userId: this.userId,
         });
 
-        const results = {
+        const results: FetchAllCalendarListsResult = {
             accountsSynced: 0,
             calendarsSynced: 0,
-            errors: [] as string[],
+            errors: [],
         };
 
         try {
@@ -280,75 +277,6 @@ export class CalendarConnectionsService extends BaseCalendarService {
             console.error('└─ [CALENDAR_CONNECTIONS] Fetch failed:', error);
             throw new Error(
                 `Failed to fetch calendar lists: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            );
-        }
-    }
-
-    /**
-     * Watch a calendar for changes
-     */
-    async watchCalendar(
-        calendarId: string,
-        webhookUrl: string,
-        ttl?: number,
-    ): Promise<{ resourceId: string; expiration: number }> {
-        console.log('┌─ [CALENDAR_CONNECTIONS] Setting up calendar watch...', {
-            calendarId,
-            webhookUrl,
-        });
-
-        try {
-            const connectionData = await this.getCalendarConnection(calendarId);
-            if (!connectionData.account) {
-                throw new Error('No account found for calendar connection');
-            }
-
-            // TODO: Fix watch method implementation
-            // The Google Calendar API watch method has complex typing issues
-            // For now, return a mock response
-            console.warn('└─ [CALENDAR_CONNECTIONS] Watch method not implemented yet');
-
-            return {
-                resourceId: 'mock-resource-id',
-                expiration: Date.now() + (ttl || 604800) * 1000,
-            };
-        } catch (error) {
-            console.error('└─ [CALENDAR_CONNECTIONS] Failed to set up watch:', error);
-            throw new Error(
-                `Failed to watch calendar: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            );
-        }
-    }
-
-    /**
-     * Stop watching a calendar
-     */
-    async stopWatchingCalendar(calendarId: string, resourceId: string): Promise<void> {
-        console.log('┌─ [CALENDAR_CONNECTIONS] Stopping calendar watch...', {
-            calendarId,
-            resourceId,
-        });
-
-        try {
-            const connectionData = await this.getCalendarConnection(calendarId);
-            if (!connectionData.account) {
-                throw new Error('No account found for calendar connection');
-            }
-
-            const calendar = await this.getCalendarApi(connectionData.account.id);
-
-            await calendar.channels.stop({
-                requestBody: {
-                    id: resourceId,
-                    resourceId: resourceId,
-                },
-            });
-
-            console.log('└─ [CALENDAR_CONNECTIONS] Watch stopped successfully');
-        } catch (error) {
-            console.error('└─ [CALENDAR_CONNECTIONS] Failed to stop watch:', error);
-            throw new Error(
-                `Failed to stop watching calendar: ${error instanceof Error ? error.message : 'Unknown error'}`,
             );
         }
     }
