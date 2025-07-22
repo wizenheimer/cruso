@@ -15,6 +15,7 @@ import {
     UpdateEventOptions,
     UpdateEventInPrimaryCalendarResult,
     DeleteEventOptions,
+    DeleteResponse,
     DeleteEventFromPrimaryCalendarResult,
     RescheduleEventOptions,
     RescheduleEventInPrimaryCalendarResult,
@@ -406,39 +407,33 @@ export class CalendarEventsService extends BaseCalendarService {
     /**
      * Delete an event from the primary calendar
      */
-    async deleteEventFromPrimaryCalendar(
-        eventId: string,
-        options?: DeleteEventOptions,
-    ): Promise<DeleteEventFromPrimaryCalendarResult> {
-        console.log('┌─ [CALENDAR_EVENTS] Deleting event from primary calendar...', { eventId });
+    async deleteEventFromPrimaryCalendar(options: DeleteEventOptions): Promise<DeleteResponse> {
+        console.log('┌─ [CALENDAR_EVENTS] Deleting event from primary calendar...', {
+            eventId: options.eventId,
+        });
 
         try {
             const primaryCalendarId = await this.getPrimaryCalendarId();
             console.log('├─ [CALENDAR_EVENTS] Primary calendar:', primaryCalendarId);
 
-            await this.deleteEvent(primaryCalendarId, eventId, options);
+            await this.deleteEvent(primaryCalendarId, options);
 
             console.log('└─ [CALENDAR_EVENTS] Event deleted successfully');
 
-            return { calendarId: primaryCalendarId };
+            return { state: 'success' };
         } catch (error) {
             console.error('└─ [CALENDAR_EVENTS] Error:', error);
-            throw new Error(
-                `Failed to delete event from primary calendar: ${
-                    error instanceof Error ? error.message : 'Unknown error'
-                }`,
-            );
+            return {
+                state: 'failed',
+                error: error instanceof Error ? error.message : 'Unknown error',
+            };
         }
     }
 
     /**
      * Delete an event from a specific calendar
      */
-    async deleteEvent(
-        calendarId: string,
-        eventId: string,
-        options?: DeleteEventOptions,
-    ): Promise<void> {
+    async deleteEvent(calendarId: string, options: DeleteEventOptions): Promise<DeleteResponse> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {
@@ -447,15 +442,19 @@ export class CalendarEventsService extends BaseCalendarService {
 
             const calendar = await this.getCalendarApi(connectionData.account.id);
 
+            // Note: The method does not returns a response body
             await calendar.events.delete({
                 calendarId,
-                eventId,
-                sendUpdates: options?.sendUpdates,
+                eventId: options.eventId,
+                sendUpdates: options.sendUpdates,
             });
+
+            return { state: 'success' };
         } catch (error) {
-            throw new Error(
-                `Failed to delete event: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            );
+            return {
+                state: 'failed',
+                error: error instanceof Error ? error.message : 'Unknown error',
+            };
         }
     }
 
@@ -640,8 +639,15 @@ export class CalendarEventsService extends BaseCalendarService {
                             if (!operation.eventId) {
                                 throw new Error('Event ID required for delete operation');
                             }
-                            await this.deleteEvent(primaryCalendarId, operation.eventId, options);
-                            result = { deleted: true };
+                            const deleteResult = await this.deleteEvent(primaryCalendarId, {
+                                eventId: operation.eventId,
+                                sendUpdates: options?.sendUpdates,
+                            });
+                            if (deleteResult.state === 'success') {
+                                result = { deleted: true };
+                            } else {
+                                throw new Error(deleteResult.error || 'Failed to delete event');
+                            }
                             break;
                         default:
                             throw new Error(`Unknown operation type: ${operation.type}`);

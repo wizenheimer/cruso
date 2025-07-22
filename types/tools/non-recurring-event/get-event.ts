@@ -15,5 +15,5 @@ export const getEventInputSchema = z.object({
 export const getEventOutputSchema = z.object({
     state: z.enum(['success', 'failed']).optional(),
     result: calendarEventSchema.optional(),
-    error: z.any().optional(),
+    error: z.string().optional(),
 });

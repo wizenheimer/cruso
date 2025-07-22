@@ -11,6 +11,7 @@ import type {
     CreateEventOptions,
     UpdateEventOptions,
     DeleteEventOptions,
+    DeleteResponse,
     RescheduleEventOptions,
     QuickCreateEventOptions,
     BatchOperationsOptions,
@@ -168,19 +169,12 @@ export class GoogleCalendarService extends BaseCalendarService {
         return this.eventsService.updateEvent(calendarId, eventId, event, options);
     }
 
-    async deleteEventFromPrimaryCalendar(
-        eventId: string,
-        options?: DeleteEventOptions,
-    ): Promise<{ calendarId: string }> {
-        return this.eventsService.deleteEventFromPrimaryCalendar(eventId, options);
+    async deleteEventFromPrimaryCalendar(options: DeleteEventOptions): Promise<DeleteResponse> {
+        return this.eventsService.deleteEventFromPrimaryCalendar(options);
     }
 
-    async deleteEvent(
-        calendarId: string,
-        eventId: string,
-        options?: DeleteEventOptions,
-    ): Promise<void> {
-        return this.eventsService.deleteEvent(calendarId, eventId, options);
+    async deleteEvent(calendarId: string, options: DeleteEventOptions): Promise<DeleteResponse> {
+        return this.eventsService.deleteEvent(calendarId, options);
     }
 
     async rescheduleEventInPrimaryCalendar(

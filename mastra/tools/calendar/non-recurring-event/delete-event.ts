@@ -9,40 +9,26 @@ export const deleteEventTool = createTool({
     inputSchema: deleteEventInputSchema,
     outputSchema: deleteEventOutputSchema,
     execute: async ({ context, runtimeContext }) => {
-        const { eventId, notifyAttendees, options } = context;
         const user = getUserFromRuntimeContext(runtimeContext);
         if (!user) {
             throw new Error('User is required');
         }
 
-        console.log('triggered delete event tool', eventId, notifyAttendees, user);
+        const { options } = context;
 
         try {
             const calendarService = new GoogleCalendarService(user.id);
 
-            // Convert notifyAttendees to sendUpdates option for backward compatibility
-            const deleteOptions = {
-                ...options,
-                sendUpdates: options?.sendUpdates || (notifyAttendees ? 'all' : 'none'),
-            };
-
-            const result = await calendarService.deleteEventFromPrimaryCalendar(
-                eventId,
-                deleteOptions,
-            );
+            const result = await calendarService.deleteEventFromPrimaryCalendar(options);
 
             return {
-                state: 'success' as const,
-                eventId: eventId,
-                eventTitle: 'Event Title', // Note: We don't have the title after deletion
-                calendarId: result.calendarId,
+                state: result.state,
             };
         } catch (error) {
             console.error('Failed to delete event:', error);
             return {
                 state: 'failed' as const,
-                eventId: eventId,
-                eventTitle: 'Event Title',
+                error: error instanceof Error ? error.message : 'Unknown error',
             };
         }
     },

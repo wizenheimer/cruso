@@ -17,5 +17,5 @@ export const listEventsInputSchema = z.object({
 export const listEventsOutputSchema = z.object({
     result: listEventsFromPrimaryCalendarResultSchema.optional(),
     state: z.enum(['success', 'failed']).optional(),
-    error: z.any().optional(),
+    error: z.string().optional(),
 });

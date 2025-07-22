@@ -168,11 +168,16 @@ export async function handleDeleteEventFromPrimaryCalendar(c: Context) {
 
         const calendarService = createCalendarService(user.id);
 
-        const result = await calendarService.deleteEventFromPrimaryCalendar(eventId, {
+        const result = await calendarService.deleteEventFromPrimaryCalendar({
+            eventId,
             sendUpdates,
         });
 
-        return c.json(result);
+        if (result.state === 'failed') {
+            return c.json({ error: result.error || 'Failed to delete event' }, 500);
+        }
+
+        return c.json({ success: true, message: 'Event deleted successfully' });
     } catch (error) {
         console.error('Error deleting event from primary calendar:', error);
         return c.json({ error: 'Failed to delete event from primary calendar' }, 500);
@@ -429,9 +434,14 @@ export async function handleDeleteEvent(c: Context) {
 
         const calendarService = createCalendarService(user.id);
 
-        await calendarService.deleteEvent(calendarId, eventId, {
+        const result = await calendarService.deleteEvent(calendarId, {
+            eventId,
             sendUpdates,
         });
+
+        if (result.state === 'failed') {
+            return c.json({ error: result.error || 'Failed to delete event' }, 500);
+        }
 
         return c.json({ success: true, message: 'Event deleted successfully' });
     } catch (error) {

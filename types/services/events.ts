@@ -36,6 +36,7 @@ export type UpdateEventInPrimaryCalendarResult = z.infer<
     typeof schemas.updateEventInPrimaryCalendarResultSchema
 >;
 export type DeleteEventOptions = z.infer<typeof schemas.deleteEventOptionsSchema>;
+export type DeleteResponse = z.infer<typeof schemas.deleteResponseSchema>;
 export type DeleteEventFromPrimaryCalendarResult = z.infer<
     typeof schemas.deleteEventFromPrimaryCalendarResultSchema
 >;

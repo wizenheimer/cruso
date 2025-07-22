@@ -46,6 +46,7 @@ export type {
     CreateEventOptions,
     UpdateEventOptions,
     DeleteEventOptions,
+    DeleteResponse,
 } from './events';
 
 // Re-export commonly used recurring events types for convenience
@@ -120,6 +121,7 @@ export {
     createEventOptionsSchema,
     updateEventOptionsSchema,
     deleteEventOptionsSchema,
+    deleteResponseSchema,
 } from './events-schemas';
 
 // Re-export recurring events schemas for runtime validation

@@ -95,7 +95,13 @@ export const updateEventOptionsSchema = z.object({
 });
 
 export const deleteEventOptionsSchema = z.object({
+    eventId: z.string(),
     sendUpdates: sendUpdatesSchema.optional(),
+});
+
+export const deleteResponseSchema = z.object({
+    state: z.enum(['success', 'failed']),
+    error: z.string().optional(),
 });
 
 export const rescheduleEventOptionsSchema = z.object({
