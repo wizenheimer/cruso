@@ -1,35 +1,10 @@
 import { createTool } from '@mastra/core/tools';
-import z from 'zod';
 import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { GoogleCalendarService } from '@/services/calendar';
-
-/**
- * The input schema for the delete recurring event tool
- */
-const deleteRecurringEventInputSchema = z.object({
-    eventId: z.string().describe('ID of the recurring event to delete'),
-    options: z
-        .object({
-            sendUpdates: z
-                .enum(['all', 'externalOnly', 'none'])
-                .optional()
-                .describe('How to send updates to attendees'),
-        })
-        .optional()
-        .describe('Delete event options'),
-});
-
-/**
- * The output schema for the delete recurring event tool
- */
-const deleteRecurringEventOutputSchema = z.object({
-    state: z.enum(['success', 'failed']).describe('The state of the event deletion'),
-    eventId: z.string().optional().describe('The id of the deleted recurring event'),
-    calendarId: z
-        .string()
-        .optional()
-        .describe('The calendar ID where the recurring event was deleted from'),
-});
+import {
+    deleteRecurringEventInputSchema,
+    deleteRecurringEventOutputSchema,
+} from '@/types/tools/recurring-event';
 
 /**
  * Delete a recurring event from google calendar for the current user

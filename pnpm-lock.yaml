@@ -142,6 +142,9 @@ importers:
             tailwindcss-animate:
                 specifier: ^1.0.7
                 version: 1.0.7(tailwindcss@4.1.11)
+            yaml:
+                specifier: ^2.8.0
+                version: 2.8.0
             zod:
                 specifier: ^3.25.74
                 version: 3.25.74
