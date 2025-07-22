@@ -12,7 +12,6 @@ import { relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { user, account } from '@/db/schema/auth';
 import { userEmails } from '@/db/schema/user-emails';
-import { calendarConnections } from '@/db/schema/calendars';
 
 /**
  * Preferences Table - ONLY fast lookup stuff that impacts availability/scheduling

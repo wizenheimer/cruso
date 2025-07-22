@@ -2,8 +2,8 @@ import { Agent } from '@mastra/core/agent';
 import { DEFAULT_SMALL_LANGUAGE_MODEL } from '@/constants/model';
 import { openai } from '@ai-sdk/openai';
 import { calendarTools } from '../tools/calendar';
-import { emailTools } from '../tools/email';
-import { preferenceTools } from '../tools/preference';
+// import { emailTools } from '../tools/email';
+// import { preferenceTools } from '../tools/preference';
 import { Memory } from '@mastra/memory';
 import { storage } from '../storage/pg';
 

@@ -1,7 +1,7 @@
 import { db } from '@/db';
 import { calendarConnections } from '@/db/schema/calendars';
 import { account } from '@/db/schema/auth';
-import { eq, and, desc, sql, isNull, gt, or } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { GoogleAuthManager } from '@/services/calendar/manager';
 
 const authManager = new GoogleAuthManager();
