@@ -5,137 +5,14 @@ import { account } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { GoogleAuthManager } from './manager';
 import { RRule, rrulestr, Frequency } from 'rrule';
-
-// ==================================================
-// Recurrence Rule Interface
-// ==================================================
-
-export interface RecurrenceRule {
-    freq: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'HOURLY' | 'MINUTELY' | 'SECONDLY';
-    dtstart?: Date;
-    interval?: number;
-    wkst?: 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU';
-    count?: number;
-    until?: Date;
-    bysetpos?: number[];
-    bymonth?: number[];
-    bymonthday?: number[];
-    byyearday?: number[];
-    byweekno?: number[];
-    byweekday?: ('MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU')[];
-    byhour?: number[];
-    byminute?: number[];
-    bysecond?: number[];
-    byeaster?: number | null;
-}
-
-// ==================================================
-// Base Interfaces
-// ==================================================
-
-export interface CalendarEvent {
-    id?: string;
-    summary: string;
-    description?: string;
-    start: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    end: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    attendees?: Array<{
-        email: string;
-        displayName?: string;
-        responseStatus?: string;
-        optional?: boolean;
-        resource?: boolean;
-        organizer?: boolean;
-        self?: boolean;
-        comment?: string;
-        additionalGuests?: number;
-    }>;
-    location?: string;
-    conferenceData?: calendar_v3.Schema$ConferenceData;
-    reminders?: {
-        useDefault?: boolean;
-        overrides?: Array<{
-            method: string;
-            minutes: number;
-        }>;
-    };
-    // Additional properties that may be present from Google Calendar API
-    recurringEventId?: string; // ID of the recurring event series
-    originalStartTime?: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    created?: string; // RFC3339 timestamp
-    updated?: string; // RFC3339 timestamp
-    status?: string; // 'confirmed', 'tentative', 'cancelled'
-    organizer?: {
-        email?: string;
-        displayName?: string;
-        self?: boolean;
-    };
-    creator?: {
-        email?: string;
-        displayName?: string;
-        self?: boolean;
-    };
-    htmlLink?: string;
-    transparency?: string; // 'opaque', 'transparent'
-    visibility?: string; // 'default', 'public', 'private', 'confidential'
-    iCalUID?: string;
-    sequence?: number;
-    colorId?: string;
-    recurrence?: string[] | RecurrenceRule[]; // RRULE strings or RecurrenceRule objects
-    extendedProperties?: {
-        private?: { [key: string]: string };
-        shared?: { [key: string]: string };
-    };
-    hangoutLink?: string;
-    anyoneCanAddSelf?: boolean;
-    guestsCanInviteOthers?: boolean;
-    guestsCanModify?: boolean;
-    guestsCanSeeOtherGuests?: boolean;
-    privateCopy?: boolean;
-    locked?: boolean;
-    source?: {
-        url?: string;
-        title?: string;
-    };
-    attachments?: Array<{
-        fileUrl?: string | null;
-        title?: string | null;
-        mimeType?: string | null;
-        iconLink?: string | null;
-        fileId?: string | null;
-    }>;
-}
-
-export interface CalendarInfo {
-    id: string;
-    summary: string;
-    description?: string;
-    primary?: boolean;
-    accessRole?: string;
-    backgroundColor?: string;
-    foregroundColor?: string;
-    timeZone?: string;
-    syncStatus: 'active' | 'error' | 'paused';
-    lastSyncAt?: string;
-    googleEmail: string;
-}
-
-export interface TimeRange {
-    start: string; // RFC3339
-    end: string; // RFC3339
-}
+import type {
+    RecurrenceRule,
+    CalendarEvent,
+    CalendarInfo,
+    TimeRange,
+    Frequency as FrequencyType,
+    Weekday,
+} from '@/types/services';
 
 // ==================================================
 // Base Calendar Service Class
@@ -287,7 +164,7 @@ export abstract class BaseCalendarService {
             attendees: googleEvent.attendees?.map((attendee) => ({
                 email: attendee.email!,
                 displayName: attendee.displayName || undefined,
-                responseStatus: attendee.responseStatus || undefined,
+                responseStatus: (attendee.responseStatus as any) || undefined,
                 optional: attendee.optional || undefined,
                 resource: attendee.resource || undefined,
                 organizer: attendee.organizer || undefined,
@@ -301,7 +178,7 @@ export abstract class BaseCalendarService {
                 ? {
                       useDefault: googleEvent.reminders.useDefault || undefined,
                       overrides: googleEvent.reminders.overrides?.map((override) => ({
-                          method: override.method || 'email',
+                          method: (override.method as any) || 'email',
                           minutes: override.minutes || 0,
                       })),
                   }
@@ -316,7 +193,7 @@ export abstract class BaseCalendarService {
                 : undefined,
             created: googleEvent.created || undefined,
             updated: googleEvent.updated || undefined,
-            status: googleEvent.status || undefined,
+            status: (googleEvent.status as any) || undefined,
             organizer: googleEvent.organizer
                 ? {
                       email: googleEvent.organizer.email || undefined,
@@ -332,8 +209,8 @@ export abstract class BaseCalendarService {
                   }
                 : undefined,
             htmlLink: googleEvent.htmlLink || undefined,
-            transparency: googleEvent.transparency || undefined,
-            visibility: googleEvent.visibility || undefined,
+            transparency: (googleEvent.transparency as any) || undefined,
+            visibility: (googleEvent.visibility as any) || undefined,
             iCalUID: googleEvent.iCalUID || undefined,
             sequence: googleEvent.sequence || undefined,
             colorId: googleEvent.colorId || undefined,
@@ -484,7 +361,7 @@ export abstract class BaseCalendarService {
     /**
      * Convert frequency string to RRULE frequency number
      */
-    private convertFrequencyToRRule(freq: string): number {
+    private convertFrequencyToRRule(freq: FrequencyType): number {
         switch (freq) {
             case 'YEARLY':
                 return Frequency.YEARLY;
@@ -508,9 +385,7 @@ export abstract class BaseCalendarService {
     /**
      * Convert RRULE frequency number to frequency string
      */
-    private convertFrequencyFromRRule(
-        freq: number,
-    ): 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'HOURLY' | 'MINUTELY' | 'SECONDLY' {
+    private convertFrequencyFromRRule(freq: number): FrequencyType {
         switch (freq) {
             case Frequency.YEARLY:
                 return 'YEARLY';
@@ -534,7 +409,7 @@ export abstract class BaseCalendarService {
     /**
      * Convert weekday string to RRULE weekday number
      */
-    private convertWeekdayToRRule(weekday: string): number {
+    private convertWeekdayToRRule(weekday: Weekday): number {
         switch (weekday) {
             case 'MO':
                 return 0; // Monday
@@ -558,9 +433,7 @@ export abstract class BaseCalendarService {
     /**
      * Convert RRULE weekday number to weekday string
      */
-    private convertWeekdayFromRRule(
-        weekday: number,
-    ): 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU' {
+    private convertWeekdayFromRRule(weekday: number): Weekday {
         switch (weekday) {
             case 0:
                 return 'MO';
@@ -601,22 +474,10 @@ export abstract class BaseCalendarService {
             return false;
         }
 
-        const validFreqs = [
-            'DAILY',
-            'WEEKLY',
-            'MONTHLY',
-            'YEARLY',
-            'HOURLY',
-            'MINUTELY',
-            'SECONDLY',
-        ];
-        if (!validFreqs.includes(rule.freq)) {
-            return false;
-        }
-
-        // Validate weekday values if present
+        // The Zod schema already validates the frequency, so we can trust it
+        // Just validate weekday values if present
         if (rule.byweekday) {
-            const validWeekdays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+            const validWeekdays: Weekday[] = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
             for (const day of rule.byweekday) {
                 if (!validWeekdays.includes(day)) {
                     return false;

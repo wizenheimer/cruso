@@ -10,7 +10,10 @@ export const calendarEventDateTimeSchema = z.object({
 export const calendarEventAttendeeSchema = z.object({
     email: z.string().describe('Attendee email address'),
     displayName: z.string().optional().describe('Attendee display name'),
-    responseStatus: z.string().optional().describe('Response status'),
+    responseStatus: z
+        .enum(['needsAction', 'declined', 'tentative', 'accepted'])
+        .optional()
+        .describe('Response status'),
     optional: z.boolean().optional().describe('Whether attendance is optional'),
     resource: z.boolean().optional().describe('Whether this is a resource'),
     organizer: z.boolean().optional().describe('Whether this is the organizer'),
@@ -58,7 +61,7 @@ export const calendarEventSchema = z.object({
             overrides: z
                 .array(
                     z.object({
-                        method: z.string().describe('Reminder method'),
+                        method: z.enum(['email', 'popup']).describe('Reminder method'),
                         minutes: z.number().describe('Minutes before event'),
                     }),
                 )
@@ -72,7 +75,7 @@ export const calendarEventSchema = z.object({
     originalStartTime: calendarEventDateTimeSchema
         .optional()
         .describe('Original start time for recurring events'),
-    status: z.string().optional().describe('Event status: confirmed, tentative, cancelled'),
+    status: z.enum(['confirmed', 'tentative', 'cancelled']).optional().describe('Event status'),
     organizer: z
         .object({
             email: z.string().optional().describe('Organizer email'),
@@ -89,11 +92,11 @@ export const calendarEventSchema = z.object({
         })
         .optional()
         .describe('Event creator'),
-    transparency: z.string().optional().describe('Event transparency: opaque, transparent'),
+    transparency: z.enum(['opaque', 'transparent']).optional().describe('Event transparency'),
     visibility: z
-        .string()
+        .enum(['default', 'public', 'private', 'confidential'])
         .optional()
-        .describe('Event visibility: default, public, private, confidential'),
+        .describe('Event visibility'),
     iCalUID: z.string().optional().describe('iCal UID'),
     colorId: z.string().optional().describe('Event color ID'),
     extendedProperties: z

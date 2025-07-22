@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CalendarEvent } from '@/services/calendar/base';
+import type { CalendarEvent } from './base';
 import * as schemas from './search-schemas';
 
 // ==================================================

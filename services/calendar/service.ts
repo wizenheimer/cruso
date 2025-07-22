@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
-import { BaseCalendarService, CalendarEvent, CalendarInfo, TimeRange } from './base';
+import { BaseCalendarService } from './base';
+import type { CalendarEvent, CalendarInfo, TimeRange } from '@/types/services';
 import { CalendarConnectionsService } from './connections';
 import { CalendarEventsService } from './events';
 import { CalendarAvailabilityService } from './availability';

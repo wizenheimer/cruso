@@ -7,7 +7,7 @@ export { GoogleCalendarService, createCalendarService, getCalendarServiceForUser
 // Base Classes and Interfaces
 // ==================================================
 export { BaseCalendarService } from './base';
-export type { CalendarEvent, CalendarInfo, TimeRange } from './base';
+export type { CalendarEvent, CalendarInfo, TimeRange } from '@/types/services';
 
 // ==================================================
 // Calendar Connections Service

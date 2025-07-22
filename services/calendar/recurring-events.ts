@@ -1,5 +1,6 @@
 import { calendar_v3 } from 'googleapis';
-import { BaseCalendarService, CalendarEvent } from './base';
+import { BaseCalendarService } from './base';
+import type { CalendarEvent } from '@/types/services';
 import {
     RecurrenceRule,
     convertRecurrenceRulesToStrings,

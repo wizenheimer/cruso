@@ -1,7 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { GoogleCalendarService } from '@/services/calendar';
-import { CalendarEvent } from '@/services/calendar/base';
+import type { CalendarEvent } from '@/types/services';
 import {
     updateRecurringEventInstanceInputSchema,
     updateRecurringEventInstanceOutputSchema,

@@ -43,7 +43,10 @@ export const searchEventByICalUIDOutputSchema = z.object({
                                 .optional()
                                 .describe('List of attendee email addresses'),
                             iCalUID: z.string().describe('iCal UID of the event'),
-                            status: z.string().optional().describe('Event status'),
+                            status: z
+                                .enum(['confirmed', 'tentative', 'cancelled'])
+                                .optional()
+                                .describe('Event status'),
                         }),
                     )
                     .describe('List of events found in this calendar'),

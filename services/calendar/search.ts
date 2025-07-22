@@ -1,5 +1,15 @@
-import { BaseCalendarService, CalendarEvent, TimeRange } from './base';
+import { BaseCalendarService } from './base';
+import type { CalendarEvent, TimeRange } from '@/types/services';
 import {
+    SearchOptions,
+    SearchResult,
+    QuickSearchPresets,
+    GetEventsOptions,
+    GetEventsResult,
+} from '@/types/services';
+
+// Re-export types for convenience
+export type {
     SearchOptions,
     SearchResult,
     QuickSearchPresets,

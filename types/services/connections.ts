@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { CalendarInfo } from '@/services/calendar/base';
+import type { CalendarInfo } from './base';
+import type { CalendarSyncStatus } from './shared';
 import * as schemas from './connections-schemas';
 
 // ==================================================
@@ -13,7 +14,6 @@ export type FetchAllCalendarListsResult = z.infer<typeof schemas.fetchAllCalenda
 // Calendar Sync Types
 export type CalendarSyncResult = z.infer<typeof schemas.calendarSyncResultSchema>;
 export type CalendarSyncOptions = z.infer<typeof schemas.calendarSyncOptionsSchema>;
-export type CalendarSyncStatus = z.infer<typeof schemas.calendarSyncStatusSchema>;
 
 // Calendar Connection Types
 export type CalendarConnectionInfo = z.infer<typeof schemas.calendarConnectionInfoSchema>;
@@ -57,5 +57,8 @@ export type CalendarConnectionHealth = z.infer<typeof schemas.calendarConnection
 export type CalendarConnectionHealthCheck = z.infer<
     typeof schemas.calendarConnectionHealthCheckSchema
 >;
+
+// Re-export shared types for convenience
+export type { CalendarSyncStatus } from './shared';
 
 // Schemas are re-exported from the index file

@@ -3,7 +3,8 @@ import { db } from '@/db';
 import { calendarConnections } from '@/db/schema/calendars';
 import { user } from '@/db/schema/auth';
 import { eq } from 'drizzle-orm';
-import { BaseCalendarService, CalendarInfo } from './base';
+import { BaseCalendarService } from './base';
+import type { CalendarInfo } from '@/types/services';
 import { SyncAllCalendarsResult, FetchAllCalendarListsResult } from '@/types/services';
 
 export class CalendarConnectionsService extends BaseCalendarService {

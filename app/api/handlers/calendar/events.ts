@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { createCalendarService } from '@/services/calendar/service';
 import { getUser } from './connections';
-import { CalendarEvent } from '@/services/calendar/base';
+import type { CalendarEvent } from '@/types/services';
 
 /**
  * Handle the GET request to list events from primary calendar

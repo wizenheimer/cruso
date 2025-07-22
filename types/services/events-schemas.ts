@@ -1,21 +1,33 @@
 import { z } from 'zod';
+import {
+    eventStatusSchema,
+    eventTransparencySchema,
+    eventVisibilitySchema,
+    reminderMethodSchema,
+    attendeeResponseStatusSchema,
+    eventReminderSchema,
+    eventAttendeeSchema,
+    eventDateTimeSchema,
+} from './shared';
 
 // ==================================================
 // Base Zod Schemas
 // ==================================================
 
 export const sendUpdatesSchema = z.enum(['all', 'externalOnly', 'none']);
-export const eventStatusSchema = z.enum(['confirmed', 'tentative', 'cancelled']);
-export const eventTransparencySchema = z.enum(['opaque', 'transparent']);
-export const eventVisibilitySchema = z.enum(['default', 'public', 'private', 'confidential']);
-export const reminderMethodSchema = z.enum(['email', 'popup']);
-export const attendeeResponseStatusSchema = z.enum([
-    'needsAction',
-    'declined',
-    'tentative',
-    'accepted',
-]);
 export const orderBySchema = z.enum(['startTime', 'updated']);
+
+// Re-export shared schemas for convenience
+export {
+    eventStatusSchema,
+    eventTransparencySchema,
+    eventVisibilitySchema,
+    reminderMethodSchema,
+    attendeeResponseStatusSchema,
+    eventReminderSchema,
+    eventAttendeeSchema,
+    eventDateTimeSchema,
+} from './shared';
 
 // ==================================================
 // Event Options Schemas
@@ -76,19 +88,7 @@ export const quickCreateEventOptionsSchema = z.object({
     conferenceDataVersion: z.number().min(0).max(1).optional(),
     createConference: z.boolean().optional(),
     colorId: z.string().optional(),
-    reminders: z
-        .object({
-            useDefault: z.boolean().optional(),
-            overrides: z
-                .array(
-                    z.object({
-                        method: reminderMethodSchema,
-                        minutes: z.number(),
-                    }),
-                )
-                .optional(),
-        })
-        .optional(),
+    reminders: eventReminderSchema.optional(),
 });
 
 // ==================================================
@@ -98,63 +98,65 @@ export const quickCreateEventOptionsSchema = z.object({
 export const getEventsResultSchema = z.object({
     events: z.array(z.any()), // CalendarEvent type
     nextPageToken: z.string().optional(),
+    updated: z.string().optional(),
+    timeZone: z.string().optional(),
+    accessRole: z.string().optional(),
+    defaultReminders: z.array(eventReminderSchema).optional(),
     nextSyncToken: z.string().optional(),
 });
 
-export const getEventsFromPrimaryCalendarResultSchema = getEventsResultSchema.extend({
+export const getEventsFromPrimaryCalendarResultSchema = z.object({
+    events: z.array(z.any()), // CalendarEvent type
+    nextPageToken: z.string().optional(),
+    updated: z.string().optional(),
+    timeZone: z.string().optional(),
+    accessRole: z.string().optional(),
+    defaultReminders: z.array(eventReminderSchema).optional(),
+    nextSyncToken: z.string().optional(),
     calendarId: z.string(),
 });
 
-export const getEventFromPrimaryCalendarResultSchema = z.object({
+export const getEventFromPrimaryCalendarResultSchema = z.any().and(
+    z.object({
+        calendarId: z.string(),
+    }),
+);
+
+export const createEventInPrimaryCalendarResultSchema = z.any().and(
+    z.object({
+        calendarId: z.string(),
+    }),
+);
+
+export const updateEventInPrimaryCalendarResultSchema = z.any().and(
+    z.object({
+        calendarId: z.string(),
+    }),
+);
+
+export const deleteEventFromPrimaryCalendarResultSchema = z.object({
+    success: z.boolean().optional(),
     calendarId: z.string(),
-    event: z.any(), // CalendarEvent type
 });
+
+export const rescheduleEventInPrimaryCalendarResultSchema = z.any().and(
+    z.object({
+        calendarId: z.string(),
+    }),
+);
+
+export const quickCreateEventInPrimaryCalendarResultSchema = z.any().and(
+    z.object({
+        calendarId: z.string(),
+    }),
+);
 
 export const getUpdatedEventsResultSchema = z.object({
     events: z.array(z.any()), // CalendarEvent type
     deletedEvents: z.array(z.string()),
     nextPageToken: z.string().optional(),
     nextSyncToken: z.string().optional(),
-});
-
-export const createEventInPrimaryCalendarResultSchema = z.object({
-    calendarId: z.string(),
-    event: z.any(), // CalendarEvent type
-});
-
-export const updateEventInPrimaryCalendarResultSchema = z.object({
-    calendarId: z.string(),
-    event: z.any(), // CalendarEvent type
-});
-
-export const deleteEventFromPrimaryCalendarResultSchema = z.object({
-    calendarId: z.string(),
-});
-
-export const rescheduleEventInPrimaryCalendarResultSchema = z.object({
-    calendarId: z.string(),
-    event: z.any(), // CalendarEvent type
-});
-
-export const quickCreateEventInPrimaryCalendarResultSchema = z.object({
-    calendarId: z.string(),
-    event: z.any(), // CalendarEvent type
-});
-
-// ==================================================
-// Event Reminder Schemas
-// ==================================================
-
-export const eventReminderSchema = z.object({
-    useDefault: z.boolean().optional(),
-    overrides: z
-        .array(
-            z.object({
-                method: reminderMethodSchema,
-                minutes: z.number(),
-            }),
-        )
-        .optional(),
+    lastSyncTime: z.string(),
 });
 
 // ==================================================
@@ -169,33 +171,6 @@ export const conferenceDataSchema = z.object({
         }),
     }),
 });
-
-// ==================================================
-// Event Attendee Schemas
-// ==================================================
-
-export const eventAttendeeSchema = z.object({
-    email: z.string().email(),
-    displayName: z.string().optional(),
-    responseStatus: attendeeResponseStatusSchema.optional(),
-});
-
-// ==================================================
-// Event Time Schemas
-// ==================================================
-
-export const eventDateTimeSchema = z.object({
-    dateTime: z.string().optional(),
-    date: z.string().optional(),
-    timeZone: z.string().optional(),
-});
-
-// ==================================================
-// Event Status Schemas
-// ==================================================
-
-// These schemas are already defined as constants at the top of the file
-// and are used throughout this file
 
 // ==================================================
 // Event Response Schemas
@@ -239,10 +214,8 @@ export const eventSyncResultSchema = z.object({
 
 export const eventSyncOptionsSchema = z.object({
     syncToken: z.string().optional(),
-    timeMin: z.string().optional(),
-    timeMax: z.string().optional(),
+    timeZone: z.string().optional(),
     maxResults: z.number().min(1).max(2500).optional(),
-    showDeleted: z.boolean().optional(),
 });
 
 // ==================================================

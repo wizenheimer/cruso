@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import { CalendarEvent } from '@/services/calendar/base';
-import { RecurrenceRule } from '@/lib/recurrence';
+import type { CalendarEvent, RecurrenceRule } from './base';
 import * as schemas from './recurring-events-schemas';
 
 // ==================================================

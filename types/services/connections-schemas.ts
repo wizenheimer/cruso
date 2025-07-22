@@ -1,12 +1,15 @@
 import { z } from 'zod';
+import { calendarSyncStatusSchema } from './shared';
 
 // ==================================================
 // Base Zod Schemas
 // ==================================================
 
-const syncStatusSchema = z.enum(['active', 'error', 'paused']);
 const accessRoleSchema = z.enum(['freeBusyReader', 'reader', 'writer', 'owner']);
 const healthStatusSchema = z.enum(['healthy', 'warning', 'error']);
+
+// Re-export shared schemas for convenience
+export { calendarSyncStatusSchema } from './shared';
 
 // ==================================================
 // Connections Service Schemas
@@ -40,14 +43,6 @@ export const calendarSyncOptionsSchema = z.object({
     syncToken: z.string().optional(),
 });
 
-export const calendarSyncStatusSchema = z.object({
-    calendarId: z.string(),
-    status: syncStatusSchema,
-    lastSyncAt: z.string().optional(),
-    errorCount: z.number(),
-    lastError: z.string().optional(),
-});
-
 // ==================================================
 // Calendar Connection Schemas
 // ==================================================
@@ -61,7 +56,7 @@ export const calendarConnectionInfoSchema = z.object({
     isPrimary: z.boolean(),
     isActive: z.boolean(),
     includeInAvailability: z.boolean(),
-    syncStatus: syncStatusSchema,
+    syncStatus: calendarSyncStatusSchema,
     lastSyncAt: z.string().optional(),
     timeZone: z.string().optional(),
 });
@@ -70,7 +65,7 @@ export const calendarConnectionUpdateSchema = z.object({
     calendarName: z.string().optional(),
     isPrimary: z.boolean().optional(),
     includeInAvailability: z.boolean().optional(),
-    syncStatus: syncStatusSchema.optional(),
+    syncStatus: calendarSyncStatusSchema.optional(),
     timeZone: z.string().optional(),
 });
 
@@ -187,7 +182,7 @@ export const calendarConnectionQuerySchema = z.object({
     isPrimary: z.boolean().optional(),
     isActive: z.boolean().optional(),
     includeInAvailability: z.boolean().optional(),
-    syncStatus: syncStatusSchema.optional(),
+    syncStatus: calendarSyncStatusSchema.optional(),
     googleEmail: z.string().email().optional(),
 });
 

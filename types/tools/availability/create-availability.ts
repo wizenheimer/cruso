@@ -35,7 +35,7 @@ export const calendarEventReminderSchema = z.object({
     overrides: z
         .array(
             z.object({
-                method: z.string().describe('Reminder method (email, popup, etc.)'),
+                method: z.enum(['email', 'popup']).describe('Reminder method'),
                 minutes: z.number().describe('Minutes before the event to trigger the reminder'),
             }),
         )
@@ -125,15 +125,15 @@ export const calendarEventSchema = z.object({
         .describe('Original start time for recurring events'),
     created: z.string().optional().describe('RFC3339 timestamp when the event was created'),
     updated: z.string().optional().describe('RFC3339 timestamp when the event was last updated'),
-    status: z.string().optional().describe('Event status (confirmed, tentative, cancelled)'),
+    status: z.enum(['confirmed', 'tentative', 'cancelled']).optional().describe('Event status'),
     organizer: calendarEventPersonSchema.optional().describe('Event organizer information'),
     creator: calendarEventPersonSchema.optional().describe('Event creator information'),
     htmlLink: z.string().optional().describe('HTML link to view the event'),
-    transparency: z.string().optional().describe('Event transparency (opaque, transparent)'),
+    transparency: z.enum(['opaque', 'transparent']).optional().describe('Event transparency'),
     visibility: z
-        .string()
+        .enum(['default', 'public', 'private', 'confidential'])
         .optional()
-        .describe('Event visibility (default, public, private, confidential)'),
+        .describe('Event visibility'),
     iCalUID: z.string().optional().describe('iCal UID for the event'),
     sequence: z.number().optional().describe('Sequence number for the event'),
     colorId: z.string().optional().describe('Color ID for the event'),

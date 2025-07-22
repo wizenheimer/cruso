@@ -1,5 +1,13 @@
 import { z } from 'zod';
-import { CalendarEvent } from '@/services/calendar/base';
+import type { CalendarEvent } from './base';
+import type {
+    EventReminder,
+    EventAttendee,
+    EventDateTime,
+    EventStatus,
+    EventTransparency,
+    EventVisibility,
+} from './shared';
 import * as schemas from './events-schemas';
 
 // ==================================================
@@ -43,24 +51,8 @@ export type BatchOperation = z.infer<typeof schemas.batchOperationSchema>;
 export type BatchOperationsOptions = z.infer<typeof schemas.batchOperationsOptionsSchema>;
 export type BatchOperationResult = z.infer<typeof schemas.batchOperationResultSchema>;
 
-// Event Reminder Types
-export type EventReminder = z.infer<typeof schemas.eventReminderSchema>;
-
 // Event Conference Types
 export type ConferenceData = z.infer<typeof schemas.conferenceDataSchema>;
-
-// Event Attendee Types
-export type EventAttendee = z.infer<typeof schemas.eventAttendeeSchema>;
-
-// Event Time Types
-export type EventDateTime = z.infer<typeof schemas.eventDateTimeSchema>;
-
-// Event Status Types
-export type EventStatus = z.infer<typeof schemas.eventStatusSchema>;
-export type EventTransparency = z.infer<typeof schemas.eventTransparencySchema>;
-
-// Event Visibility Types
-export type EventVisibility = z.infer<typeof schemas.eventVisibilitySchema>;
 
 // Event Response Types
 export type EventResponse = z.infer<typeof schemas.eventResponseSchema>;
@@ -71,5 +63,15 @@ export type EventFilters = z.infer<typeof schemas.eventFiltersSchema>;
 // Event Sync Types
 export type EventSyncResult = z.infer<typeof schemas.eventSyncResultSchema>;
 export type EventSyncOptions = z.infer<typeof schemas.eventSyncOptionsSchema>;
+
+// Re-export shared types for convenience
+export type {
+    EventReminder,
+    EventAttendee,
+    EventDateTime,
+    EventStatus,
+    EventTransparency,
+    EventVisibility,
+} from './shared';
 
 // Schemas are re-exported from the index file

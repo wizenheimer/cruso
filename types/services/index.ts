@@ -1,4 +1,6 @@
 // Export all service-related types
+export * from './shared';
+export * from './base';
 export * from './availability';
 export * from './connections';
 export * from './events';
@@ -38,8 +40,6 @@ export type {
     EventFilters,
     EventSyncResult,
     BatchOperation,
-    EventAttendee,
-    EventReminder,
     GetEventsOptions,
     CreateEventOptions,
     UpdateEventOptions,
@@ -80,6 +80,9 @@ export type {
     SearchAnalytics,
 } from './search';
 
+// Re-export commonly used base types for convenience
+export type { RecurrenceRule, CalendarEvent, CalendarInfo } from './base';
+
 // Re-export availability schemas for runtime validation
 export {
     availabilityResultSchema,
@@ -109,8 +112,6 @@ export {
     eventResponseSchema,
     eventFiltersSchema,
     batchOperationSchema,
-    eventAttendeeSchema,
-    eventReminderSchema,
     getEventsOptionsSchema,
     createEventOptionsSchema,
     updateEventOptionsSchema,
@@ -150,3 +151,6 @@ export {
     searchSuggestionsResultSchema,
     searchAnalyticsSchema,
 } from './search-schemas';
+
+// Re-export base schemas for runtime validation
+export { recurrenceRuleSchema, calendarEventSchema, calendarInfoSchema } from './base';

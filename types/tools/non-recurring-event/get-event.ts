@@ -36,7 +36,10 @@ export const getEventOutputSchema = z.object({
         .array(z.string().email())
         .optional()
         .describe('List of attendee email addresses'),
-    eventStatus: z.string().optional().describe('Event status: confirmed, tentative, cancelled'),
+    eventStatus: z
+        .enum(['confirmed', 'tentative', 'cancelled'])
+        .optional()
+        .describe('Event status'),
     eventOrganizer: z
         .object({
             email: z.string().optional().describe('Organizer email'),
@@ -54,11 +57,11 @@ export const getEventOutputSchema = z.object({
     eventLink: z.string().optional().describe('Link to the event'),
     eventICalUID: z.string().optional().describe('iCal UID of the event'),
     eventRecurringEventId: z.string().optional().describe('ID of the recurring event series'),
-    eventTransparency: z.string().optional().describe('Event transparency: opaque, transparent'),
+    eventTransparency: z.enum(['opaque', 'transparent']).optional().describe('Event transparency'),
     eventVisibility: z
-        .string()
+        .enum(['default', 'public', 'private', 'confidential'])
         .optional()
-        .describe('Event visibility: default, public, private, confidential'),
+        .describe('Event visibility'),
     eventColorId: z.string().optional().describe('Event color ID'),
     eventCreated: z.string().optional().describe('Event creation timestamp'),
     eventUpdated: z.string().optional().describe('Event last update timestamp'),

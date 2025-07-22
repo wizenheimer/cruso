@@ -1,7 +1,7 @@
 import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { GoogleCalendarService } from '@/services/calendar';
 import { createTool } from '@mastra/core/tools';
-import { CalendarEvent, RecurrenceRule } from '@/services/calendar/base';
+import type { CalendarEvent, RecurrenceRule } from '@/types/services';
 import {
     batchRecurringEventInputSchema,
     batchRecurringEventOutputSchema,

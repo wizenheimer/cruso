@@ -1,5 +1,6 @@
 import { calendar_v3 } from 'googleapis';
-import { BaseCalendarService, CalendarEvent } from './base';
+import { BaseCalendarService } from './base';
+import type { CalendarEvent } from '@/types/services';
 import {
     GetEventsOptions,
     GetEventsResult,
@@ -259,6 +260,7 @@ export class CalendarEventsService extends BaseCalendarService {
                 deletedEvents,
                 nextPageToken: response.data.nextPageToken || undefined,
                 nextSyncToken: response.data.nextSyncToken || undefined,
+                lastSyncTime: new Date().toISOString(),
             };
         } catch (error) {
             throw new Error(

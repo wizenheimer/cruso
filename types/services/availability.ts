@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CalendarEvent, TimeRange } from '@/services/calendar/base';
+import type { CalendarEvent, TimeRange } from './base';
 import * as schemas from './availability-schemas';
 
 // ==================================================

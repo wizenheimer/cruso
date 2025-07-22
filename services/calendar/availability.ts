@@ -3,9 +3,28 @@ import { db } from '@/db';
 import { calendarConnections } from '@/db/schema/calendars';
 import { eq, and } from 'drizzle-orm';
 import { preferenceService } from '../preferences';
-import { BaseCalendarService, CalendarEvent, TimeRange } from './base';
+import { BaseCalendarService } from './base';
+import type { CalendarEvent, TimeRange } from '@/types/services';
 import { addMinutes, differenceInMinutes, startOfDay, endOfDay, isWeekend } from 'date-fns';
 import {
+    AvailabilityResult,
+    BlockAvailabilityResult,
+    ClearAvailabilityResult,
+    WorkingHours,
+    SuggestedTimeSlot,
+    CheckAvailabilityBlockOptions,
+    CreateAvailabilityBlockOptions,
+    FindBestTimeForMeetingOptions,
+    TimeSlot,
+    ScoredEvent,
+    GenerateTimeSlotsOptions,
+    WorkingHoursOptions,
+    ScoreTimeSlotOptions,
+    CalendarEventDetails,
+} from '@/types/services';
+
+// Re-export types for convenience
+export type {
     AvailabilityResult,
     BlockAvailabilityResult,
     ClearAvailabilityResult,

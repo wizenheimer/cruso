@@ -41,7 +41,10 @@ export const getRecurringEventOutputSchema = z.object({
         .array(recurrenceRuleSchema)
         .optional()
         .describe('Recurrence rules for the event'),
-    eventStatus: z.string().optional().describe('Event status: confirmed, tentative, cancelled'),
+    eventStatus: z
+        .enum(['confirmed', 'tentative', 'cancelled'])
+        .optional()
+        .describe('Event status'),
     eventOrganizer: z
         .object({
             email: z.string().optional().describe('Organizer email'),
@@ -63,11 +66,11 @@ export const getRecurringEventOutputSchema = z.object({
         .string()
         .optional()
         .describe('Original start time for recurring events'),
-    eventTransparency: z.string().optional().describe('Event transparency: opaque, transparent'),
+    eventTransparency: z.enum(['opaque', 'transparent']).optional().describe('Event transparency'),
     eventVisibility: z
-        .string()
+        .enum(['default', 'public', 'private', 'confidential'])
         .optional()
-        .describe('Event visibility: default, public, private, confidential'),
+        .describe('Event visibility'),
     eventColorId: z.string().optional().describe('Event color ID'),
     eventCreated: z.string().optional().describe('Event creation timestamp'),
     eventUpdated: z.string().optional().describe('Event last update timestamp'),
