@@ -611,8 +611,8 @@ export class CalendarEventsService extends BaseCalendarService {
         });
 
         const results = {
-            successful: [] as Array<{ operation: any; result?: any }>,
-            failed: [] as Array<{ operation: any; error: string }>,
+            successful: [] as Array<{ operation: BatchOperation; result?: CalendarEvent | { deleted: boolean } }>,
+            failed: [] as Array<{ operation: BatchOperation; error: string }>,
         };
 
         try {

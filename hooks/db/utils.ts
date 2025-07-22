@@ -2,8 +2,9 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { schema } from '@/db/schema';
 import { ConnectionManager } from '@/services/calendar/connection';
-import { PreferenceService } from '@/services/preferences/service';
+import { PreferenceService } from '@/services/preferences';
 import { AvailabilityService } from '@/services/availability';
+import { Account, GenericEndpointContext } from 'better-auth';
 
 const { user, userEmails } = schema;
 
@@ -31,7 +32,10 @@ export function extractEmailFromGoogleToken(idToken?: string | null): string | n
 /**
  * Handle Google account creation and calendar sync
  */
-export async function handleGoogleCalendarConnection(account: any, context?: any) {
+export async function handleGoogleCalendarConnection(
+    account: Account,
+    context?: GenericEndpointContext,
+) {
     try {
         // Get the user info
         const userData = await db.query.user.findFirst({
@@ -57,8 +61,10 @@ export async function handleGoogleCalendarConnection(account: any, context?: any
             });
 
             // Add the user email to the context
-            context.context.userEmail = userEmail;
-            context.context.userName = userName;
+            if (context) {
+                context.context.userEmail = userEmail;
+                context.context.userName = userName;
+            }
         }
     } catch (error) {
         console.error('[DB_HOOK] Error in database hook calendar sync:', error);
@@ -69,7 +75,7 @@ export async function handleGoogleCalendarConnection(account: any, context?: any
 /**
  * Handle email connection adds the connected calendar email to the user emails table
  */
-export async function handleEmailConnection(account: any, context: any) {
+export async function handleEmailConnection(account: Account, context: GenericEndpointContext) {
     // Get the user email
     const userEmail = context.context.userEmail;
 
@@ -100,7 +106,7 @@ export async function handleEmailConnection(account: any, context: any) {
 /**
  * Handle new user preferences creation adds the connected calendar email to the user preferences table
  */
-export async function handleNewUserPreferences(account: any, context: any) {
+export async function handleNewUserPreferences(account: Account, context: GenericEndpointContext) {
     // Get the newly added email
     const newEmail = context.context.addedEmail;
     const userName = context.context.userName;
@@ -125,23 +131,21 @@ export async function handleNewUserPreferences(account: any, context: any) {
     }
 }
 
-export async function handleNewUserAvailabilities(account: any, context: any) {
+export async function handleNewUserAvailabilities(
+    account: Account,
+    context: GenericEndpointContext,
+) {
     // Check if the user is newly created
     const isNewUser = context.context.isNewUser;
     if (!isNewUser) {
         return;
     }
 
-    // Create default 9 to 5 weekday availability
+    // Use the AvailabilityService to create default availability
     const availabilityService = new AvailabilityService();
     const result = await availabilityService.createDefaultAvailability(account.userId);
 
     if (!result.success) {
         console.error('[DB_HOOK] Failed to create default availability:', result.error);
-    } else {
-        console.log(
-            '[DB_HOOK] Default availability created successfully for user:',
-            account.userId,
-        );
     }
 }

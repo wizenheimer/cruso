@@ -14,6 +14,7 @@ import {
 import { Mastra } from '@mastra/core/mastra';
 import { mastra } from '@/mastra';
 import { User } from '@/types/api/users';
+import { ExchangeData } from './types';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
 
@@ -99,7 +100,7 @@ export class ExchangeProcessingService {
      */
     private async emailWithPriors(
         rawEmailData: RawEmailData,
-        priorEmail: any, // ExchangeData type
+        priorEmail: ExchangeData, // ExchangeData type
     ): Promise<EmailData> {
         const bodyPrefix = generatePrefixForBody(
             { name: rawEmailData.sender, address: rawEmailData.sender },

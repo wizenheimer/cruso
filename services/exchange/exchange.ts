@@ -3,6 +3,7 @@ import { ExchangeDataService } from './exchangeDataService';
 import { ExchangeProcessingService } from './exchangeProcessingService';
 import { CreateExchangeData, ExchangeFilters } from '@/types/api/exchange';
 import { User } from '@/types/api/users';
+import { Context } from 'hono';
 
 export class ExchangeService {
     private static instance: ExchangeService | null = null;
@@ -26,7 +27,7 @@ export class ExchangeService {
     // ============================================================================
 
     // Email Processing Methods
-    async processEmail(c: any): Promise<EmailData> {
+    async processEmail(c: Context): Promise<EmailData> {
         return this.exchangeProcessingService.processEmail(c);
     }
 

@@ -4,8 +4,24 @@ import { eq, and } from 'drizzle-orm';
 
 export interface CreateAvailabilityResult {
     success: boolean;
-    data?: any;
+    data?: {
+        id: number;
+        userId: string | null;
+        days: number[] | null;
+        startTime: string;
+        endTime: string;
+        timezone: string;
+        createdAt: Date | null;
+        updatedAt: Date | null;
+    };
     error?: string;
+}
+
+export interface AvailabilityData {
+    days: number[];
+    startTime: string;
+    endTime: string;
+    timezone?: string;
 }
 
 export class AvailabilityService {
@@ -92,12 +108,7 @@ export class AvailabilityService {
      */
     async createAvailability(
         userId: string,
-        availabilityData: {
-            days: number[];
-            startTime: string;
-            endTime: string;
-            timezone?: string;
-        },
+        availabilityData: AvailabilityData,
     ): Promise<CreateAvailabilityResult> {
         try {
             const newAvailability = await db

@@ -1,3 +1,4 @@
+import { GenericEndpointContext } from 'better-auth';
 import { AccountAfterCreateHook, AccountBeforeCreateHook } from './types';
 import {
     handleEmailConnection,
@@ -16,7 +17,7 @@ export const beforeAccountCreationHook = (async (account) => {
 /**
  * Hooks triggered after account creation
  */
-export const afterAccountCreationHook = (async (account, context) => {
+export const afterAccountCreationHook = (async (account, context: GenericEndpointContext) => {
     // Handle Google calendar connection
     if (account.providerId === 'google') {
         await handleGoogleCalendarConnection(account, context);

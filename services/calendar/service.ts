@@ -12,6 +12,7 @@ import {
     CheckAvailabilityBlockOptions,
     CreateAvailabilityBlockOptions,
     FindBestTimeForMeetingOptions,
+    BatchOperation,
 } from '@/types/services';
 import { CalendarRecurringEventsService } from './recurring-events';
 import { CalendarSearchService } from './search';
@@ -296,8 +297,8 @@ export class GoogleCalendarService extends BaseCalendarService {
             sendUpdates?: 'all' | 'externalOnly' | 'none';
         },
     ): Promise<{
-        successful: Array<{ operation: any; result?: any }>;
-        failed: Array<{ operation: any; error: string }>;
+        successful: Array<{ operation: BatchOperation; result?: CalendarEvent }>;
+        failed: Array<{ operation: BatchOperation; error: string }>;
     }> {
         return this.eventsService.performBatchOperationsOnPrimaryCalendar(operations, options);
     }

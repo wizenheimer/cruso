@@ -5,11 +5,9 @@ import { eq, and } from 'drizzle-orm';
 import { preferenceService } from '../preferences';
 import { BaseCalendarService } from './base';
 import type { CalendarEvent, TimeRange } from '@/types/services';
-import { addMinutes, differenceInMinutes, startOfDay, endOfDay, isWeekend } from 'date-fns';
 import {
     AvailabilityResult,
     BlockAvailabilityResult,
-    ClearAvailabilityResult,
     WorkingHours,
     SuggestedTimeSlot,
     CheckAvailabilityBlockOptions,

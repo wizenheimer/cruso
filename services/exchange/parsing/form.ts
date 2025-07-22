@@ -3,6 +3,19 @@ import { parseEmailAddress, parseEmailAddressList } from './email';
 import { RawEmailData } from '@/services/exchange/types';
 
 /**
+ * Interface for form data value options
+ */
+interface FormDataValueOptions {
+    decode?: boolean;
+    defaultValue?: string;
+    trim?: boolean;
+    lowercase?: boolean;
+    maxLength?: number;
+    sanitize?: boolean;
+    attributes?: Record<string, string>;
+}
+
+/**
  * Get a value from a FormData object.
  * @param formData - The FormData object to get the value from.
  * @param key - The key to get the value from.
@@ -12,15 +25,7 @@ import { RawEmailData } from '@/services/exchange/types';
 export const getValueFromFormData = (
     formData: FormData,
     key: string,
-    options: {
-        decode?: boolean;
-        defaultValue?: string;
-        trim?: boolean;
-        lowercase?: boolean;
-        maxLength?: number;
-        sanitize?: boolean;
-        attributes?: any;
-    } = {},
+    options: FormDataValueOptions = {},
 ) => {
     // Set the default options
     const {

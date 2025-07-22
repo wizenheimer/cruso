@@ -7,6 +7,22 @@ import { getValueFromFormData } from './form';
 export const mailgunWebhookSigningKey = process.env.MAILGUN_WEBHOOK_SIGNING_KEY;
 
 /**
+ * Interface for Mailgun webhook signature payload
+ */
+interface MailgunWebhookSignature {
+    token: string;
+    signature: string;
+    timestamp: string;
+}
+
+/**
+ * Interface for Mailgun webhook JSON payload
+ */
+interface MailgunWebhookPayload {
+    signature?: MailgunWebhookSignature;
+}
+
+/**
  * Verifies the signature of a webhook using HMAC-SHA256.
  *
  * @param {string} webhookSignature - The signature to verify
@@ -63,10 +79,12 @@ export async function verifyMailgunWebhookFromFormData(formData: FormData): Prom
 /**
  * Verifies the signature of a Mailgun JSON webhook payload.
  *
- * @param {any} payload - The JSON payload containing webhook data
+ * @param {MailgunWebhookPayload} payload - The JSON payload containing webhook data
  * @returns {Promise<boolean>} True if the signature is valid, false otherwise
  */
-export async function verifyMailgunWebhookFromJSONPayload(payload: any): Promise<boolean> {
+export async function verifyMailgunWebhookFromJSONPayload(
+    payload: MailgunWebhookPayload,
+): Promise<boolean> {
     const signature = payload?.signature;
     if (!signature) {
         return false;
