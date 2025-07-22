@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth';
 import { Context } from 'hono';
 import { Next } from 'hono';
-import { User } from '@/types/api/users';
+import { User } from '@/types/users';
 
 /**
  * Get the session from the request headers

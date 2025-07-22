@@ -11,10 +11,8 @@ import {
     USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
     NON_USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
 } from '@/constants/email';
-import { Mastra } from '@mastra/core/mastra';
-import { mastra } from '@/mastra';
-import { User } from '@/types/api/users';
 import { ExchangeData } from './types';
+import { User } from '@/types/users';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
 
@@ -23,13 +21,11 @@ export class ExchangeProcessingService {
     private exchangeDataService: ExchangeDataService;
     private emailParsingService: EmailParsingService;
     private emailService: EmailService;
-    private mastra: Mastra;
 
     private constructor() {
         this.exchangeDataService = ExchangeDataService.getInstance();
         this.emailParsingService = EmailParsingService.getInstance();
         this.emailService = EmailService.getInstance();
-        this.mastra = mastra;
     }
 
     public static getInstance(): ExchangeProcessingService {
@@ -252,23 +248,5 @@ ${signature}`,
      */
     async handleEngagementForExistingUser(emailData: EmailData, user: User) {
         console.log('handling engagement for existing user', { emailData, user });
-
-        // Get agent to handle the email
-        const agent = await this.getAgent();
-
-        // Get the result from the agent
-        const result = await agent.generate(emailData.body, {
-            maxSteps: 5, // Allow up to 5 tool usage steps
-            onStepFinish: ({ text, toolCalls, toolResults }) => {
-                console.log('Step completed:', { text, toolCalls, toolResults });
-            },
-        });
-
-        console.log('agent result', { result });
-    }
-
-    async getAgent() {
-        const agent = await this.mastra.getAgent('supervisorAgent');
-        return agent;
     }
 }

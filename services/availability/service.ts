@@ -4,24 +4,8 @@ import { eq, and } from 'drizzle-orm';
 
 export interface CreateAvailabilityResult {
     success: boolean;
-    data?: {
-        id: number;
-        userId: string | null;
-        days: number[] | null;
-        startTime: string;
-        endTime: string;
-        timezone: string;
-        createdAt: Date | null;
-        updatedAt: Date | null;
-    };
+    data?: any;
     error?: string;
-}
-
-export interface AvailabilityData {
-    days: number[];
-    startTime: string;
-    endTime: string;
-    timezone?: string;
 }
 
 export class AvailabilityService {
@@ -32,8 +16,6 @@ export class AvailabilityService {
      */
     async createDefaultAvailability(userId: string): Promise<CreateAvailabilityResult> {
         try {
-            console.log('[AVAILABILITY_SERVICE] Creating default availability for user:', userId);
-
             // Default 9-5 availability for weekdays (Monday = 1, Tuesday = 2, ..., Friday = 5)
             const defaultAvailability = await db
                 .insert(availability)
@@ -48,17 +30,11 @@ export class AvailabilityService {
                 })
                 .returning();
 
-            console.log(
-                '[AVAILABILITY_SERVICE] Default availability created successfully:',
-                defaultAvailability[0],
-            );
-
             return {
                 success: true,
                 data: defaultAvailability[0],
             };
         } catch (error) {
-            console.error('[AVAILABILITY_SERVICE] Error creating default availability:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -92,7 +68,6 @@ export class AvailabilityService {
                 data: userAvailability,
             };
         } catch (error) {
-            console.error('[AVAILABILITY_SERVICE] Error getting user availability:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -108,7 +83,12 @@ export class AvailabilityService {
      */
     async createAvailability(
         userId: string,
-        availabilityData: AvailabilityData,
+        availabilityData: {
+            days: number[];
+            startTime: string;
+            endTime: string;
+            timezone?: string;
+        },
     ): Promise<CreateAvailabilityResult> {
         try {
             const newAvailability = await db
@@ -129,7 +109,6 @@ export class AvailabilityService {
                 data: newAvailability[0],
             };
         } catch (error) {
-            console.error('[AVAILABILITY_SERVICE] Error creating availability:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -176,7 +155,6 @@ export class AvailabilityService {
                 data: updatedAvailability[0],
             };
         } catch (error) {
-            console.error('[AVAILABILITY_SERVICE] Error updating availability:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -220,7 +198,6 @@ export class AvailabilityService {
                 data: deletedAvailability,
             };
         } catch (error) {
-            console.error('[AVAILABILITY_SERVICE] Error deleting availability:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred',

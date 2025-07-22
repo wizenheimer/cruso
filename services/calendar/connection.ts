@@ -81,29 +81,14 @@ export class ConnectionManager {
         profile: UserProfile;
     }): Promise<void> {
         try {
-            console.log('\n [CONNECTION] Handling Google calendar connection for user:', userId);
-            console.log(' [CONNECTION] Account details:', {
-                id: account.id,
-                accountId: account.accountId,
-                providerId: account.providerId,
-                hasAccessToken: !!account.accessToken,
-            });
-            console.log(' [CONNECTION] Profile details:', {
-                email: profile.email,
-                name: profile.name,
-            });
-
             if (!account.accessToken) {
-                console.error(' [CONNECTION] No access token available for calendar sync');
                 return;
             }
 
             if (!account.accountId) {
-                console.error(' [CONNECTION] No Google account ID available for calendar sync');
                 return;
             }
 
-            console.log(' [CONNECTION] Creating ConnectionManager instance...');
             const connectionManager = new ConnectionManager({
                 userId,
                 accountId: account.id,
@@ -111,21 +96,10 @@ export class ConnectionManager {
                 googleEmail: profile.email,
             });
 
-            console.log(' [CONNECTION] ConnectionManager created with:', {
-                userId,
-                accountId: account.id,
-                googleAccountId: account.accountId,
-                googleEmail: profile.email,
-            });
-
             // Fetch and store available calendars
-            console.log(' [CONNECTION] Starting calendar sync...');
             await connectionManager.syncUserCalendars();
-
-            console.log(' [CONNECTION] handleGoogleCalendarConnection completed successfully');
         } catch (error) {
-            console.error(' [CONNECTION] Error handling Google calendar connection:', error);
-            console.error(' [CONNECTION] Full error details:', error);
+            // Error handling
         }
     }
 
@@ -152,42 +126,17 @@ export class ConnectionManager {
      */
     async syncUserCalendars(): Promise<void> {
         try {
-            console.log('\n [SYNC] Syncing calendars for user:', {
-                userId: this.userId,
-                accountId: this.accountId,
-                googleAccountId: this.googleAccountId,
-                googleEmail: this.googleEmail,
-            });
-
-            console.log(' [SYNC] Getting calendar API instance...');
             const calendar = await this.getCalendarApi();
 
-            console.log(' [SYNC] Fetching calendars from Google...');
             const calendars = await this.fetchCalendarsFromGoogle(calendar);
 
             if (!calendars) {
-                console.error(' [SYNC] Failed to fetch calendars from Google');
                 return;
             }
 
-            console.log(
-                ` [SYNC] Found ${calendars.length} calendars for user ${this.userId}:`,
-                calendars.map((c: GoogleCalendar) => ({
-                    id: c.id,
-                    name: c.summary,
-                    primary: c.primary,
-                })),
-            );
-
-            console.log(' [SYNC] Storing calendars in database...');
             await this.storeCalendars(calendars);
-
-            console.log(
-                ` [SYNC] Finished syncing ${calendars.length} calendars for user ${this.userId}`,
-            );
         } catch (error) {
-            console.error(' [SYNC] Error syncing calendars:', error);
-            console.error(' [SYNC] Error details:', error);
+            // Error handling
         }
     }
 
@@ -200,10 +149,7 @@ export class ConnectionManager {
         try {
             const response = await calendar.calendarList.list();
 
-            console.log('Google Calendar API response status:', response.status);
-
             if (response.status !== 200) {
-                console.error('Failed to fetch calendars:', response.statusText);
                 return null;
             }
 
@@ -215,7 +161,6 @@ export class ConnectionManager {
                 primary: cal.primary || false,
             }));
         } catch (error) {
-            console.error('Error fetching calendars from Google:', error);
             return null;
         }
     }
@@ -225,16 +170,6 @@ export class ConnectionManager {
      */
     private async storeCalendars(calendars: GoogleCalendar[]): Promise<void> {
         for (const calendar of calendars) {
-            console.log(` [STORE] Inserting calendar: ${calendar.summary} (${calendar.id})`);
-            console.log(` [STORE] Calendar data:`, {
-                calendarId: calendar.id,
-                calendarName: calendar.summary,
-                timeZone: calendar.timeZone,
-                isPrimary: calendar.primary,
-                googleAccountId: this.googleAccountId,
-                googleEmail: this.googleEmail,
-            });
-
             await db
                 .insert(calendarConnections)
                 .values({
@@ -265,8 +200,6 @@ export class ConnectionManager {
                         updatedAt: new Date(),
                     },
                 });
-
-            console.log(` [STORE] Successfully stored calendar: ${calendar.summary}`);
         }
     }
 

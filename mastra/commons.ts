@@ -1,4 +1,4 @@
-import { User } from '@/types/api/users';
+import { User } from '@/types/users';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { PinoLogger } from '@mastra/loggers';
 

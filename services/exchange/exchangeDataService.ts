@@ -3,8 +3,7 @@ import { db } from '@/db';
 import { exchangeData } from '@/db/schema/exchange';
 import { user } from '@/db/schema/auth';
 import { and, asc, count, desc, eq, or, sql } from 'drizzle-orm';
-import { CreateExchangeData, ExchangeFilters } from '@/types/api/exchange';
-import { User } from '@/types/api/users';
+import { CreateExchangeData, ExchangeFilters } from '@/types/exchange';
 
 const MAX_EMAILS_IN_EXCHANGE = 25;
 

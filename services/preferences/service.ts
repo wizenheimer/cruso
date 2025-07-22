@@ -37,8 +37,6 @@ export class PreferenceService {
      */
     async getPreferences(userId: string): Promise<GetPreferencesResult> {
         try {
-            console.log('[PREFERENCE_SERVICE] Getting preferences for user:', userId);
-
             const [userPrefs] = await db
                 .select({
                     preferences: preferences,
@@ -52,20 +50,17 @@ export class PreferenceService {
                 .limit(1);
 
             if (!userPrefs) {
-                console.log('[PREFERENCE_SERVICE] No preferences found for user:', userId);
                 return {
                     success: false,
                     error: 'Preferences not found',
                 };
             }
 
-            console.log('[PREFERENCE_SERVICE] Preferences retrieved successfully');
             return {
                 success: true,
                 data: userPrefs as PreferencesWithPrimaries,
             };
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error getting preferences:', error);
             return {
                 success: false,
                 error: 'Failed to get preferences',
@@ -78,8 +73,6 @@ export class PreferenceService {
      */
     async getBasicPreferences(userId: string): Promise<ServiceResult<Preference>> {
         try {
-            console.log('[PREFERENCE_SERVICE] Getting basic preferences for user:', userId);
-
             const [userPrefs] = await db
                 .select()
                 .from(preferences)
@@ -98,7 +91,6 @@ export class PreferenceService {
                 data: userPrefs,
             };
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error getting basic preferences:', error);
             return {
                 success: false,
                 error: 'Failed to get preferences',
@@ -111,8 +103,6 @@ export class PreferenceService {
      */
     async createDefaultPreferences(userId: string): Promise<CreatePreferencesResult> {
         try {
-            console.log('[PREFERENCE_SERVICE] Creating default preferences for user:', userId);
-
             // Check if preferences already exist
             const existingResult = await this.getBasicPreferences(userId);
             if (existingResult.success && existingResult.data) {
@@ -155,13 +145,11 @@ export class PreferenceService {
                 })
                 .returning();
 
-            console.log('[PREFERENCE_SERVICE] Default preferences created successfully');
             return {
                 success: true,
                 data: newPrefs,
             };
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error creating default preferences:', error);
             return {
                 success: false,
                 error: 'Failed to create default preferences',
@@ -180,13 +168,6 @@ export class PreferenceService {
         userName?: string,
     ): Promise<CreatePreferencesResult> {
         try {
-            console.log('[PREFERENCE_SERVICE] Creating preferences for new user:', {
-                userId,
-                primaryUserEmailId,
-                primaryAccountId,
-                userName,
-            });
-
             // Check if preferences already exist
             const existingResult = await this.getBasicPreferences(userId);
             if (existingResult.success && existingResult.data) {
@@ -229,12 +210,6 @@ export class PreferenceService {
                 timezone,
             );
 
-            console.log('[PREFERENCE_SERVICE] Generated document for new user:', {
-                userId,
-                documentLength: document.length,
-                hasContent: document.length > 0,
-            });
-
             const [newPrefs] = await db
                 .insert(preferences)
                 .values({
@@ -260,16 +235,11 @@ export class PreferenceService {
                 })
                 .returning();
 
-            console.log(
-                '[PREFERENCE_SERVICE] Preferences created successfully for new user with timezone:',
-                timezone,
-            );
             return {
                 success: true,
                 data: newPrefs,
             };
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error creating preferences for new user:', error);
             return {
                 success: false,
                 error: 'Failed to create preferences for new user',
@@ -285,8 +255,6 @@ export class PreferenceService {
         updateData: PreferenceUpdate,
     ): Promise<UpdatePreferencesResult> {
         try {
-            console.log('[PREFERENCE_SERVICE] Updating preferences for user:', userId);
-
             // Validate the update data
             const validation = this.validatePreferenceUpdate(updateData);
             if (!validation.isValid) {
@@ -314,13 +282,11 @@ export class PreferenceService {
                 .where(and(eq(preferences.userId, userId), eq(preferences.isActive, true)))
                 .returning();
 
-            console.log('[PREFERENCE_SERVICE] Preferences updated successfully');
             return {
                 success: true,
                 data: updatedPrefs,
             };
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error updating preferences:', error);
             return {
                 success: false,
                 error: 'Failed to update preferences',
@@ -335,7 +301,6 @@ export class PreferenceService {
         userId: string,
         document: string,
     ): Promise<UpdatePreferencesResult> {
-        console.log('[PREFERENCE_SERVICE] Updating preferences document for user:', userId);
         const updateResult = await this.updatePreferences(userId, { document });
         return updateResult;
     }
@@ -345,8 +310,6 @@ export class PreferenceService {
      */
     async deletePreferences(userId: string): Promise<DeletePreferencesResult> {
         try {
-            console.log('[PREFERENCE_SERVICE] Deleting preferences for user:', userId);
-
             // Check if preferences exist
             const existingResult = await this.getBasicPreferences(userId);
             if (!existingResult.success || !existingResult.data) {
@@ -364,13 +327,11 @@ export class PreferenceService {
                 })
                 .where(and(eq(preferences.userId, userId), eq(preferences.isActive, true)));
 
-            console.log('[PREFERENCE_SERVICE] Preferences deleted successfully');
             return {
                 success: true,
                 data: true,
             };
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error deleting preferences:', error);
             return {
                 success: false,
                 error: 'Failed to delete preferences',
@@ -386,8 +347,6 @@ export class PreferenceService {
         primaryUserEmailId: number | null,
     ): Promise<UpdatePrimaryEmailResult> {
         try {
-            console.log('[PREFERENCE_SERVICE] Updating primary email for user:', userId);
-
             // Check if preferences exist
             const existingResult = await this.getBasicPreferences(userId);
             if (!existingResult.success || !existingResult.data) {
@@ -421,13 +380,11 @@ export class PreferenceService {
                 .where(and(eq(preferences.userId, userId), eq(preferences.isActive, true)))
                 .returning();
 
-            console.log('[PREFERENCE_SERVICE] Primary email updated successfully');
             return {
                 success: true,
                 data: updatedPrefs,
             };
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error updating primary email:', error);
             return {
                 success: false,
                 error: 'Failed to update primary email',
@@ -443,8 +400,6 @@ export class PreferenceService {
         primaryAccountId: string | null,
     ): Promise<UpdatePrimaryAccountResult> {
         try {
-            console.log('[PREFERENCE_SERVICE] Updating primary account for user:', userId);
-
             // Check if preferences exist
             const existingResult = await this.getBasicPreferences(userId);
             if (!existingResult.success || !existingResult.data) {
@@ -478,13 +433,11 @@ export class PreferenceService {
                 .where(and(eq(preferences.userId, userId), eq(preferences.isActive, true)))
                 .returning();
 
-            console.log('[PREFERENCE_SERVICE] Primary account updated successfully');
             return {
                 success: true,
                 data: updatedPrefs,
             };
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error updating primary account:', error);
             return {
                 success: false,
                 error: 'Failed to update primary account',
@@ -497,14 +450,11 @@ export class PreferenceService {
      */
     async getPrimaryOptions(userId: string): Promise<GetPrimaryOptionsResult> {
         try {
-            console.log('[PREFERENCE_SERVICE] Getting primary options for user:', userId);
-
             const [availableEmails, availableAccounts] = await Promise.all([
                 this.getAvailablePrimaryEmails(userId),
                 this.getAvailablePrimaryAccounts(userId),
             ]);
 
-            console.log('[PREFERENCE_SERVICE] Primary options retrieved successfully');
             return {
                 success: true,
                 data: {
@@ -513,7 +463,6 @@ export class PreferenceService {
                 },
             };
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error getting primary options:', error);
             return {
                 success: false,
                 error: 'Failed to get primary options',
@@ -527,8 +476,6 @@ export class PreferenceService {
      */
     async getOrCreatePreferences(userId: string): Promise<GetPreferencesResult> {
         try {
-            console.log('[PREFERENCE_SERVICE] Getting or creating preferences for user:', userId);
-
             // Try to get existing preferences
             const getResult = await this.getPreferences(userId);
             if (getResult.success && getResult.data) {
@@ -547,7 +494,6 @@ export class PreferenceService {
             // Get the newly created preferences with primaries
             return await this.getPreferences(userId);
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error in getOrCreatePreferences:', error);
             return {
                 success: false,
                 error: 'Failed to get or create preferences',
@@ -714,13 +660,6 @@ export class PreferenceService {
         timezone?: string,
     ): Promise<string> {
         try {
-            console.log('[PREFERENCE_SERVICE] Generating document for user:', {
-                userId,
-                displayName,
-                nickname,
-                timezone,
-            });
-
             // Get user availability
             const userAvailability = await db
                 .select({
@@ -732,8 +671,6 @@ export class PreferenceService {
                 .from(availability)
                 .where(eq(availability.userId, userId))
                 .orderBy(availability.createdAt);
-
-            console.log('[PREFERENCE_SERVICE] Found availability slots:', userAvailability.length);
 
             // Prepare data for document generation
             const preferencesData: PreferencesData = {
@@ -758,7 +695,6 @@ export class PreferenceService {
             // Generate the markdown document using the common utility
             return generatePreferencesMarkdown(preferencesData);
         } catch (error) {
-            console.error('[PREFERENCE_SERVICE] Error generating preferences document:', error);
             return PREFERENCES_DEFAULTS.DOCUMENT;
         }
     }

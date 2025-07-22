@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { EmailData } from '@/services/exchange/types';
-import { User } from '@/types/api/users';
+import { User } from '@/types/users';
 import { ExchangeService } from '@/services/exchange';
 
 /**

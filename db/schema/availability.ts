@@ -7,7 +7,6 @@ import {
     timestamp,
     index,
     text,
-    boolean,
 } from 'drizzle-orm/pg-core';
 import { user } from '@/db/schema/auth';
 import { relations } from 'drizzle-orm';

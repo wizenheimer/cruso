@@ -1,9 +1,9 @@
 import { EmailData, ExchangeData } from './types';
 import { ExchangeDataService } from './exchangeDataService';
 import { ExchangeProcessingService } from './exchangeProcessingService';
-import { CreateExchangeData, ExchangeFilters } from '@/types/api/exchange';
-import { User } from '@/types/api/users';
 import { Context } from 'hono';
+import { User } from '@/types/users';
+import { CreateExchangeData, ExchangeFilters } from '@/types/exchange';
 
 export class ExchangeService {
     private static instance: ExchangeService | null = null;
