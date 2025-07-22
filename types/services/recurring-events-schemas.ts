@@ -22,7 +22,7 @@ export const getRecurringEventInstancesOptionsSchema = z.object({
 });
 
 export const getRecurringEventInstancesResultSchema = z.object({
-    instances: z.array(z.any()), // CalendarEvent type
+    instances: z.array(calendarEventSchema),
     nextPageToken: z.string().optional(),
 });
 
@@ -36,7 +36,7 @@ export const createRecurringEventOptionsSchema = z.object({
     conferenceDataVersion: z.number().min(0).max(1).optional(),
 });
 
-export const createRecurringEventInPrimaryCalendarResultSchema = z.any().and(
+export const createRecurringEventInPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
@@ -51,7 +51,7 @@ export const updateRecurringEventOptionsSchema = z.object({
     sendUpdates: sendUpdatesSchema.optional(),
 });
 
-export const updateRecurringEventInPrimaryCalendarResultSchema = z.any().and(
+export const updateRecurringEventInPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
@@ -61,7 +61,7 @@ export const updateRecurringEventDataSchema = z
     .object({
         recurrence: z.array(recurrenceRuleSchema).optional(),
     })
-    .and(z.any()); // Partial<CalendarEvent> type
+    .and(calendarEventSchema.partial());
 
 export const updateFutureRecurringEventsOptionsSchema = z.object({
     sendUpdates: sendUpdatesSchema.optional(),
@@ -71,9 +71,9 @@ export const updateFutureRecurringEventsDataSchema = z
     .object({
         recurrence: z.array(recurrenceRuleSchema).optional(),
     })
-    .and(z.any()); // Partial<CalendarEvent> type
+    .and(calendarEventSchema.partial());
 
-export const updateFutureRecurringEventsInPrimaryCalendarResultSchema = z.any().and(
+export const updateFutureRecurringEventsInPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
@@ -85,7 +85,7 @@ export const getRecurringEventOptionsSchema = z.object({
     maxAttendees: z.number().min(1).max(100).optional(),
 });
 
-export const getRecurringEventFromPrimaryCalendarResultSchema = z.any().and(
+export const getRecurringEventFromPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
@@ -95,7 +95,7 @@ export const rescheduleRecurringEventOptionsSchema = z.object({
     sendUpdates: sendUpdatesSchema.optional(),
 });
 
-export const rescheduleRecurringEventInPrimaryCalendarResultSchema = z.any().and(
+export const rescheduleRecurringEventInPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
@@ -105,7 +105,7 @@ export const updateRecurringEventInstanceOptionsSchema = z.object({
     sendUpdates: sendUpdatesSchema.optional(),
 });
 
-export const updateRecurringEventInstanceInPrimaryCalendarResultSchema = z.any().and(
+export const updateRecurringEventInstanceInPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
@@ -136,7 +136,7 @@ export const batchCreateRecurringEventsResultSchema = z.object({
     successful: z.array(
         z.object({
             event: recurringEventSchema,
-            result: z.any(), // CalendarEvent type
+            result: calendarEventSchema,
         }),
     ),
     failed: z.array(
@@ -162,7 +162,7 @@ export const recurringEventInstanceSchema = z.object({
 
 export const recurringEventInstanceUpdateSchema = z.object({
     instanceStartTime: z.string(),
-    updates: z.any(), // Partial<CalendarEvent> type
+    updates: calendarEventSchema.partial(),
 });
 
 // ==================================================
@@ -245,7 +245,7 @@ export const recurringEventSyncOptionsSchema = z.object({
 });
 
 export const recurringEventSyncResultSchema = z.object({
-    events: z.array(z.any()), // CalendarEvent type
+    events: z.array(calendarEventSchema),
     deletedEvents: z.array(z.string()),
     nextSyncToken: z.string().optional(),
     lastSyncTime: z.string(),
@@ -267,7 +267,7 @@ export const recurringEventQuerySchema = z.object({
 });
 
 export const recurringEventQueryResultSchema = z.object({
-    events: z.array(z.any()), // CalendarEvent type
+    events: z.array(calendarEventSchema),
     totalResults: z.number().min(0),
     nextPageToken: z.string().optional(),
 });

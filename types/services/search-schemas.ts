@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { calendarEventSchema } from './base';
 
 // ==================================================
 // Base Zod Schemas
@@ -55,7 +56,7 @@ export const searchOptionsSchema = z.object({
 });
 
 export const searchResultSchema = z.object({
-    events: z.array(z.any()), // CalendarEvent type
+    events: z.array(calendarEventSchema),
     totalResults: z.number().min(0),
     executionTime: z.number().min(0), // milliseconds
     nextPageToken: z.string().optional(),

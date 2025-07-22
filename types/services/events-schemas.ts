@@ -9,6 +9,7 @@ import {
     eventAttendeeSchema,
     eventDateTimeSchema,
 } from './shared';
+import { calendarEventSchema } from './base';
 
 // ==================================================
 // Base Zod Schemas
@@ -96,7 +97,7 @@ export const quickCreateEventOptionsSchema = z.object({
 // ==================================================
 
 export const getEventsResultSchema = z.object({
-    events: z.array(z.any()), // CalendarEvent type
+    events: z.array(calendarEventSchema),
     nextPageToken: z.string().optional(),
     updated: z.string().optional(),
     timeZone: z.string().optional(),
@@ -106,7 +107,7 @@ export const getEventsResultSchema = z.object({
 });
 
 export const getEventsFromPrimaryCalendarResultSchema = z.object({
-    events: z.array(z.any()), // CalendarEvent type
+    events: z.array(calendarEventSchema),
     nextPageToken: z.string().optional(),
     updated: z.string().optional(),
     timeZone: z.string().optional(),
@@ -116,19 +117,19 @@ export const getEventsFromPrimaryCalendarResultSchema = z.object({
     calendarId: z.string(),
 });
 
-export const getEventFromPrimaryCalendarResultSchema = z.any().and(
+export const getEventFromPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
 );
 
-export const createEventInPrimaryCalendarResultSchema = z.any().and(
+export const createEventInPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
 );
 
-export const updateEventInPrimaryCalendarResultSchema = z.any().and(
+export const updateEventInPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
@@ -139,20 +140,20 @@ export const deleteEventFromPrimaryCalendarResultSchema = z.object({
     calendarId: z.string(),
 });
 
-export const rescheduleEventInPrimaryCalendarResultSchema = z.any().and(
+export const rescheduleEventInPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
 );
 
-export const quickCreateEventInPrimaryCalendarResultSchema = z.any().and(
+export const quickCreateEventInPrimaryCalendarResultSchema = calendarEventSchema.and(
     z.object({
         calendarId: z.string(),
     }),
 );
 
 export const getUpdatedEventsResultSchema = z.object({
-    events: z.array(z.any()), // CalendarEvent type
+    events: z.array(calendarEventSchema),
     deletedEvents: z.array(z.string()),
     nextPageToken: z.string().optional(),
     nextSyncToken: z.string().optional(),
@@ -178,7 +179,7 @@ export const conferenceDataSchema = z.object({
 
 export const eventResponseSchema = z.object({
     success: z.boolean(),
-    event: z.any().optional(), // CalendarEvent type
+    event: calendarEventSchema.optional(),
     error: z.string().optional(),
     calendarId: z.string().optional(),
 });
@@ -206,7 +207,7 @@ export const eventFiltersSchema = z.object({
 // ==================================================
 
 export const eventSyncResultSchema = z.object({
-    events: z.array(z.any()), // CalendarEvent type
+    events: z.array(calendarEventSchema),
     deletedEvents: z.array(z.string()),
     nextSyncToken: z.string().optional(),
     lastSyncTime: z.string(),
@@ -225,7 +226,7 @@ export const eventSyncOptionsSchema = z.object({
 export const batchOperationSchema = z.object({
     type: z.enum(['create', 'update', 'delete']),
     eventId: z.string().optional(),
-    event: z.any().optional(), // CalendarEvent | Partial<CalendarEvent> type
+    event: calendarEventSchema.partial().optional(),
 });
 
 export const batchOperationsOptionsSchema = z.object({
@@ -236,7 +237,7 @@ export const batchOperationResultSchema = z.object({
     successful: z.array(
         z.object({
             operation: batchOperationSchema,
-            result: z.any().optional(),
+            result: z.union([calendarEventSchema, z.object({ deleted: z.boolean() })]).optional(),
         }),
     ),
     failed: z.array(

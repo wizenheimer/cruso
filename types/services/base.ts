@@ -68,7 +68,7 @@ export const calendarEventSchema = z.object({
     end: eventDateTimeSchema,
     attendees: z.array(eventAttendeeSchema).optional(),
     location: z.string().optional(),
-    conferenceData: z.any().optional(), // calendar_v3.Schema$ConferenceData
+    conferenceData: z.any().optional(), // Google Calendar API conference data structure
     reminders: eventReminderSchema.optional(),
     recurringEventId: z.string().optional(),
     originalStartTime: eventDateTimeSchema.optional(),

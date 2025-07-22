@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { calendarEventSchema } from './base';
 
 // ==================================================
 // Base Zod Schemas
@@ -60,15 +61,15 @@ export const availabilityResultSchema = z.object({
 export const blockAvailabilityResultSchema = z.object({
     state: z.enum(['success', 'error']),
     rescheduledEventCount: z.number().optional(),
-    rescheduledEventDetails: z.array(z.any()).optional(), // CalendarEvent type
-    blockEventDetails: z.any().optional(), // CalendarEvent type
+    rescheduledEventDetails: z.array(calendarEventSchema).optional(),
+    blockEventDetails: calendarEventSchema.optional(),
     message: z.string().optional(),
 });
 
 export const clearAvailabilityResultSchema = z.object({
     state: z.enum(['success', 'error']),
     rescheduledEventCount: z.number().optional(),
-    rescheduledEventDetails: z.array(z.any()).optional(), // CalendarEvent type
+    rescheduledEventDetails: z.array(calendarEventSchema).optional(),
 });
 
 // ==================================================
@@ -121,7 +122,7 @@ export const timeSlotSchema = z.object({
 });
 
 export const scoredEventSchema = z.object({
-    event: z.any(), // CalendarEvent type
+    event: calendarEventSchema,
     score: z.number(),
     duration: z.number(),
 });

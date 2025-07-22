@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { calendarSyncStatusSchema } from './shared';
+import { calendarInfoSchema } from './base';
 
 // ==================================================
 // Base Zod Schemas
@@ -140,7 +141,7 @@ export const calendarSyncResponseSchema = z.object({
     success: z.boolean(),
     data: z
         .object({
-            calendars: z.array(z.any()), // CalendarInfo type
+            calendars: z.array(calendarInfoSchema),
             syncStatus: z.array(calendarSyncStatusSchema),
         })
         .optional(),

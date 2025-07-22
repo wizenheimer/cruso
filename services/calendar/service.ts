@@ -297,7 +297,10 @@ export class GoogleCalendarService extends BaseCalendarService {
             sendUpdates?: 'all' | 'externalOnly' | 'none';
         },
     ): Promise<{
-        successful: Array<{ operation: BatchOperation; result?: CalendarEvent }>;
+        successful: Array<{
+            operation: BatchOperation;
+            result?: CalendarEvent | { deleted: boolean };
+        }>;
         failed: Array<{ operation: BatchOperation; error: string }>;
     }> {
         return this.eventsService.performBatchOperationsOnPrimaryCalendar(operations, options);
