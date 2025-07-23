@@ -14,7 +14,7 @@ import {
     ValidationResult,
     EmailAvailabilityResult,
     PrimaryEmailUpdateResult,
-} from './types';
+} from '@/types/user-emails';
 
 export class UserEmailService {
     /**
