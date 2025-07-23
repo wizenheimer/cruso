@@ -82,18 +82,18 @@ class ApiClient {
      * @param connectionId - The calendar connection ID to sync
      * @returns Promise with sync result
      */
-    async syncCalendar(connectionId: string) {
-        return this.request(`/calendar/${connectionId}/sync`, {
-            method: 'POST',
-        });
-    }
+    // async syncCalendar(connectionId: string) {
+    //     return this.request(`/calendar/${connectionId}/sync`, {
+    //         method: 'POST',
+    //     });
+    // }
 
     /**
      * Sync all calendar connections for the user
      * @returns Promise with sync results for all calendars
      */
-    async syncAllCalendars() {
-        return this.request('/calendar/sync-all', {
+    async refreshCalendars() {
+        return this.request('/calendar/refresh', {
             method: 'POST',
         });
     }

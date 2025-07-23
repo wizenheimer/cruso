@@ -3,7 +3,6 @@ import { BaseCalendarService } from './base';
 import { EventsService } from './events';
 import { AvailabilityService } from './availability';
 import { GoogleCalendarService } from './calendar';
-import { CalendarSyncResult } from '@/types/calendar';
 import { CalendarRefreshResult } from '@/types/calendar';
 
 // ==================================================
@@ -28,9 +27,9 @@ export class CalendarService extends BaseCalendarService {
     // Calendar Connections Methods
     // ==================================================
 
-    async syncCalendars(): Promise<CalendarSyncResult> {
-        return this.googleCalendarService.syncCalendars();
-    }
+    // async syncCalendars(): Promise<CalendarSyncResult> {
+    //     return this.googleCalendarService.syncCalendars();
+    // }
 
     async refreshCalendars(): Promise<CalendarRefreshResult> {
         return this.googleCalendarService.refreshCalendars();

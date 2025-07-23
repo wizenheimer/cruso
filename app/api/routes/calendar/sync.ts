@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { requireAuth } from '@/app/api/middleware/auth';
-import { handleSyncAllCalendars, handleSyncCalendar } from '@/app/api/handlers/calendar';
+import { handleRefreshCalendars } from '@/app/api/handlers/calendar';
 
 const sync = new Hono();
 
@@ -10,13 +10,13 @@ const sync = new Hono();
 sync.use('*', requireAuth);
 
 /**
- * POST /api/v1/calendar/sync-all
+ * POST /api/v1/calendar/refresh
  */
-sync.post('/all', handleSyncAllCalendars);
+sync.post('/all', handleRefreshCalendars);
 
-/**
- * POST /api/v1/calendar/:id/sync
- */
-sync.post('/:id', handleSyncCalendar);
+// /**
+//  * POST /api/v1/calendar/:id/sync
+//  */
+// sync.post('/:id', handleSyncCalendar);
 
 export default sync;

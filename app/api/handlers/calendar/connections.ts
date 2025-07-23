@@ -3,7 +3,6 @@ import { calendarConnections } from '@/db/schema/calendars';
 import { account } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { Context } from 'hono';
-import { createCalendarService } from '@/services/calendar/service';
 import { updatePrimaryAccount } from '@/db/queries/preferences';
 
 /**
@@ -127,82 +126,82 @@ export async function handleListCalendarAccounts(requestContext: Context) {
  * @param c - The context object
  * @returns The response object
  */
-export async function handleSyncCalendar(c: Context) {
-    try {
-        const calendarId = c.req.param('id');
-        const user = getUser(c);
+// export async function handleSyncCalendar(c: Context) {
+//     try {
+//         const calendarId = c.req.param('id');
+//         const user = getUser(c);
 
-        // Get the connection with its account
-        const connectionData = await db
-            .select({
-                connection: calendarConnections,
-                accountData: account,
-            })
-            .from(calendarConnections)
-            .leftJoin(account, eq(calendarConnections.accountId, account.id))
-            .where(
-                and(
-                    eq(calendarConnections.calendarId, calendarId),
-                    eq(calendarConnections.userId, user.id),
-                    eq(calendarConnections.isActive, true),
-                ),
-            )
-            .limit(1);
+//         // Get the connection with its account
+//         const connectionData = await db
+//             .select({
+//                 connection: calendarConnections,
+//                 accountData: account,
+//             })
+//             .from(calendarConnections)
+//             .leftJoin(account, eq(calendarConnections.accountId, account.id))
+//             .where(
+//                 and(
+//                     eq(calendarConnections.calendarId, calendarId),
+//                     eq(calendarConnections.userId, user.id),
+//                     eq(calendarConnections.isActive, true),
+//                 ),
+//             )
+//             .limit(1);
 
-        if (connectionData.length === 0) {
-            return c.json({ error: 'Connection not found' }, 404);
-        }
+//         if (connectionData.length === 0) {
+//             return c.json({ error: 'Connection not found' }, 404);
+//         }
 
-        const { accountData } = connectionData[0];
+//         const { accountData } = connectionData[0];
 
-        if (!accountData) {
-            return c.json({ error: 'Account not found' }, 404);
-        }
+//         if (!accountData) {
+//             return c.json({ error: 'Account not found' }, 404);
+//         }
 
-        try {
-            // Use the calendar service to handle token refresh and syncing
-            const calendarService = createCalendarService(user.id);
+//         try {
+//             // Use the calendar service to handle token refresh and syncing
+//             const calendarService = createCalendarService(user.id);
 
-            // Sync all calendars using the service (which handles individual calendar updates)
-            const result = await calendarService.syncCalendars();
+//             // Sync all calendars using the service (which handles individual calendar updates)
+//             const result = await calendarService.syncCalendars();
 
-            // Check if the specific calendar was synced successfully
-            const syncedCalendar = result.accountSynced > 0;
+//             // Check if the specific calendar was synced successfully
+//             const syncedCalendar = result.accountSynced > 0;
 
-            if (syncedCalendar) {
-                return c.json({ success: true, syncedAccounts: result.accountSynced });
-            } else {
-                return c.json(
-                    {
-                        error: 'Failed to sync calendar',
-                        details: result.errors,
-                    },
-                    500,
-                );
-            }
-        } catch (syncError) {
-            // Update error status
-            await db
-                .update(calendarConnections)
-                .set({
-                    syncStatus: 'error',
-                    errorMessage: syncError instanceof Error ? syncError.message : 'Unknown error',
-                    updatedAt: new Date(),
-                })
-                .where(
-                    and(
-                        eq(calendarConnections.calendarId, calendarId),
-                        eq(calendarConnections.isActive, true),
-                    ),
-                );
+//             if (syncedCalendar) {
+//                 return c.json({ success: true, syncedAccounts: result.accountSynced });
+//             } else {
+//                 return c.json(
+//                     {
+//                         error: 'Failed to sync calendar',
+//                         details: result.errors,
+//                     },
+//                     500,
+//                 );
+//             }
+//         } catch (syncError) {
+//             // Update error status
+//             await db
+//                 .update(calendarConnections)
+//                 .set({
+//                     syncStatus: 'error',
+//                     errorMessage: syncError instanceof Error ? syncError.message : 'Unknown error',
+//                     updatedAt: new Date(),
+//                 })
+//                 .where(
+//                     and(
+//                         eq(calendarConnections.calendarId, calendarId),
+//                         eq(calendarConnections.isActive, true),
+//                     ),
+//                 );
 
-            return c.json({ error: 'Failed to sync calendar' }, 500);
-        }
-    } catch (error) {
-        console.error('Error syncing calendar:', error);
-        return c.json({ error: 'Failed to sync calendar' }, 500);
-    }
-}
+//             return c.json({ error: 'Failed to sync calendar' }, 500);
+//         }
+//     } catch (error) {
+//         console.error('Error syncing calendar:', error);
+//         return c.json({ error: 'Failed to sync calendar' }, 500);
+//     }
+// }
 
 /**
  * Handle the PATCH request to update a calendar connection

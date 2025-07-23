@@ -62,7 +62,7 @@ export type OAuthTokens = z.infer<typeof OAuthTokensSchema>;
  * @see services/calendar/service.ts - Used in syncCalendars method
  * @see services/calendar/calendar.ts - Used in GoogleCalendarService
  */
-export type CalendarSyncResult = z.infer<typeof CalendarSyncResultSchema>;
+// export type CalendarSyncResult = z.infer<typeof CalendarSyncResultSchema>;
 
 /**
  * Result of calendar refresh operation.

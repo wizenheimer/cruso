@@ -3,14 +3,14 @@ import { createCalendarService } from '@/services/calendar/service';
 import { getUser } from './connections';
 
 /**
- * Handle the POST request to sync all calendars
+ * Handle the POST request to refresh all calendars
  * @param c - The context object
  * @returns The response object
  */
-export async function handleSyncAllCalendars(c: Context) {
+export async function handleRefreshCalendars(c: Context) {
     try {
         const user = getUser(c);
-        console.log('Manual sync requested for user:', user.id);
+        console.log('Manual refresh requested for user:', user.id);
 
         // Use the calendar service to handle token refresh and syncing
         const calendarService = createCalendarService(user.id);
@@ -18,7 +18,7 @@ export async function handleSyncAllCalendars(c: Context) {
         // Use the new method to fetch all calendar lists
         const result = await calendarService.refreshCalendars();
 
-        console.log(`Finished manual sync. Total calendars synced: ${result.calendarsSynced}`);
+        console.log(`Finished manual refresh. Total calendars synced: ${result.calendarsSynced}`);
 
         if (result.errors.length > 0) {
             console.warn('Some errors occurred during sync:', result.errors);
