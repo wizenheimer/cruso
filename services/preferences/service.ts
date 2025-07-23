@@ -23,7 +23,7 @@ import {
     GetPrimaryOptionsResult,
     ValidationResult,
     PreferenceValidationError,
-} from './types';
+} from '@/types/preferences';
 
 /**
  * Preference Service
