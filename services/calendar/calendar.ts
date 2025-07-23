@@ -2,7 +2,7 @@ import {
     GoogleCalendarListEntry,
     GoogleCalendarListOptions,
     GoogleCalendarListResponse,
-} from '@/types/google-calendar';
+} from '@/types/google-calendar/list-calendar';
 import { BaseCalendarService } from './base';
 import { CalendarRefreshResult } from '@/types/calendar';
 import { Account } from 'better-auth';
@@ -12,62 +12,6 @@ import { user } from '@/db/schema/auth';
 import { eq } from 'drizzle-orm';
 
 export class GoogleCalendarService extends BaseCalendarService {
-    /*
-     * Sync stored calendars for a user
-     */
-    // async syncCalendars(): Promise<CalendarSyncResult> {
-    //     const result: CalendarSyncResult = {
-    //         accountSynced: 0,
-    //         errors: [],
-    //     };
-
-    //     try {
-    //         // Attempt to get all active connections
-    //         const connections = await this.getActiveConnections();
-
-    //         // Iterate over the connections and sync them
-    //         for (const { connection, account } of connections) {
-    //             if (!connection || !account) {
-    //                 result.errors.push(`connection or account is missing`);
-    //                 continue;
-    //             }
-
-    //             try {
-    //                 await db
-    //                     .update(calendarConnections)
-    //                     .set({
-    //                         lastSyncAt: new Date(),
-    //                         syncStatus: 'active',
-    //                     })
-    //                     .where(eq(calendarConnections.id, connection.id));
-    //                 result.accountSynced++;
-    //             } catch (error) {
-    //                 result.errors.push(
-    //                     error instanceof Error ? error.message : 'could not sync calendars',
-    //                 );
-
-    //                 try {
-    //                     await db
-    //                         .update(calendarConnections)
-    //                         .set({
-    //                             syncStatus: 'error',
-    //                             lastSyncAt: new Date(),
-    //                         })
-    //                         .where(eq(calendarConnections.id, connection.id));
-    //                 } catch (error) {
-    //                     result.errors.push(
-    //                         error instanceof Error ? error.message : 'could not update sync status',
-    //                     );
-    //                 }
-    //             }
-    //         }
-    //     } catch (error) {
-    //         result.errors.push(error instanceof Error ? error.message : 'could not sync calendars');
-    //     }
-
-    //     return result;
-    // }
-
     /*
      * Refresh calendars for a user from all active accounts
      */

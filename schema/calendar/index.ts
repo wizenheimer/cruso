@@ -45,12 +45,6 @@ export const OAuthTokensSchema = z.object({
     expiry_date: z.number().optional(),
 });
 
-// Sync Result Schema
-export const CalendarSyncResultSchema = z.object({
-    accountSynced: z.number(),
-    errors: z.array(z.string()),
-});
-
 // Refresh Result Schema
 export const CalendarRefreshResultSchema = z.object({
     accountsSynced: z.number(),

@@ -2,7 +2,7 @@ import {
     GoogleCalendarListEntrySchema,
     GoogleCalendarListOptionsSchema,
     GoogleCalendarListResponseSchema,
-} from '@/schema/google-calendar';
+} from '@/schema/google-calendar/list-calendar';
 import { z } from 'zod';
 
 export type GoogleCalendarListEntry = z.infer<typeof GoogleCalendarListEntrySchema>;

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Default reminder schema
-const GoogleDefaultReminderSchema = z.object({
+export const GoogleDefaultReminderSchema = z.object({
     method: z
         .enum(['email', 'popup'])
         .describe(

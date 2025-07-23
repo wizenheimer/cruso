@@ -5,7 +5,6 @@ import {
     ConnectionManagerParamsSchema,
     GoogleCalendarConnectionParamsSchema,
     OAuthTokensSchema,
-    CalendarSyncResultSchema,
     CalendarRefreshResultSchema,
     CalendarConnectionSchema,
     CalendarClientGoogleAccountSchema,
