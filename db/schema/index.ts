@@ -1,5 +1,5 @@
 import { account, session, user, verification } from './auth';
-import { availability } from './availability';
+import { workingHours } from './working-hours';
 import { exchangeData } from './exchange';
 import { preferences } from './preferences';
 import { userEmails } from './user-emails';
@@ -10,7 +10,7 @@ export const schema = {
     account: account,
     session: session,
     verification: verification,
-    availability: availability,
+    workingHours: workingHours,
     exchangeData: exchangeData,
     preferences: preferences,
     userEmails: userEmails,

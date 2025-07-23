@@ -2,18 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { serialize } from 'next-mdx-remote/serialize';
+import { BlogPost } from '@/types/blog';
 
 const POSTS_PER_PAGE = 6;
-
-export interface BlogPost {
-    slug: string;
-    title: string;
-    date: string;
-    excerpt: string;
-    author: string;
-    content: string;
-    coverImage?: string; // Optional cover image for the blog post
-}
 
 export async function getAllPosts(
     page: number = 1,

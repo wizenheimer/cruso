@@ -1,7 +1,7 @@
 import { PREFERENCES_DEFAULTS } from '@/constants/preferences';
 
 // Types for document generation
-export interface AvailabilitySlot {
+export interface WorkingHoursSlot {
     days: number[]; // [1,2,3,4,5] for Mon-Fri (1=Monday, 7=Sunday)
     startTime: string; // "09:00" or "09:00:00"
     endTime: string; // "17:00" or "17:00:00"
@@ -13,8 +13,8 @@ export interface PreferencesData {
     displayName?: string;
     nickname?: string;
 
-    // Availability - computed from availability table
-    availability?: AvailabilitySlot[];
+    // Working Hours - computed from working hours table
+    workingHours?: WorkingHoursSlot[];
     defaultTimezone?: string; // fallback timezone from preferences table
 
     // Scheduling - from preferences table
@@ -48,17 +48,17 @@ export function generatePreferencesMarkdown(data: PreferencesData): string {
         }
     }
 
-    // Availability Section
-    if (data.availability && data.availability.length > 0) {
-        sections.push('\n## Availability\n');
+    // Working Hours Section
+    if (data.workingHours && data.workingHours.length > 0) {
+        sections.push('\n## Working Hours\n');
 
-        const workingHours = formatAvailability(data.availability);
+        const workingHours = formatWorkingHours(data.workingHours);
         workingHours.forEach((hours) => {
             sections.push(`- My working hours are typically ${hours}.\n`);
         });
 
-        // Use timezone from first availability slot, or fallback to default
-        const timezone = data.availability[0]?.timezone || data.defaultTimezone;
+        // Use timezone from first working hours slot, or fallback to default
+        const timezone = data.workingHours[0]?.timezone || data.defaultTimezone;
         if (timezone) {
             sections.push(`- My timezone is usually ${timezone}.\n`);
         }
@@ -151,12 +151,12 @@ export function generatePreferencesMarkdown(data: PreferencesData): string {
 }
 
 /**
- * Format availability slots into readable working hours
+ * Format working hours slots into readable working hours
  */
-export function formatAvailability(availability: AvailabilitySlot[]): string[] {
+export function formatWorkingHours(workingHours: WorkingHoursSlot[]): string[] {
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    return availability.map((slot) => {
+    return workingHours.map((slot) => {
         const days = slot.days || [];
         const startTime = formatTime(slot.startTime);
         const endTime = formatTime(slot.endTime);
@@ -226,7 +226,7 @@ export function generateDefaultPreferencesDocument(
     const preferencesData: PreferencesData = {
         displayName: displayName || undefined,
         nickname: nickname || undefined,
-        availability: [], // No availability for new users
+        workingHours: [], // No working hours for new users
         defaultTimezone: timezone || undefined,
         minNoticeMinutes: PREFERENCES_DEFAULTS.MIN_NOTICE_MINUTES,
         defaultMeetingDurationMinutes: PREFERENCES_DEFAULTS.DEFAULT_MEETING_DURATION_MINUTES,

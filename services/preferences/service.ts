@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { preferences } from '@/db/schema/preferences';
 import { userEmails } from '@/db/schema/user-emails';
 import { calendarConnections } from '@/db/schema/calendars';
-import { availability } from '@/db/schema/availability';
+import { workingHours } from '@/db/schema/working-hours';
 import { account, user } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { PREFERENCES_DEFAULTS } from '@/constants/preferences';
@@ -660,23 +660,23 @@ export class PreferenceService {
         timezone?: string,
     ): Promise<string> {
         try {
-            // Get user availability
-            const userAvailability = await db
+            // Get user working hours
+            const userWorkingHours = await db
                 .select({
-                    days: availability.days,
-                    startTime: availability.startTime,
-                    endTime: availability.endTime,
-                    timezone: availability.timezone,
+                    days: workingHours.days,
+                    startTime: workingHours.startTime,
+                    endTime: workingHours.endTime,
+                    timezone: workingHours.timezone,
                 })
-                .from(availability)
-                .where(eq(availability.userId, userId))
-                .orderBy(availability.createdAt);
+                .from(workingHours)
+                .where(eq(workingHours.userId, userId))
+                .orderBy(workingHours.createdAt);
 
             // Prepare data for document generation
             const preferencesData: PreferencesData = {
                 displayName: displayName || undefined,
                 nickname: nickname || undefined,
-                availability: userAvailability.map((avail) => ({
+                workingHours: userWorkingHours.map((avail) => ({
                     days: avail.days || [],
                     startTime: avail.startTime,
                     endTime: avail.endTime,

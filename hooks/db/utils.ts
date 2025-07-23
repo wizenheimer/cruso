@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { schema } from '@/db/schema';
 import { ConnectionManager } from '@/services/calendar/connection';
 import { PreferenceService } from '@/services/preferences';
-import { AvailabilityService } from '@/services/availability';
+import { WorkingHoursService } from '@/services/working-hours';
 import { Account, GenericEndpointContext } from 'better-auth';
 
 const { user, userEmails } = schema;
@@ -131,7 +131,7 @@ export async function handleNewUserPreferences(account: Account, context: Generi
     }
 }
 
-export async function handleNewUserAvailabilities(
+export async function handleNewUserWorkingHours(
     account: Account,
     context: GenericEndpointContext,
 ) {
@@ -141,11 +141,11 @@ export async function handleNewUserAvailabilities(
         return;
     }
 
-    // Use the AvailabilityService to create default availability
-    const availabilityService = new AvailabilityService();
-    const result = await availabilityService.createDefaultAvailability(account.userId);
+    // Use the WorkingHoursService to create default working hours
+    const workingHoursService = new WorkingHoursService();
+    const result = await workingHoursService.createDefaultWorkingHours(account.userId);
 
     if (!result.success) {
-        console.error('[DB_HOOK] Failed to create default availability:', result.error);
+        console.error('[DB_HOOK] Failed to create default working hours:', result.error);
     }
 }

@@ -1,6 +1,6 @@
 import { WeeklySchedule } from '@/components/onboarding/types';
 
-export interface DatabaseAvailability {
+export interface DatabaseWorkingHours {
     id: number;
     days: number[] | null;
     startTime: string;
@@ -11,12 +11,12 @@ export interface DatabaseAvailability {
 }
 
 /**
- * Convert database availability format to UI schedule format
+ * Convert database working hours format to UI schedule format
  * Database: days [1,2,3,4,5] where 0=Sunday, 1=Monday, 2=Tuesday, etc.
  * UI: WeeklySchedule with day names as keys
  */
-export function convertAvailabilityToSchedule(
-    availability: DatabaseAvailability[],
+export function convertWorkingHoursToSchedule(
+    workingHours: DatabaseWorkingHours[],
 ): WeeklySchedule {
     const dayNames = [
         'Sunday', // 0
@@ -39,10 +39,10 @@ export function convertAvailabilityToSchedule(
         Sunday: { enabled: false, timeSlots: [] },
     };
 
-    // Process each availability record
-    availability.forEach((avail) => {
-        if (avail.days && avail.days.length > 0) {
-            avail.days.forEach((dayNum) => {
+    // Process each working hours record
+    workingHours.forEach((hours) => {
+        if (hours.days && hours.days.length > 0) {
+            hours.days.forEach((dayNum) => {
                 // Database and UI both use 0=Sunday, 1=Monday, etc.
                 // So we can use the day number directly as the index
                 const dayName = dayNames[dayNum] as keyof WeeklySchedule;
@@ -50,9 +50,9 @@ export function convertAvailabilityToSchedule(
                 if (schedule[dayName]) {
                     schedule[dayName].enabled = true;
                     schedule[dayName].timeSlots.push({
-                        id: `${avail.id}-${dayNum}`,
-                        startTime: avail.startTime.substring(0, 5), // Convert HH:MM:SS to HH:MM
-                        endTime: avail.endTime.substring(0, 5), // Convert HH:MM:SS to HH:MM
+                        id: `${hours.id}-${dayNum}`,
+                        startTime: hours.startTime.substring(0, 5), // Convert HH:MM:SS to HH:MM
+                        endTime: hours.endTime.substring(0, 5), // Convert HH:MM:SS to HH:MM
                     });
                 }
             });
@@ -63,11 +63,11 @@ export function convertAvailabilityToSchedule(
 }
 
 /**
- * Convert UI schedule format to database availability format
+ * Convert UI schedule format to database working hours format
  * UI: WeeklySchedule with day names as keys
  * Database: days [1,2,3,4,5] where 0=Sunday, 1=Monday, 2=Tuesday, etc.
  */
-export function convertScheduleToAvailability(schedule: WeeklySchedule): Array<{
+export function convertScheduleToWorkingHours(schedule: WeeklySchedule): Array<{
     days: number[];
     startTime: string;
     endTime: string;
@@ -82,13 +82,13 @@ export function convertScheduleToAvailability(schedule: WeeklySchedule): Array<{
         Saturday: 6, // 6
     };
 
-    const availability: Array<{
+    const workingHours: Array<{
         days: number[];
         startTime: string;
         endTime: string;
     }> = [];
 
-    // Group time slots by start/end times to create efficient availability records
+    // Group time slots by start/end times to create efficient working hours records
     const timeSlotGroups = new Map<
         string,
         { days: number[]; startTime: string; endTime: string }
@@ -114,12 +114,12 @@ export function convertScheduleToAvailability(schedule: WeeklySchedule): Array<{
         }
     });
 
-    // Convert groups to availability records
+    // Convert groups to working hours records
     timeSlotGroups.forEach((group) => {
-        availability.push(group);
+        workingHours.push(group);
     });
 
-    return availability;
+    return workingHours;
 }
 
 /**

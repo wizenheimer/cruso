@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { db } from '@/db';
-import { availability } from '@/db/schema/availability';
+import { workingHours } from '@/db/schema/working-hours';
 import { eq, and } from 'drizzle-orm';
 
 export const getUser = (c: Context) => {
@@ -12,41 +12,41 @@ export const getUser = (c: Context) => {
 };
 
 /**
- * Handle GET request to fetch user availability
+ * Handle GET request to fetch user working hours
  * @param c - The context object
  * @returns The response object
  */
-export async function handleGetAvailability(c: Context) {
+export async function handleGetWorkingHours(c: Context) {
     try {
         const user = getUser(c);
 
-        const userAvailability = await db
+        const userWorkingHours = await db
             .select({
-                id: availability.id,
-                days: availability.days,
-                startTime: availability.startTime,
-                endTime: availability.endTime,
-                timezone: availability.timezone,
-                createdAt: availability.createdAt,
-                updatedAt: availability.updatedAt,
+                id: workingHours.id,
+                days: workingHours.days,
+                startTime: workingHours.startTime,
+                endTime: workingHours.endTime,
+                timezone: workingHours.timezone,
+                createdAt: workingHours.createdAt,
+                updatedAt: workingHours.updatedAt,
             })
-            .from(availability)
-            .where(eq(availability.userId, user.id))
-            .orderBy(availability.createdAt);
+            .from(workingHours)
+            .where(eq(workingHours.userId, user.id))
+            .orderBy(workingHours.createdAt);
 
-        return c.json(userAvailability);
+        return c.json(userWorkingHours);
     } catch (error) {
-        console.error('Error fetching availability:', error);
-        return c.json({ error: 'Failed to fetch availability' }, 500);
+        console.error('Error fetching working hours:', error);
+        return c.json({ error: 'Failed to fetch working hours' }, 500);
     }
 }
 
 /**
- * Handle POST request to create new availability
+ * Handle POST request to create new working hours
  * @param c - The context object
  * @returns The response object
  */
-export async function handleCreateAvailability(c: Context) {
+export async function handleCreateWorkingHours(c: Context) {
     try {
         const user = getUser(c);
         const body = await c.req.json();
@@ -71,8 +71,8 @@ export async function handleCreateAvailability(c: Context) {
             );
         }
 
-        const newAvailability = await db
-            .insert(availability)
+        const newWorkingHours = await db
+            .insert(workingHours)
             .values({
                 userId: user.id,
                 days: body.days,
@@ -84,38 +84,38 @@ export async function handleCreateAvailability(c: Context) {
             })
             .returning();
 
-        return c.json(newAvailability[0], 201);
+        return c.json(newWorkingHours[0], 201);
     } catch (error) {
-        console.error('Error creating availability:', error);
-        return c.json({ error: 'Failed to create availability' }, 500);
+        console.error('Error creating working hours:', error);
+        return c.json({ error: 'Failed to create working hours' }, 500);
     }
 }
 
 /**
- * Handle PATCH request to update availability
+ * Handle PATCH request to update working hours
  * @param c - The context object
  * @returns The response object
  */
-export async function handleUpdateAvailability(c: Context) {
+export async function handleUpdateWorkingHours(c: Context) {
     try {
         const user = getUser(c);
-        const availabilityId = c.req.param('id');
+        const workingHoursId = c.req.param('id');
         const body = await c.req.json();
 
-        // Check if availability exists and belongs to user
-        const existingAvailability = await db
+        // Check if working hours exists and belongs to user
+        const existingWorkingHours = await db
             .select()
-            .from(availability)
+            .from(workingHours)
             .where(
                 and(
-                    eq(availability.id, parseInt(availabilityId)),
-                    eq(availability.userId, user.id),
+                    eq(workingHours.id, parseInt(workingHoursId)),
+                    eq(workingHours.userId, user.id),
                 ),
             )
             .limit(1);
 
-        if (existingAvailability.length === 0) {
-            return c.json({ error: 'Availability not found' }, 404);
+        if (existingWorkingHours.length === 0) {
+            return c.json({ error: 'Working hours not found' }, 404);
         }
 
         // Validate days array if provided
@@ -132,8 +132,8 @@ export async function handleUpdateAvailability(c: Context) {
             }
         }
 
-        const updatedAvailability = await db
-            .update(availability)
+        const updatedWorkingHours = await db
+            .update(workingHours)
             .set({
                 days: body.days,
                 startTime: body.startTime,
@@ -143,59 +143,59 @@ export async function handleUpdateAvailability(c: Context) {
             })
             .where(
                 and(
-                    eq(availability.id, parseInt(availabilityId)),
-                    eq(availability.userId, user.id),
+                    eq(workingHours.id, parseInt(workingHoursId)),
+                    eq(workingHours.userId, user.id),
                 ),
             )
             .returning();
 
-        return c.json(updatedAvailability[0]);
+        return c.json(updatedWorkingHours[0]);
     } catch (error) {
-        console.error('Error updating availability:', error);
-        return c.json({ error: 'Failed to update availability' }, 500);
+        console.error('Error updating working hours:', error);
+        return c.json({ error: 'Failed to update working hours' }, 500);
     }
 }
 
 /**
- * Handle DELETE request to delete availability
+ * Handle DELETE request to delete working hours
  * @param c - The context object
  * @returns The response object
  */
-export async function handleDeleteAvailability(c: Context) {
+export async function handleDeleteWorkingHours(c: Context) {
     try {
         const user = getUser(c);
-        const availabilityId = c.req.param('id');
+        const workingHoursId = c.req.param('id');
 
-        // Check if availability exists and belongs to user
-        const existingAvailability = await db
+        // Check if working hours exists and belongs to user
+        const existingWorkingHours = await db
             .select()
-            .from(availability)
+            .from(workingHours)
             .where(
                 and(
-                    eq(availability.id, parseInt(availabilityId)),
-                    eq(availability.userId, user.id),
+                    eq(workingHours.id, parseInt(workingHoursId)),
+                    eq(workingHours.userId, user.id),
                 ),
             )
             .limit(1);
 
-        if (existingAvailability.length === 0) {
-            return c.json({ error: 'Availability not found' }, 404);
+        if (existingWorkingHours.length === 0) {
+            return c.json({ error: 'Working hours not found' }, 404);
         }
 
         // Hard delete - permanently remove the record
         await db
-            .delete(availability)
+            .delete(workingHours)
             .where(
                 and(
-                    eq(availability.id, parseInt(availabilityId)),
-                    eq(availability.userId, user.id),
+                    eq(workingHours.id, parseInt(workingHoursId)),
+                    eq(workingHours.userId, user.id),
                 ),
             );
 
         return c.json({ success: true });
     } catch (error) {
-        console.error('Error deleting availability:', error);
-        return c.json({ error: 'Failed to delete availability' }, 500);
+        console.error('Error deleting working hours:', error);
+        return c.json({ error: 'Failed to delete working hours' }, 500);
     }
 }
 
@@ -217,21 +217,21 @@ export async function handleCheckUserAvailability(c: Context) {
         const requestDate = new Date(date as string);
         const dayOfWeek = requestDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-        // Get user's availability for the specific day
-        const userAvailability = await db
+        // Get user's working hours for the specific day
+        const userWorkingHours = await db
             .select()
-            .from(availability)
-            .where(eq(availability.userId, user.id));
+            .from(workingHours)
+            .where(eq(workingHours.userId, user.id));
 
-        // Check if user has availability on this day
-        const availableSlots = userAvailability.filter(
+        // Check if user has working hours on this day
+        const availableSlots = userWorkingHours.filter(
             (slot) => slot.days && slot.days.includes(dayOfWeek),
         );
 
         if (availableSlots.length === 0) {
             return c.json({
                 available: false,
-                reason: 'No availability set for this day',
+                reason: 'No working hours set for this day',
             });
         }
 

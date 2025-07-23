@@ -1,12 +1,12 @@
 import { relations } from 'drizzle-orm';
 import { user, account, session } from './auth';
-import { availability } from './availability';
+import { workingHours } from './working-hours';
 
 /**
  * User relations - defines one-to-many relationships
  */
 export const userRelations = relations(user, ({ many }) => ({
-    availabilities: many(availability),
+    workingHours: many(workingHours),
     accounts: many(account),
     sessions: many(session),
 }));

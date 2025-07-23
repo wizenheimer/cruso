@@ -277,54 +277,54 @@ class ApiClient {
     }
 
     /**
-     * Availability API methods
+     * Working Hours API methods
      */
 
     /**
-     * Get user's availability schedules
-     * @returns Promise with availability data
+     * Get user's working hours schedules
+     * @returns Promise with working hours data
      */
-    async getAvailability() {
-        return this.request('/availability');
+    async getWorkingHours() {
+        return this.request('/working-hours');
     }
 
     /**
-     * Create a new availability schedule
-     * @param data - Availability data with days array (0-6), startTime, endTime, timezone
-     * @returns Promise with created availability data
+     * Create a new working hours schedule
+     * @param data - Working hours data with days array (0-6), startTime, endTime, timezone
+     * @returns Promise with created working hours data
      */
-    async createAvailability(data: {
+    async createWorkingHours(data: {
         days: number[];
         startTime: string;
         endTime: string;
         timezone?: string;
     }) {
-        return this.request('/availability', {
+        return this.request('/working-hours', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     }
 
     /**
-     * Update an availability schedule
-     * @param availabilityId - The availability ID to update (number)
+     * Update a working hours schedule
+     * @param workingHoursId - The working hours ID to update (number)
      * @param data - The update data (days, startTime, endTime, timezone, isActive)
-     * @returns Promise with updated availability data
+     * @returns Promise with updated working hours data
      */
-    async updateAvailability(availabilityId: number, data: Record<string, unknown>) {
-        return this.request(`/availability/${availabilityId}`, {
+    async updateWorkingHours(workingHoursId: number, data: Record<string, unknown>) {
+        return this.request(`/working-hours/${workingHoursId}`, {
             method: 'PATCH',
             body: JSON.stringify(data),
         });
     }
 
     /**
-     * Delete an availability schedule (hard delete - permanently removes)
-     * @param availabilityId - The availability ID to delete (number)
+     * Delete a working hours schedule (hard delete - permanently removes)
+     * @param workingHoursId - The working hours ID to delete (number)
      * @returns Promise with deletion result
      */
-    async deleteAvailability(availabilityId: number) {
-        return this.request(`/availability/${availabilityId}`, {
+    async deleteWorkingHours(workingHoursId: number) {
+        return this.request(`/working-hours/${workingHoursId}`, {
             method: 'DELETE',
         });
     }
@@ -340,7 +340,7 @@ class ApiClient {
         const params = new URLSearchParams({ date, time });
         if (timezone) params.append('timezone', timezone);
 
-        return this.request(`/availability/check?${params.toString()}`);
+        return this.request(`/working-hours/check?${params.toString()}`);
     }
 }
 

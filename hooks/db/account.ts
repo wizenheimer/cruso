@@ -3,7 +3,7 @@ import { AccountAfterCreateHook, AccountBeforeCreateHook } from './types';
 import {
     handleEmailConnection,
     handleGoogleCalendarConnection,
-    handleNewUserAvailabilities,
+    handleNewUserWorkingHours,
     handleNewUserPreferences,
 } from './utils';
 
@@ -28,8 +28,8 @@ export const afterAccountCreationHook = (async (account, context: GenericEndpoin
         // Handle new user preferences - adds the connected calendar email to the user preferences table if the user is newly created
         const isNewUser = context?.context?.isNewUser || false;
         if (isNewUser) {
-            // Add default availability
-            await handleNewUserAvailabilities(account, context);
+            // Add default working hours
+            await handleNewUserWorkingHours(account, context);
 
             // Add default preferences
             await handleNewUserPreferences(account, context);

@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { db } from '@/db';
-import { availability } from '@/db/schema/availability';
+import { workingHours } from '@/db/schema/working-hours';
 import { eq } from 'drizzle-orm';
 import { preferenceService } from '@/services/preferences';
 import { generatePreferencesMarkdown, type PreferencesData } from '@/lib/preference';
@@ -144,23 +144,23 @@ export async function handleGeneratePreferencesDocument(requestContext: Context)
 
         const userPreferences = preferencesResult.data;
 
-        // Get user availability
-        const userAvailability = await db
+        // Get user working hours
+        const userWorkingHours = await db
             .select({
-                days: availability.days,
-                startTime: availability.startTime,
-                endTime: availability.endTime,
-                timezone: availability.timezone,
+                days: workingHours.days,
+                startTime: workingHours.startTime,
+                endTime: workingHours.endTime,
+                timezone: workingHours.timezone,
             })
-            .from(availability)
-            .where(eq(availability.userId, authenticatedUser.id))
-            .orderBy(availability.createdAt);
+            .from(workingHours)
+            .where(eq(workingHours.userId, authenticatedUser.id))
+            .orderBy(workingHours.createdAt);
 
         // Prepare data for document generation
         const preferencesData: PreferencesData = {
             displayName: userPreferences.displayName || undefined,
             nickname: userPreferences.nickname || undefined,
-            availability: userAvailability.map((avail) => ({
+            workingHours: userWorkingHours.map((avail) => ({
                 days: avail.days || [],
                 startTime: avail.startTime,
                 endTime: avail.endTime,

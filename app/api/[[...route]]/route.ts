@@ -9,7 +9,7 @@ import auth from '../routes/auth';
 import calendar from '../routes/calendar';
 import preferences from '../routes/preference';
 import userEmails from '../routes/user-email';
-import availability from '../routes/availability';
+import workingHours from '../routes/working-hours';
 
 /**
  * The runtime
@@ -56,7 +56,7 @@ v1.route('/inbox', inbox);
 v1.route('/calendar', calendar);
 v1.route('/preferences', preferences);
 v1.route('/user-emails', userEmails);
-v1.route('/availability', availability);
+v1.route('/working-hours', workingHours);
 
 app.route('/v1', v1);
 

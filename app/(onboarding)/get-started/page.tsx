@@ -213,9 +213,9 @@ const OnboardingContent = () => {
                 console.log('└─ [API] No existing preferences found or error occurred');
             }
 
-            // Load availability schedule
-            console.log('┌─ [API] Loading availability schedule...');
-            const availabilityResponse = await apiClient.getAvailability();
+            // Load working hours schedule
+            console.log('┌─ [API] Loading working hours schedule...');
+            const availabilityResponse = await apiClient.getWorkingHours();
             console.log('├─ [API] Availability response:', {
                 success: availabilityResponse.success,
                 dataLength: Array.isArray(availabilityResponse.data)
@@ -224,7 +224,7 @@ const OnboardingContent = () => {
                 error: availabilityResponse.error,
             });
             if (availabilityResponse.success && availabilityResponse.data) {
-                const availability = availabilityResponse.data as Array<{
+                const workingHours = availabilityResponse.data as Array<{
                     id: number;
                     days: number[] | null;
                     startTime: string;
@@ -234,10 +234,10 @@ const OnboardingContent = () => {
                     updatedAt: string;
                 }>;
 
-                // Convert availability data to schedule format using utility function
-                const { convertAvailabilityToSchedule } = await import('@/lib/availability');
-                const newSchedule = convertAvailabilityToSchedule(
-                    availability.map((avail) => ({
+                // Convert working hours data to schedule format using utility function
+                const { convertWorkingHoursToSchedule } = await import('@/lib/working-hours');
+                const newSchedule = convertWorkingHoursToSchedule(
+                    workingHours.map((avail) => ({
                         ...avail,
                         createdAt: new Date(avail.createdAt),
                         updatedAt: new Date(avail.updatedAt),
@@ -245,9 +245,9 @@ const OnboardingContent = () => {
                 );
 
                 setSchedule(newSchedule);
-                console.log('└─ [API] Successfully loaded availability schedule:', newSchedule);
+                console.log('└─ [API] Successfully loaded working hours schedule:', newSchedule);
             } else {
-                console.log('└─ [API] No existing availability schedule found');
+                console.log('└─ [API] No existing working hours schedule found');
             }
         } catch (error) {
             console.error('Error loading onboarding data:', error);
@@ -360,10 +360,10 @@ const OnboardingContent = () => {
     }, [fields]);
 
     const saveScheduleData = useCallback(async () => {
-        // Clear existing availability first
+        // Clear existing working hours first
         console.log('┌─ [API] Saving schedule data...');
-        console.log('├─ [API] Getting existing availability...');
-        const existingAvailability = await apiClient.getAvailability();
+        console.log('├─ [API] Getting existing working hours...');
+        const existingAvailability = await apiClient.getWorkingHours();
         console.log('├─ [API] Existing availability response:', {
             success: existingAvailability.success,
             dataLength: Array.isArray(existingAvailability.data)
@@ -372,30 +372,30 @@ const OnboardingContent = () => {
         });
         if (existingAvailability.success && existingAvailability.data) {
             const existing = existingAvailability.data as Array<{ id: number }>;
-            console.log('├─ [API] Deleting', existing.length, 'existing availability records...');
+            console.log('├─ [API] Deleting', existing.length, 'existing working hours records...');
             for (const avail of existing) {
-                await apiClient.deleteAvailability(avail.id);
+                await apiClient.deleteWorkingHours(avail.id);
             }
-            console.log('├─ [API] Deleted existing availability records');
+            console.log('├─ [API] Deleted existing working hours records');
         }
 
-        // Convert schedule to availability format using utility function
-        console.log('├─ [API] Converting schedule to availability format...');
-        const { convertScheduleToAvailability } = await import('@/lib/availability');
-        const availabilityData = convertScheduleToAvailability(schedule);
+        // Convert schedule to working hours format using utility function
+        console.log('├─ [API] Converting schedule to working hours format...');
+        const { convertScheduleToWorkingHours } = await import('@/lib/working-hours');
+        const workingHoursData = convertScheduleToWorkingHours(schedule);
 
-        // Create new availability records
-        console.log('├─ [API] Creating new availability records...');
+        // Create new working hours records
+        console.log('├─ [API] Creating new working hours records...');
         let createdCount = 0;
-        for (const avail of availabilityData) {
-            await apiClient.createAvailability({
+        for (const avail of workingHoursData) {
+            await apiClient.createWorkingHours({
                 days: avail.days,
                 startTime: avail.startTime,
                 endTime: avail.endTime,
             });
             createdCount++;
         }
-        console.log('└─ [API] Created', createdCount, 'new availability records');
+        console.log('└─ [API] Created', createdCount, 'new working hours records');
     }, [schedule]);
 
     const finalizeOnboarding = useCallback(async () => {
