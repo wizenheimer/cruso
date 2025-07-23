@@ -130,8 +130,6 @@ export class ExchangeProcessingService {
      * @description This method is used to onboard a user
      */
     async handleNewUser(inboundEmailData: EmailData) {
-        console.log('onboarding non-user', { inboundEmailData });
-
         const outboundEmailData = await this.emailService.sendEmail({
             recipients: [inboundEmailData.sender],
             cc: [ONBOARDING_EMAIL_RECIPIENT],
@@ -140,7 +138,6 @@ export class ExchangeProcessingService {
             newThread: true, // Force new thread for onboarding
         });
 
-        console.log('sent onboarding email', { outboundEmailData });
         return outboundEmailData;
     }
 
@@ -152,8 +149,6 @@ export class ExchangeProcessingService {
      * @description This method is used when existing user tries to create branches from old threads
      */
     async handleInvalidEngagementForExistingUser(inboundEmailData: EmailData, user: User) {
-        console.log('handling invalid engagement for existing user', { inboundEmailData, user });
-
         const signature = await this.exchangeDataService.getSignature(inboundEmailData.exchangeId);
         const body = USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE + `\n\n${signature}`;
         const outboundEmailData = await this.emailService.sendReply(inboundEmailData, {
@@ -161,7 +156,6 @@ export class ExchangeProcessingService {
             body,
         });
 
-        console.log('sent invalid engagement email', { outboundEmailData });
         return outboundEmailData;
     }
 
@@ -172,8 +166,6 @@ export class ExchangeProcessingService {
      * @description This method is used when non-user tries to create branches from old threads
      */
     async handleInvalidEngagementForNonUser(inboundEmailData: EmailData) {
-        console.log('handling invalid engagement for non-user', { inboundEmailData });
-
         const signature = await this.exchangeDataService.getSignature(inboundEmailData.exchangeId);
         const body = NON_USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE + `\n\n${signature}`;
         const outboundEmailData = await this.emailService.sendReply(inboundEmailData, {
@@ -181,7 +173,6 @@ export class ExchangeProcessingService {
             body,
         });
 
-        console.log('sent invalid engagement email', { outboundEmailData });
         return outboundEmailData;
     }
 
@@ -192,8 +183,6 @@ export class ExchangeProcessingService {
      * @description This method handles non-user exchanges - triggered when Cruso acts on behalf of a user
      */
     async handleEngagementForNonUser(emailData: EmailData) {
-        console.log('handling engagement for non-user', { emailData });
-
         // Look up the previous message to find the exchange owner
         const previousMessage = await this.exchangeDataService.getByMessageId(
             emailData.previousMessageId!,
@@ -213,28 +202,23 @@ export class ExchangeProcessingService {
 
         await this.exchangeDataService.saveEmail(emailData, previousMessage.exchangeOwnerId);
 
-        // Determine reply type based on email content
-        const replyToMe = emailData.body.includes('reply to me');
-        const replyType = replyToMe ? 'sender-only' : 'all-including-sender';
-
         const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
+
+        const body = `You have been pinged!
+
+${signature}`;
 
         // NOTE: sender-only mode might not be viable for real world use case tbh
         const sentEmail = await this.emailService.sendReply(emailData, {
-            type: replyType,
-            body: `You have been pinged!
-
-${signature}`,
+            type: 'all-including-sender',
+            body,
         });
-
-        console.log('sent engagement email', { sentEmail });
 
         // Save the sent email to the database
         const savedEmail = await this.exchangeDataService.saveEmail(
             sentEmail,
             previousMessage.exchangeOwnerId,
         );
-        console.log('saved engagement email', { savedEmail });
 
         return sentEmail;
     }
@@ -247,6 +231,20 @@ ${signature}`,
      * @description This method handles existing user interactions with Cruso
      */
     async handleEngagementForExistingUser(emailData: EmailData, user: User) {
-        console.log('handling engagement for existing user', { emailData, user });
+        const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
+
+        const body = `You have been pinged!
+
+${signature}`;
+
+        const sentEmail = await this.emailService.sendReply(emailData, {
+            type: 'all-including-sender',
+            body,
+        });
+
+        // Save the sent email to the database
+        const savedEmail = await this.exchangeDataService.saveEmail(sentEmail, user.id);
+
+        return sentEmail;
     }
 }
