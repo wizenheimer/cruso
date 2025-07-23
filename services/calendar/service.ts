@@ -5,93 +5,19 @@ import { calendarConnections } from '@/db/schema/calendars';
 import { account } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { GoogleAuthManager } from './manager';
-
-export interface CalendarEvent {
-    id?: string;
-    summary: string;
-    description?: string;
-    start: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    end: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    attendees?: Array<{
-        email: string;
-        displayName?: string;
-        responseStatus?: string;
-    }>;
-    location?: string;
-    conferenceData?: calendar_v3.Schema$ConferenceData;
-    reminders?: {
-        useDefault?: boolean;
-        overrides?: Array<{
-            method: string;
-            minutes: number;
-        }>;
-    };
-}
-
-export interface CalendarEvent {
-    id?: string;
-    summary: string;
-    description?: string;
-    start: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    end: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    attendees?: Array<{
-        email: string;
-        displayName?: string;
-        responseStatus?: string;
-    }>;
-    location?: string;
-    conferenceData?: calendar_v3.Schema$ConferenceData;
-    reminders?: {
-        useDefault?: boolean;
-        overrides?: Array<{
-            method: string;
-            minutes: number;
-        }>;
-    };
-}
-
-export interface CalendarInfo {
-    id: string;
-    summary: string;
-    description?: string;
-    primary?: boolean;
-    accessRole?: string;
-    backgroundColor?: string;
-    foregroundColor?: string;
-    timeZone?: string;
-    syncStatus: 'active' | 'error' | 'paused';
-    lastSyncAt?: string;
-    googleEmail: string;
-}
-
-export interface AvailabilityResult {
-    isAvailable: boolean;
-    busySlots: Array<{ start: string; end: string }>;
-    events: Array<{
-        id: string;
-        summary: string;
-        start: string;
-        end: string;
-        calendarId: string;
-        calendarName: string;
-    }>;
-}
+import {
+    CalendarEvent,
+    CalendarInfo,
+    AvailabilityResult,
+    GetEventsOptions,
+    CreateEventOptions,
+    UpdateEventOptions,
+    DeleteEventOptions,
+    CheckAvailabilityOptions,
+    SyncResult,
+    CalendarListSyncResult,
+    WatchCalendarResult,
+} from '@/types/calendar';
 
 export class GoogleCalendarService {
     private userId: string;
@@ -288,14 +214,7 @@ export class GoogleCalendarService {
         calendarId: string,
         timeMin: string,
         timeMax: string,
-        options?: {
-            maxResults?: number;
-            pageToken?: string;
-            q?: string;
-            showDeleted?: boolean;
-            singleEvents?: boolean;
-            orderBy?: 'startTime' | 'updated';
-        },
+        options?: GetEventsOptions,
     ): Promise<{ events: CalendarEvent[]; nextPageToken?: string }> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -336,10 +255,7 @@ export class GoogleCalendarService {
     async createEvent(
         calendarId: string,
         event: CalendarEvent,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-            conferenceDataVersion?: number;
-        },
+        options?: CreateEventOptions,
     ): Promise<CalendarEvent> {
         console.log('┌─ [CALENDAR_SERVICE] Creating event...', {
             calendarId,
@@ -385,9 +301,7 @@ export class GoogleCalendarService {
         calendarId: string,
         eventId: string,
         event: Partial<CalendarEvent>,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: UpdateEventOptions,
     ): Promise<CalendarEvent> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -432,9 +346,7 @@ export class GoogleCalendarService {
     async deleteEvent(
         calendarId: string,
         eventId: string,
-        options?: {
-            sendUpdates?: 'all' | 'externalOnly' | 'none';
-        },
+        options?: DeleteEventOptions,
     ): Promise<void> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
@@ -464,11 +376,7 @@ export class GoogleCalendarService {
     async checkAvailability(
         timeMin: string,
         timeMax: string,
-        options: {
-            includeCalendarIds?: string[];
-            excludeCalendarIds?: string[];
-            timeZone?: string;
-        } = {},
+        options: CheckAvailabilityOptions = {},
     ): Promise<AvailabilityResult> {
         try {
             let connections = await db
@@ -610,7 +518,7 @@ export class GoogleCalendarService {
     /**
      * Sync all calendar connections for the user
      */
-    async syncAllCalendars(): Promise<{ success: number; errors: string[] }> {
+    async syncAllCalendars(): Promise<SyncResult> {
         const connections = await this.getActiveConnections();
         let successCount = 0;
         const errors: string[] = [];
@@ -675,11 +583,7 @@ export class GoogleCalendarService {
      * Fetch calendar lists from all Google accounts and store them in the database
      * This is used for initial calendar discovery and syncing
      */
-    async fetchAllCalendarLists(): Promise<{
-        accountsSynced: number;
-        calendarsSynced: number;
-        errors: string[];
-    }> {
+    async fetchAllCalendarLists(): Promise<CalendarListSyncResult> {
         try {
             // Get all Google accounts for the user
             const googleAccounts = await db
@@ -775,7 +679,7 @@ export class GoogleCalendarService {
         calendarId: string,
         webhookUrl: string,
         ttl?: number,
-    ): Promise<{ resourceId: string; expiration: number }> {
+    ): Promise<WatchCalendarResult> {
         try {
             const connectionData = await this.getCalendarConnection(calendarId);
             if (!connectionData.account) {

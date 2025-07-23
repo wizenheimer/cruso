@@ -1,4 +1,4 @@
-import { EmailData, RawEmailData } from './types';
+import { EmailData, RawEmailData } from '@/types/exchange';
 import { ExchangeDataService } from './exchangeDataService';
 import { EmailParsingService } from './parsing';
 import { EmailService } from '../email';
@@ -11,7 +11,7 @@ import {
     USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
     NON_USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
 } from '@/constants/email';
-import { ExchangeData } from './types';
+import { ExchangeData } from '@/types/exchange';
 import { User } from '@/types/users';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';

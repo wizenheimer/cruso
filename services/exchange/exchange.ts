@@ -1,4 +1,4 @@
-import { EmailData, ExchangeData } from './types';
+import { EmailData, ExchangeData } from '@/types/exchange';
 import { ExchangeDataService } from './exchangeDataService';
 import { ExchangeProcessingService } from './exchangeProcessingService';
 import { Context } from 'hono';

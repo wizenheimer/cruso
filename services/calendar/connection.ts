@@ -2,35 +2,13 @@ import { db } from '@/db';
 import { calendarConnections } from '@/db/schema/calendars';
 import { google, calendar_v3 } from 'googleapis';
 import { GoogleAuthManager } from './manager';
-
-/**
- * GoogleAccount is the response from the calendar API when getting Google accounts.
- */
-interface GoogleAccount {
-    id: string;
-    accountId: string;
-    providerId: string;
-    accessToken?: string | null;
-    userId: string;
-}
-
-/**
- * UserProfile is the response from the calendar API when getting user profile.
- */
-interface UserProfile {
-    email: string;
-    name: string;
-}
-
-/**
- * Calendar data structure from Google Calendar API
- */
-interface GoogleCalendar {
-    id: string;
-    summary: string;
-    timeZone?: string;
-    primary?: boolean;
-}
+import {
+    GoogleAccount,
+    UserProfile,
+    GoogleCalendar,
+    ConnectionManagerParams,
+    GoogleCalendarConnectionParams,
+} from '@/types/calendar';
 
 /**
  * ConnectionManager handles Google calendar connections and synchronization.
@@ -47,17 +25,7 @@ export class ConnectionManager {
     private authManager: GoogleAuthManager;
     private calendarCache: Map<string, calendar_v3.Calendar> = new Map();
 
-    constructor({
-        userId,
-        accountId,
-        googleAccountId,
-        googleEmail,
-    }: {
-        userId: string;
-        accountId: string;
-        googleAccountId: string;
-        googleEmail: string;
-    }) {
+    constructor({ userId, accountId, googleAccountId, googleEmail }: ConnectionManagerParams) {
         this.userId = userId;
         this.accountId = accountId;
         this.googleAccountId = googleAccountId;
@@ -75,11 +43,7 @@ export class ConnectionManager {
         userId,
         account,
         profile,
-    }: {
-        userId: string;
-        account: GoogleAccount;
-        profile: UserProfile;
-    }): Promise<void> {
+    }: GoogleCalendarConnectionParams): Promise<void> {
         try {
             if (!account.accessToken) {
                 return;

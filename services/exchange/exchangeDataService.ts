@@ -1,4 +1,4 @@
-import { EmailData, ExchangeData } from './types';
+import { EmailData, ExchangeData } from '@/types/exchange';
 import { db } from '@/db';
 import { exchangeData } from '@/db/schema/exchange';
 import { user } from '@/db/schema/auth';

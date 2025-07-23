@@ -2,7 +2,7 @@ import {
     verifyMailgunWebhookFromFormData,
     verifyMailgunWebhookSpamThresholdFromFormData,
 } from '@/services/exchange/parsing/verify';
-import { RawEmailData } from '@/services/exchange/types';
+import { RawEmailData } from '@/types/exchange';
 import {
     parseURLEncodedToFormData,
     parseMultipartToFormData,

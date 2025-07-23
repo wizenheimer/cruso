@@ -1,5 +1,6 @@
 import { createCalendarService } from '@/services/calendar/service';
 import { auth } from '@/lib/auth';
+import { AvailabilityResult } from '@/types/calendar';
 /**
  * AvailabilityChecker is a class that checks the availability of a user.
  */

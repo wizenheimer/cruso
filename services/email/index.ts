@@ -1,26 +1,15 @@
 import Mailgun from 'mailgun.js';
 import formData from 'form-data';
-import { EmailData } from '../exchange/types';
+import { EmailData } from '@/types/exchange';
 import { MailgunMessageData } from 'mailgun.js/definitions';
 import { randomUUID } from 'crypto';
-
-// Configuration interface for sending emails
-interface SendEmailConfig {
-    recipients: string[];
-    subject: string;
-    body: string;
-    cc?: string[];
-    bcc?: string[];
-    replyTo?: EmailData; // If replying to an email
-    newThread?: boolean; // Force new thread (default: true if no replyTo)
-}
-
-// Reply configuration for different reply behaviors
-interface ReplyConfig {
-    type: 'sender-only' | 'all-including-sender' | 'all-excluding-sender' | 'all-with-cc-to-sender';
-    body: string;
-    subject?: string;
-}
+import {
+    SendEmailConfig,
+    ReplyConfig,
+    EmailSendParams,
+    ReplyRecipients,
+    ThreadContext,
+} from '@/types/email';
 
 export class EmailService {
     private static instance: EmailService | null = null;
@@ -114,7 +103,7 @@ export class EmailService {
      * @returns The thread context
      * @description This method is used to get the thread context for an email
      */
-    private getThreadContext(replyTo?: EmailData, newThread?: boolean) {
+    private getThreadContext(replyTo?: EmailData, newThread?: boolean): ThreadContext {
         if (newThread || !replyTo) {
             return {
                 exchangeId: randomUUID(),
@@ -135,7 +124,10 @@ export class EmailService {
      * @returns The recipients for the reply
      * @description This method is used to get the recipients for a reply
      */
-    private getReplyRecipients(originalEmail: EmailData, type: ReplyConfig['type']) {
+    private getReplyRecipients(
+        originalEmail: EmailData,
+        type: ReplyConfig['type'],
+    ): ReplyRecipients {
         const sender = originalEmail.sender;
         const allRecipients = originalEmail.recipients;
 
@@ -178,15 +170,7 @@ export class EmailService {
      * @returns The email data of the sent email
      * @description This method is used to execute the email send
      */
-    private async executeEmailSend(params: {
-        to: string[];
-        cc: string[];
-        bcc: string[];
-        subject: string;
-        body: string;
-        exchangeId: string;
-        previousMessageId: string | null;
-    }): Promise<EmailData> {
+    private async executeEmailSend(params: EmailSendParams): Promise<EmailData> {
         const { to, cc, bcc, subject, body, exchangeId, previousMessageId } = params;
 
         try {

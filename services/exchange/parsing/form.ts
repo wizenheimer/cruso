@@ -1,6 +1,6 @@
 import { cleanTextContent } from './text';
 import { parseEmailAddress, parseEmailAddressList } from './email';
-import { RawEmailData } from '@/services/exchange/types';
+import { RawEmailData } from '@/types/exchange';
 
 /**
  * Interface for form data value options

@@ -3,7 +3,7 @@ import {
     parseInboundWebhookWithAttachments,
     parseInboundWebhookWithoutAttachments,
 } from '@/services/exchange/parsing/inbound';
-import { RawEmailData } from '@/services/exchange/types';
+import { RawEmailData } from '@/types/exchange';
 
 /**
  * EmailParsingService class for parsing emails from inbound webhooks

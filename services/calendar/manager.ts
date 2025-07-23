@@ -3,6 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { db } from '@/db';
 import { account } from '@/db/schema/auth';
 import { eq } from 'drizzle-orm';
+import { OAuthTokens } from '@/types/calendar';
 
 /**
  * GoogleAuthManager is a class that manages the Google OAuth2 client.
@@ -78,11 +79,7 @@ export class GoogleAuthManager {
     /**
      * Exchange authorization code for tokens
      */
-    async exchangeCodeForTokens(code: string): Promise<{
-        access_token: string;
-        refresh_token?: string;
-        expiry_date?: number;
-    }> {
+    async exchangeCodeForTokens(code: string): Promise<OAuthTokens> {
         const { tokens } = await this.oauth2Client.getToken(code);
 
         if (!tokens.access_token) {
