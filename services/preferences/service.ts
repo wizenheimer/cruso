@@ -7,6 +7,8 @@ import { account, user } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { PREFERENCES_DEFAULTS } from '@/constants/preferences';
 import { generatePreferencesMarkdown, type PreferencesData } from '@/lib/preference';
+import { generateObject } from 'ai';
+import { openai } from '@ai-sdk/openai';
 import {
     Preference,
     PreferenceUpdate,
@@ -24,6 +26,16 @@ import {
     ValidationResult,
     PreferenceValidationError,
 } from '@/types/preferences';
+import {
+    PreferenceUpdateExcludingSystemFieldsSchema,
+    PreferenceUpdateUsingInstructionSchema,
+} from '@/schema/preferences';
+import {
+    DEFAULT_LARGE_LANGUAGE_MODEL,
+    DEFAULT_SMALL_LANGUAGE_MODEL,
+    LARGE_LANGUAGE_MODEL,
+} from '@/constants/model';
+import yaml from 'yaml';
 
 /**
  * Preference Service
@@ -301,8 +313,106 @@ export class PreferenceService {
         userId: string,
         document: string,
     ): Promise<UpdatePreferencesResult> {
-        const updateResult = await this.updatePreferences(userId, { document });
+        const existingPreferences = await this.getPreferences(userId);
+
+        if (!existingPreferences.success || !existingPreferences.data) {
+            console.error('Preferences not found', existingPreferences);
+        }
+
+        // Convert the existing preference into yaml
+        const existingPreferencesYaml = yaml.stringify(existingPreferences.data?.preferences);
+
+        let updateData: PreferenceUpdate = {
+            document,
+        };
+
+        try {
+            const { object } = await generateObject({
+                model: openai(DEFAULT_LARGE_LANGUAGE_MODEL),
+                schema: PreferenceUpdateExcludingSystemFieldsSchema,
+                schemaName: 'updated_user_preferences',
+                schemaDescription:
+                    'The updated preferences object that combines both the existing and new preferences. Do not include any other text or comments in the response.',
+                prompt: `=== NEW PREFERENCES DOCUMENT ===
+---- NEW START ----
+${document}
+---- NEW END ----
+=== PREVIOUS PREFERENCES (YAML) ===
+---- OLD START ----
+${existingPreferencesYaml}
+---- OLD END ----
+=== INSTRUCTIONS ===
+Update the preferences document based on the new document provided above.
+Merge the new preferences with the existing preferences, keeping any existing values that are not overridden by the new document.
+
+=== FINAL RESULT ===
+Please provide the final updated preferences object that combines both the existing and new preferences. Do not include any other text or comments in the response.`,
+            });
+
+            console.log('object', object);
+
+            updateData = {
+                ...updateData,
+                ...object,
+            };
+        } catch (error) {
+            console.error('Error generating object', error);
+        }
+
+        const updateResult = await this.updatePreferences(userId, updateData);
+
+        console.log('updateResult', updateResult);
+
         return updateResult;
+    }
+
+    async updatePreferencesDocumentUsingInstruction(
+        userId: string,
+        userInstruction: string,
+    ): Promise<UpdatePreferencesResult> {
+        const existingPreferences = await this.getPreferences(userId);
+
+        if (!existingPreferences.success || !existingPreferences.data) {
+            console.error('Preferences not found', existingPreferences);
+        }
+
+        // Convert the existing preference into yaml
+        const existingPreferencesYaml = yaml.stringify(existingPreferences.data?.preferences);
+
+        try {
+            const { object } = await generateObject({
+                model: openai(DEFAULT_LARGE_LANGUAGE_MODEL),
+                schema: PreferenceUpdateUsingInstructionSchema,
+                schemaName: 'updated_user_preferences_using_instruction',
+                schemaDescription:
+                    'The updated preferences object using the update instructions and existing preferences.',
+                prompt: `Create a new preferences object based on the update instructions and existing preferences. Carefully review the update instructions and existing preferences to create an updated preference object. Pause, read and reflect on the update instructions carefully before updating the preferences object. Do not include any other text or comments in the response that is not part of the preferences object.
+
+                === UPDATE INSTRUCTIONS ===
+${userInstruction}
+
+=== PREVIOUS PREFERENCES (YAML) ===
+${existingPreferencesYaml}
+
+=== FINAL RESULT ===
+Please provide the final updated preferences object that combines both the existing and new preferences. Do not include any other text or comments in the response.`,
+            });
+
+            console.log('object', object);
+
+            const updateResult = await this.updatePreferences(userId, object);
+
+            return updateResult;
+        } catch (error) {
+            console.error('Error updating preferences using instruction', error);
+            return {
+                success: false,
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : 'Seems something went wrong, let us try again',
+            };
+        }
     }
 
     /**

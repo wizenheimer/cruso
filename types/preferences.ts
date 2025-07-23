@@ -17,6 +17,7 @@ import {
     GetPrimaryOptionsResultSchema,
     PreferenceValidationErrorSchema,
     ValidationResultSchema,
+    PreferenceUpdateExcludingSystemFieldsSchema,
 } from '@/schema/preferences';
 
 // Base preference schemas (these reference the database schema)

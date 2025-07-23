@@ -403,7 +403,8 @@ export default function DashboardPage() {
                 savePreferencesResponse = await apiClient.createPreferences(preferencesPayload);
             } else {
                 // Update existing preferences
-                savePreferencesResponse = await apiClient.updatePreferences(preferencesPayload);
+                savePreferencesResponse =
+                    await apiClient.updatePreferencesDocument(preferencesPayload);
             }
             console.log('├─ [API] Save preferences response:', {
                 success: savePreferencesResponse.success,

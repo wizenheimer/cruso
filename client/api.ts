@@ -160,6 +160,18 @@ class ApiClient {
     }
 
     /**
+     * Update user preferences document
+     * @param data - The preference document to update
+     * @returns Promise with updated preferences
+     */
+    async updatePreferencesDocument(data: Record<string, unknown>) {
+        return this.request('/preferences/update-document', {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+        });
+    }
+
+    /**
      * Generate preferences document
      * @returns Promise with generated document
      */

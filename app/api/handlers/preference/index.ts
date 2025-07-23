@@ -205,6 +205,41 @@ export async function handleGeneratePreferencesDocument(requestContext: Context)
 }
 
 /**
+ * Handle PATCH request to update user preferences document
+ * @param requestContext - The Hono context object containing request data
+ * @returns JSON response with updated preferences or error message
+ */
+export async function handleUpdatePreferencesDocument(requestContext: Context) {
+    console.log('[HANDLER] Updating preferences document for user');
+
+    try {
+        const authenticatedUser = getUser(requestContext);
+        const preferencesUpdatePayload = await requestContext.req.json();
+
+        const updatePreferencesResult = await preferenceService.updatePreferencesDocument(
+            authenticatedUser.id,
+            preferencesUpdatePayload.document,
+        );
+
+        if (!updatePreferencesResult.success) {
+            console.log(
+                '[HANDLER] Failed to update preferences document:',
+                updatePreferencesResult.error,
+            );
+            return requestContext.json({ error: updatePreferencesResult.error }, 400);
+        }
+
+        console.log(
+            '[HANDLER] Preferences document updated successfully for user:',
+            authenticatedUser.id,
+        );
+        return requestContext.json(updatePreferencesResult.data);
+    } catch (updatePreferencesDocumentError) {
+        console.error('Error updating preferences document:', updatePreferencesDocumentError);
+        return requestContext.json({ error: 'Failed to update preferences document' }, 500);
+    }
+}
+/**
  * Handle PATCH request to update primary user email
  * @param requestContext - The Hono context object containing request data
  * @returns JSON response with updated preferences or error message

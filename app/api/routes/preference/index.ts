@@ -9,6 +9,7 @@ import {
     handleUpdatePrimaryAccount,
     handleGetPrimaryOptions,
     handleGeneratePreferencesDocument,
+    handleUpdatePreferencesDocument,
 } from '@/app/api/handlers/preference';
 
 const preferences = new Hono();
@@ -37,6 +38,11 @@ preferences.patch('/', handleUpdatePreferences);
  * POST /api/preferences/generate-document - Generate preferences document
  */
 preferences.post('/generate-document', handleGeneratePreferencesDocument);
+
+/**
+ * PATCH /api/preferences/update-document - Update user preferences document
+ */
+preferences.patch('/update-document', handleUpdatePreferencesDocument);
 
 /**
  * DELETE /api/preferences - Delete user preferences

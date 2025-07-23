@@ -67,6 +67,7 @@
         "@radix-ui/react-separator": "^1.1.7",
         "@radix-ui/react-slot": "^1.2.3",
         "@tailwindcss/typography": "^0.5.16",
+        "ai": "^4.3.19",
         "better-auth": "^1.2.12",
         "boring-avatars": "^1.11.2",
         "canvas-confetti": "^1.9.3",
