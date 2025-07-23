@@ -5,7 +5,6 @@ import {
     handleCreateWorkingHours,
     handleUpdateWorkingHours,
     handleDeleteWorkingHours,
-    handleCheckUserAvailability,
 } from '@/app/api/handlers/working-hours';
 
 const workingHours = new Hono();
@@ -34,10 +33,5 @@ workingHours.patch('/:id', handleUpdateWorkingHours);
  * DELETE /api/working-hours/:id - Delete working hours
  */
 workingHours.delete('/:id', handleDeleteWorkingHours);
-
-/**
- * GET /api/working-hours/check - Check if user is available at a specific time
- */
-workingHours.get('/check', handleCheckUserAvailability);
 
 export default workingHours;

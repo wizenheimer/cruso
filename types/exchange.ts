@@ -1,116 +1,159 @@
 import { z } from 'zod';
 import { exchangeData } from '@/db/schema/exchange';
-
-// Email Data Schemas - for email processing and exchange management
-export const RawEmailDataSchema = z.object({
-    messageId: z.string().min(1, 'Message ID is required'), // MessageID of the email
-    previousMessageId: z.string().nullable(), // MessageID of the previous email - null if the email is the first in the exchange
-    sender: z.string().email('Invalid sender email address'), // Email address of the sender
-    recipients: z
-        .array(z.string().email('Invalid recipient email address'))
-        .min(1, 'At least one recipient is required'), // Email addresses of the recipients - includes CC and BCC
-    rawSubject: z.string(), // Subject of the email
-    rawBody: z.string(), // Body of the email
-    timestamp: z.date(), // Timestamp of the email
-    type: z.enum(['inbound', 'outbound']), // Type of the email - inbound or outbound
-});
-
-export const EmailDataSchema = z.object({
-    id: z.string().uuid('Invalid email ID format'), // UUID for the email
-    exchangeId: z.string().uuid('Invalid exchange ID format'), // UUID for the parent email
-    messageId: z.string().min(1, 'Message ID is required'), // MessageID of the email
-    previousMessageId: z.string().nullable(), // MessageID of the previous email - null if the email is the first in the exchange
-    sender: z.string().email('Invalid sender email address'), // Email address of the sender
-    recipients: z
-        .array(z.string().email('Invalid recipient email address'))
-        .min(1, 'At least one recipient is required'), // Email addresses of the recipients - includes CC and BCC
-    subject: z.string(), // Subject of the email - sanitized
-    body: z.string(), // Body of the email - sanitized
-    timestamp: z.date(), // Timestamp of the email
-    type: z.enum(['inbound', 'outbound']), // Type of the email - inbound or outbound
-});
-
-// ExchangeData schema for database operations (omits subject and body)
-export const ExchangeDataSchema = z.object({
-    id: z.string().uuid('Invalid email ID format'), // UUID for the email
-    exchangeId: z.string().uuid('Invalid exchange ID format'), // UUID for the parent email
-    exchangeOwnerId: z.string(), // User ID who owns this exchange
-    messageId: z.string().min(1, 'Message ID is required'), // MessageID of the email
-    previousMessageId: z.string().nullable(), // MessageID of the previous email - null if the email is the first in the exchange
-    sender: z.string().email('Invalid sender email address'), // Email address of the sender
-    recipients: z
-        .array(z.string().email('Invalid recipient email address'))
-        .min(1, 'At least one recipient is required'), // Email addresses of the recipients - includes CC and BCC
-    timestamp: z.date(), // Timestamp of the email
-    type: z.enum(['inbound', 'outbound']), // Type of the email - inbound or outbound
-    // Note: subject and body are omitted from database storage
-    // They are handled by agent memory instead
-});
-
-// Helper schemas for partial updates
-export const PartialRawEmailDataSchema = RawEmailDataSchema.partial();
-export const PartialEmailDataSchema = EmailDataSchema.partial();
-export const PartialExchangeDataSchema = ExchangeDataSchema.partial();
-
-// API schemas - manual but referencing DB constraints to prevent drift
-// NOTE: Keep these in sync with the exchangeData table definition above
-
-// CreateExchangeDataSchema is the schema for creating a new exchange data
-export const CreateExchangeDataSchema = z.object({
-    id: z.string().uuid(),
-    exchangeId: z.string().uuid(),
-    exchangeOwnerId: z.string(), // User ID who owns this exchange
-    messageId: z.string().max(500), // Matches varchar(500) in DB
-    previousMessageId: z.string().max(500).nullable(), // Previous message ID is nullable for first message in exchange
-    sender: z.string().max(255), // Matches varchar(255) in DB
-    recipients: z.array(z.string().email()).min(1), // Custom validation for email array
-    timestamp: z
-        .string()
-        .datetime()
-        .or(z.date())
-        .transform((val) => (val instanceof Date ? val : new Date(val))),
-    type: z.enum(['inbound', 'outbound']),
-});
-
-// UpdateExchangeDataSchema is the schema for updating an existing exchange data
-export const UpdateExchangeDataSchema = z.object({
-    exchangeId: z.string().uuid(),
-    exchangeOwnerId: z.string().optional(), // User ID who owns this exchange
-    previousMessageId: z.string().max(500).nullable().optional(), // Previous message ID is nullable for first message in exchange
-    sender: z.string().max(255).optional(),
-    recipients: z.array(z.string().email()).min(1).optional(),
-    timestamp: z
-        .string()
-        .datetime()
-        .or(z.date())
-        .transform((val) => (val instanceof Date ? val : new Date(val)))
-        .optional(),
-    type: z.enum(['inbound', 'outbound']).optional(),
-});
-
-// ExchangeFiltersSchema is the schema for filtering exchange data
-export const ExchangeFiltersSchema = z.object({
-    exchangeId: z.string().uuid().optional(),
-    exchangeOwnerId: z.string().optional(), // Filter by owner
-    type: z.enum(['inbound', 'outbound']).optional(),
-    sender: z.string().optional(),
-    recipient: z.string().email().optional(),
-    startDate: z.string().datetime().optional(),
-    endDate: z.string().datetime().optional(),
-    limit: z.number().min(1).max(1000).default(50),
-    offset: z.number().min(0).default(0),
-});
+import {
+    CreateExchangeDataSchema,
+    UpdateExchangeDataSchema,
+    ExchangeFiltersSchema,
+    RawEmailDataSchema,
+    EmailDataSchema,
+    PartialRawEmailDataSchema,
+    PartialEmailDataSchema,
+    PartialExchangeDataSchema,
+    ServiceResultSchema,
+    GetExchangeDataResultSchema,
+    CreateExchangeDataResultSchema,
+    UpdateExchangeDataResultSchema,
+    DeleteExchangeDataResultSchema,
+} from '@/schema/exchange';
 
 // Types - inferred from the DB schema
+
+/**
+ * Exchange data record as stored in the database.
+ * Contains email exchange information including sender, recipient, subject, and content.
+ * Used for reading exchange data from the database.
+ * @see db/schema/exchange.ts - Source schema definition
+ * @see db/queries/exchange.ts - Used in exchange queries
+ */
 export type ExchangeData = typeof exchangeData.$inferSelect;
+
+/**
+ * Exchange data for inserting new records into the database.
+ * Contains required fields for creating new exchange records.
+ * Used when storing new email exchanges in the database.
+ * @see db/schema/exchange.ts - Source schema definition
+ * @see db/queries/exchange.ts - Used in createExchangeData query
+ */
 export type InsertExchangeData = typeof exchangeData.$inferInsert;
+
+/**
+ * Input data for creating new exchange records.
+ * Contains validated exchange data for API operations.
+ * Used as request body when creating exchanges via API.
+ * @see schema/exchange.ts - CreateExchangeDataSchema definition
+ * @see api/routes/exchange/index.ts - Used in POST exchange endpoint validation
+ */
 export type CreateExchangeData = z.infer<typeof CreateExchangeDataSchema>;
+
+/**
+ * Input data for updating existing exchange records.
+ * Contains validated exchange data for update operations.
+ * Used as request body when updating exchanges via API.
+ * @see schema/exchange.ts - UpdateExchangeDataSchema definition
+ * @see api/routes/exchange/index.ts - Used in PATCH exchange endpoint validation
+ */
 export type UpdateExchangeData = z.infer<typeof UpdateExchangeDataSchema>;
+
+/**
+ * Filters for querying exchange data.
+ * Contains search and filter parameters for exchange data retrieval.
+ * Used for filtering and searching exchange records.
+ * @see schema/exchange.ts - ExchangeFiltersSchema definition
+ * @see api/routes/exchange/index.ts - Used in GET exchange endpoint query parameters
+ */
 export type ExchangeFilters = z.infer<typeof ExchangeFiltersSchema>;
 
 // Email Data Types - inferred from Zod schemas (single source of truth)
+
+/**
+ * Raw email data as received from email providers.
+ * Contains unprocessed email information including headers and metadata.
+ * Used for initial email data processing and parsing.
+ * @see schema/exchange.ts - RawEmailDataSchema definition
+ * @see services/exchange/parsing/index.ts - Used in email parsing services
+ */
 export type RawEmailData = z.infer<typeof RawEmailDataSchema>;
+
+/**
+ * Processed email data after parsing and validation.
+ * Contains cleaned and structured email information.
+ * Used for storing and displaying email content.
+ * @see schema/exchange.ts - EmailDataSchema definition
+ * @see services/exchange/processing.ts - Used in email processing
+ * @see components/dashboard/InboxSection.tsx - Used in UI components
+ */
 export type EmailData = z.infer<typeof EmailDataSchema>;
+
+/**
+ * Partial raw email data for incremental updates.
+ * Contains optional fields for updating raw email information.
+ * Used when updating email data incrementally.
+ * @see schema/exchange.ts - PartialRawEmailDataSchema definition
+ * @see services/exchange/parsing/index.ts - Used in partial email updates
+ */
 export type PartialRawEmailData = z.infer<typeof PartialRawEmailDataSchema>;
+
+/**
+ * Partial email data for incremental updates.
+ * Contains optional fields for updating processed email information.
+ * Used when updating email data incrementally.
+ * @see schema/exchange.ts - PartialEmailDataSchema definition
+ * @see services/exchange/processing.ts - Used in partial email updates
+ */
 export type PartialEmailData = z.infer<typeof PartialEmailDataSchema>;
+
+/**
+ * Partial exchange data for incremental updates.
+ * Contains optional fields for updating exchange records.
+ * Used when updating exchange data incrementally.
+ * @see schema/exchange.ts - PartialExchangeDataSchema definition
+ * @see services/exchange/index.ts - Used in partial exchange updates
+ */
 export type PartialExchangeData = z.infer<typeof PartialExchangeDataSchema>;
+
+// Service Result Types - inferred from Zod schemas
+
+/**
+ * Generic service result wrapper for API responses.
+ * Provides consistent error handling and success/failure status.
+ * Used across all exchange service operations for standardized responses.
+ * @see schema/exchange.ts - ServiceResultSchema definition
+ * @see services/exchange/index.ts - Used in exchange service responses
+ */
+export type ServiceResult<T> = z.infer<ReturnType<typeof ServiceResultSchema<z.ZodType<T>>>>;
+
+/**
+ * Result of exchange data retrieval operation.
+ * Contains exchange data or error information.
+ * Used when fetching exchange records from the API.
+ * @see schema/exchange.ts - GetExchangeDataResultSchema definition
+ * @see api/routes/exchange/index.ts - Used in GET exchange endpoint
+ */
+export type GetExchangeDataResult = z.infer<typeof GetExchangeDataResultSchema>;
+
+/**
+ * Result of creating exchange data operation.
+ * Contains the created exchange data or error information.
+ * Used when creating new exchange records via API.
+ * @see schema/exchange.ts - CreateExchangeDataResultSchema definition
+ * @see api/routes/exchange/index.ts - Used in POST exchange endpoint
+ */
+export type CreateExchangeDataResult = z.infer<typeof CreateExchangeDataResultSchema>;
+
+/**
+ * Result of updating exchange data operation.
+ * Contains the updated exchange data or error information.
+ * Used when modifying exchange records via API.
+ * @see schema/exchange.ts - UpdateExchangeDataResultSchema definition
+ * @see api/routes/exchange/index.ts - Used in PATCH exchange endpoint
+ */
+export type UpdateExchangeDataResult = z.infer<typeof UpdateExchangeDataResultSchema>;
+
+/**
+ * Result of deleting exchange data operation.
+ * Contains success confirmation or error information.
+ * Used when removing exchange records via API.
+ * @see schema/exchange.ts - DeleteExchangeDataResultSchema definition
+ * @see api/routes/exchange/index.ts - Used in DELETE exchange endpoint
+ */
+export type DeleteExchangeDataResult = z.infer<typeof DeleteExchangeDataResultSchema>;

@@ -1,6 +1,6 @@
 import { EmailData, ExchangeData } from '@/types/exchange';
-import { ExchangeDataService } from './exchangeDataService';
-import { ExchangeProcessingService } from './exchangeProcessingService';
+import { ExchangeDataService } from './data';
+import { ExchangeProcessingService } from './processing';
 import { Context } from 'hono';
 import { User } from '@/types/users';
 import { CreateExchangeData, ExchangeFilters } from '@/types/exchange';

@@ -124,19 +124,6 @@ class ApiClient {
     }
 
     /**
-     * Check availability by querying calendar events
-     * @param startTime - The start time to check (ISO string)
-     * @param endTime - The end time to check (ISO string)
-     * @returns Promise with availability data and events
-     */
-    async checkCalendarAvailability(startTime: string, endTime: string) {
-        return this.request('/calendar/availability', {
-            method: 'POST',
-            body: JSON.stringify({ startTime, endTime }),
-        });
-    }
-
-    /**
      * Preferences API methods
      */
 

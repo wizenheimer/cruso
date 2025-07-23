@@ -164,13 +164,13 @@ export async function handleSyncCalendar(c: Context) {
             const calendarService = createCalendarService(user.id);
 
             // Sync all calendars using the service (which handles individual calendar updates)
-            const result = await calendarService.syncAllCalendars();
+            const result = await calendarService.syncCalendars();
 
             // Check if the specific calendar was synced successfully
-            const syncedCalendar = result.success > 0;
+            const syncedCalendar = result.accountSynced > 0;
 
             if (syncedCalendar) {
-                return c.json({ success: true, syncedCalendars: result.success });
+                return c.json({ success: true, syncedAccounts: result.accountSynced });
             } else {
                 return c.json(
                     {

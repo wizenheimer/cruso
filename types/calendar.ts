@@ -1,152 +1,114 @@
-import { calendar_v3 } from 'googleapis';
+import { z } from 'zod';
+import {
+    UserProfileSchema,
+    GoogleCalendarSchema,
+    ConnectionManagerParamsSchema,
+    GoogleCalendarConnectionParamsSchema,
+    OAuthTokensSchema,
+    CalendarSyncResultSchema,
+    CalendarRefreshResultSchema,
+    CalendarConnectionSchema,
+    CalendarClientGoogleAccountSchema,
+    AvailabilityRequestSchema,
+    AvailabilityResponseSchema,
+} from '@/schema/calendar';
 
-// Calendar Event Types
-export interface CalendarEvent {
-    id?: string;
-    summary: string;
-    description?: string;
-    start: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    end: {
-        dateTime?: string;
-        date?: string;
-        timeZone?: string;
-    };
-    attendees?: Array<{
-        email: string;
-        displayName?: string;
-        responseStatus?: string;
-    }>;
-    location?: string;
-    conferenceData?: calendar_v3.Schema$ConferenceData;
-    reminders?: {
-        useDefault?: boolean;
-        overrides?: Array<{
-            method: string;
-            minutes: number;
-        }>;
-    };
-}
+// Inferred Types from Zod Schemas
 
-// Calendar Info Types
-export interface CalendarInfo {
-    id: string;
-    summary: string;
-    description?: string;
-    primary?: boolean;
-    accessRole?: string;
-    backgroundColor?: string;
-    foregroundColor?: string;
-    timeZone?: string;
-    syncStatus: 'active' | 'error' | 'paused';
-    lastSyncAt?: string;
-    googleEmail: string;
-}
+/**
+ * User profile information from authentication providers.
+ * Used in calendar connection setup to identify the user's email and name.
+ * @see services/calendar/connection.ts - Used in GoogleCalendarConnectionParams
+ */
+export type UserProfile = z.infer<typeof UserProfileSchema>;
 
-// Availability Types
-export interface AvailabilityResult {
-    isAvailable: boolean;
-    busySlots: Array<{ start: string; end: string }>;
-    events: Array<{
-        id: string;
-        summary: string;
-        start: string;
-        end: string;
-        calendarId: string;
-        calendarName: string;
-    }>;
-}
+/**
+ * Google Calendar metadata from the Google Calendar API.
+ * Represents a calendar's basic information like id, summary, and timezone.
+ * Used in calendar synchronization to store available calendars.
+ * @see services/calendar/connection.ts - Used in fetchCalendarsFromGoogle and storeCalendars
+ */
+export type GoogleCalendar = z.infer<typeof GoogleCalendarSchema>;
 
-// Google Account Types
-export interface GoogleAccount {
-    id: string;
-    accountId: string;
-    providerId: string;
-    accessToken?: string | null;
-    userId: string;
-}
+/**
+ * Parameters required to initialize a calendar connection manager.
+ * Contains user and account identification information from Better Auth.
+ * Used when creating new calendar connections for a user.
+ * @see services/calendar/connection.ts - Used in ConnectionManager constructor
+ */
+export type ConnectionManagerParams = z.infer<typeof ConnectionManagerParamsSchema>;
 
-// User Profile Types
-export interface UserProfile {
-    email: string;
-    name: string;
-}
+/**
+ * Parameters for handling Google calendar connection setup.
+ * Contains user, account, and profile information needed for OAuth flow.
+ * Used during the initial calendar connection process.
+ * @see services/calendar/connection.ts - Used in handleGoogleCalendarConnection
+ * @see hooks/db/account.ts - Used in account creation flow
+ */
+export type GoogleCalendarConnectionParams = z.infer<typeof GoogleCalendarConnectionParamsSchema>;
 
-// Google Calendar Types
-export interface GoogleCalendar {
-    id: string;
-    summary: string;
-    timeZone?: string;
-    primary?: boolean;
-}
+/**
+ * OAuth tokens received from Google authentication.
+ * Contains access token, refresh token, and expiry information.
+ * Used for authenticating API requests to Google Calendar.
+ * @see services/calendar/auth.ts - Used in GoogleAuthManager
+ */
+export type OAuthTokens = z.infer<typeof OAuthTokensSchema>;
 
-// Connection Manager Types
-export interface ConnectionManagerParams {
-    userId: string;
-    accountId: string;
-    googleAccountId: string;
-    googleEmail: string;
-}
+/**
+ * Result of calendar synchronization operation.
+ * Contains count of synced accounts and any errors encountered.
+ * Used to report sync status and handle errors.
+ * @see services/calendar/service.ts - Used in syncCalendars method
+ * @see services/calendar/calendar.ts - Used in GoogleCalendarService
+ */
+export type CalendarSyncResult = z.infer<typeof CalendarSyncResultSchema>;
 
-export interface GoogleCalendarConnectionParams {
-    userId: string;
-    account: GoogleAccount;
-    profile: UserProfile;
-}
+/**
+ * Result of calendar refresh operation.
+ * Contains counts of synced accounts and calendars, plus any errors.
+ * Used to report refresh status and handle errors.
+ * @see services/calendar/service.ts - Used in refreshCalendars method
+ * @see services/calendar/calendar.ts - Used in GoogleCalendarService
+ */
+export type CalendarRefreshResult = z.infer<typeof CalendarRefreshResultSchema>;
 
-// Calendar Service Options Types
-export interface GetEventsOptions {
-    maxResults?: number;
-    pageToken?: string;
-    q?: string;
-    showDeleted?: boolean;
-    singleEvents?: boolean;
-    orderBy?: 'startTime' | 'updated';
-}
+// Calendar Client Types
 
-export interface CreateEventOptions {
-    sendUpdates?: 'all' | 'externalOnly' | 'none';
-    conferenceDataVersion?: number;
-}
+/**
+ * Calendar connection information for the client.
+ * Represents a user's connected calendar with sync status and settings.
+ * Used in the dashboard to display and manage calendar connections.
+ * @see client/calendar.ts - Used in CalendarClient methods
+ * @see hooks/client/calendar.ts - Used in useCalendarConnections hook
+ * @see components/dashboard/CalendarSection.tsx - Used in UI components
+ */
+export type CalendarConnection = z.infer<typeof CalendarConnectionSchema>;
 
-export interface UpdateEventOptions {
-    sendUpdates?: 'all' | 'externalOnly' | 'none';
-}
+/**
+ * Google account information for the calendar client.
+ * Contains account details and associated calendars for display in the UI.
+ * Used to show users their connected Google accounts and calendars.
+ * @see client/calendar.ts - Used in getGoogleAccounts method
+ * @see hooks/client/calendar.ts - Used in useGoogleAccounts hook
+ * @see components/dashboard/CalendarSection.tsx - Used in UI components
+ */
+export type CalendarClientGoogleAccount = z.infer<typeof CalendarClientGoogleAccountSchema>;
 
-export interface DeleteEventOptions {
-    sendUpdates?: 'all' | 'externalOnly' | 'none';
-}
+/**
+ * Request parameters for checking calendar availability.
+ * Contains start and end times for availability checking.
+ * Used when users want to check their availability for a specific time period.
+ * @see client/calendar.ts - Used in checkAvailability method
+ * @see hooks/client/calendar.ts - Used in useAvailabilityCheck hook
+ */
+export type AvailabilityRequest = z.infer<typeof AvailabilityRequestSchema>;
 
-export interface CheckAvailabilityOptions {
-    includeCalendarIds?: string[];
-    excludeCalendarIds?: string[];
-    timeZone?: string;
-}
-
-// Sync Result Types
-export interface SyncResult {
-    success: number;
-    errors: string[];
-}
-
-export interface CalendarListSyncResult {
-    accountsSynced: number;
-    calendarsSynced: number;
-    errors: string[];
-}
-
-// Watch Calendar Types
-export interface WatchCalendarResult {
-    resourceId: string;
-    expiration: number;
-}
-
-// OAuth Token Types
-export interface OAuthTokens {
-    access_token: string;
-    refresh_token?: string;
-    expiry_date?: number;
-}
+/**
+ * Response from calendar availability check.
+ * Contains events found during the specified time period and count of calendars checked.
+ * Used to display conflicts and availability information to users.
+ * @see client/calendar.ts - Used in checkAvailability method
+ * @see hooks/client/calendar.ts - Used in useAvailabilityCheck hook
+ */
+export type AvailabilityResponse = z.infer<typeof AvailabilityResponseSchema>;

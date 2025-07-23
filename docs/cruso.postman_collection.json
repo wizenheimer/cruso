@@ -17,13 +17,8 @@
                         "header": [],
                         "url": {
                             "raw": "{{baseUrl}}/api/health",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "health"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "health"]
                         }
                     },
                     "response": [
@@ -34,13 +29,8 @@
                                 "header": [],
                                 "url": {
                                     "raw": "{{baseUrl}}/api/health",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "health"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "health"]
                                 }
                             },
                             "status": "OK",
@@ -100,14 +90,8 @@
                         "header": [],
                         "url": {
                             "raw": "{{baseUrl}}/api/health/ready",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "health",
-                                "ready"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "health", "ready"]
                         }
                     },
                     "response": [
@@ -118,14 +102,8 @@
                                 "header": [],
                                 "url": {
                                     "raw": "{{baseUrl}}/api/health/ready",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "health",
-                                        "ready"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "health", "ready"]
                                 }
                             },
                             "status": "OK",
@@ -173,14 +151,8 @@
                         "header": [],
                         "url": {
                             "raw": "{{baseUrl}}/api/health/live",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "health",
-                                "live"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "health", "live"]
                         }
                     },
                     "response": [
@@ -191,14 +163,8 @@
                                 "header": [],
                                 "url": {
                                     "raw": "{{baseUrl}}/api/health/live",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "health",
-                                        "live"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "health", "live"]
                                 }
                             },
                             "status": "OK",
@@ -263,14 +229,8 @@
                                         ],
                                         "url": {
                                             "raw": "{{baseUrl}}/api/v1/calendar",
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "path": [
-                                                "api",
-                                                "v1",
-                                                "calendar"
-                                            ]
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "calendar"]
                                         }
                                     },
                                     "response": [
@@ -287,14 +247,8 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "path": [
-                                                        "api",
-                                                        "v1",
-                                                        "calendar"
-                                                    ]
+                                                    "host": ["{{baseUrl}}"],
+                                                    "path": ["api", "v1", "calendar"]
                                                 }
                                             },
                                             "status": "OK",
@@ -362,15 +316,8 @@
                                         },
                                         "url": {
                                             "raw": "{{baseUrl}}/api/v1/calendar/{{calendarId}}",
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "path": [
-                                                "api",
-                                                "v1",
-                                                "calendar",
-                                                "{{calendarId}}"
-                                            ]
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "calendar", "{{calendarId}}"]
                                         }
                                     },
                                     "response": [
@@ -401,9 +348,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/{{calendarId}}",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -463,15 +408,8 @@
                                         ],
                                         "url": {
                                             "raw": "{{baseUrl}}/api/v1/calendar/accounts",
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "path": [
-                                                "api",
-                                                "v1",
-                                                "calendar",
-                                                "accounts"
-                                            ]
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "calendar", "accounts"]
                                         }
                                     },
                                     "response": [
@@ -488,15 +426,8 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/accounts",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "path": [
-                                                        "api",
-                                                        "v1",
-                                                        "calendar",
-                                                        "accounts"
-                                                    ]
+                                                    "host": ["{{baseUrl}}"],
+                                                    "path": ["api", "v1", "calendar", "accounts"]
                                                 }
                                             },
                                             "status": "OK",
@@ -550,15 +481,8 @@
                                         ],
                                         "url": {
                                             "raw": "{{baseUrl}}/api/v1/calendar/{{accountId}}",
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "path": [
-                                                "api",
-                                                "v1",
-                                                "calendar",
-                                                "{{accountId}}"
-                                            ]
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "calendar", "{{accountId}}"]
                                         }
                                     },
                                     "response": [
@@ -575,9 +499,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/{{accountId}}",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -642,16 +564,8 @@
                                         ],
                                         "url": {
                                             "raw": "{{baseUrl}}/api/v1/calendar/sync/all",
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "path": [
-                                                "api",
-                                                "v1",
-                                                "calendar",
-                                                "sync",
-                                                "all"
-                                            ]
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "calendar", "sync", "all"]
                                         }
                                     },
                                     "response": [
@@ -668,16 +582,8 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/sync/all",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "path": [
-                                                        "api",
-                                                        "v1",
-                                                        "calendar",
-                                                        "sync",
-                                                        "all"
-                                                    ]
+                                                    "host": ["{{baseUrl}}"],
+                                                    "path": ["api", "v1", "calendar", "sync", "all"]
                                                 }
                                             },
                                             "status": "OK",
@@ -731,9 +637,7 @@
                                         ],
                                         "url": {
                                             "raw": "{{baseUrl}}/api/v1/calendar/sync/{{calendarId}}",
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
+                                            "host": ["{{baseUrl}}"],
                                             "path": [
                                                 "api",
                                                 "v1",
@@ -757,9 +661,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/sync/{{calendarId}}",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -842,16 +744,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/v1/calendar/availability/check",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "v1",
-                                        "calendar",
-                                        "availability",
-                                        "check"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "v1", "calendar", "availability", "check"]
                                 }
                             },
                             "response": [
@@ -882,15 +776,8 @@
                                         },
                                         "url": {
                                             "raw": "{{baseUrl}}/api/v1/calendar/availability",
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "path": [
-                                                "api",
-                                                "v1",
-                                                "calendar",
-                                                "availability"
-                                            ]
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "calendar", "availability"]
                                         }
                                     },
                                     "status": "OK",
@@ -958,16 +845,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/v1/calendar/availability/create",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "v1",
-                                        "calendar",
-                                        "availability",
-                                        "create"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "v1", "calendar", "availability", "create"]
                                 }
                             },
                             "response": [
@@ -998,15 +877,8 @@
                                         },
                                         "url": {
                                             "raw": "{{baseUrl}}/api/v1/calendar/availability",
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "path": [
-                                                "api",
-                                                "v1",
-                                                "calendar",
-                                                "availability"
-                                            ]
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "calendar", "availability"]
                                         }
                                     },
                                     "status": "OK",
@@ -1084,9 +956,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/events/batch",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -1124,9 +994,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/events/batch",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -1201,16 +1069,9 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/events",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
-                                                    "path": [
-                                                        "api",
-                                                        "v1",
-                                                        "calendar",
-                                                        "events"
-                                                    ]
+                                                    "path": ["api", "v1", "calendar", "events"]
                                                 }
                                             },
                                             "response": [
@@ -1240,9 +1101,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/events",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -1307,15 +1166,8 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/events?timeMin={{startTime}}&timeMax={{endTime}}&maxResults={{maxResult}}&singleEvents={{singleEvents}}&orderBy={{orderBy}}",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "path": [
-                                                        "api",
-                                                        "v1",
-                                                        "calendar",
-                                                        "events"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
+                                                    "path": ["api", "v1", "calendar", "events"],
                                                     "query": [
                                                         {
                                                             "key": "timeMin",
@@ -1358,9 +1210,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/events?timeMin={{startTime}}&timeMax={{endTime}}&maxResults={{maxResult}}&singleEvents={{singleEvents}}&orderBy={{orderBy}}",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -1455,9 +1305,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/events/{{eventId}}",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -1495,9 +1343,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/events/{{eventId}}",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -1572,9 +1418,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/events/{{eventId}}",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -1612,9 +1456,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/events/{{eventId}}",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -1680,9 +1522,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/events/search/icaluid?iCalUID={{iCalUID}}",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -1727,9 +1567,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/events/search/icaluid?iCalUID={{iCalUID}}",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -1820,9 +1658,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/events/{{eventId}}",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -1860,9 +1696,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/events/{{eventId}}",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -1934,9 +1768,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/{{calendarId}}/events?timeMin={{startTime}}&timeMax={{endTime}}&maxResults={{maxResult}}&singleEvents={{singleEvents}}&orderBy={{orderBy}}",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -1997,9 +1829,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/{{calendarId}}/events",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -2038,9 +1868,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/{{calendarId}}/events/{{eventId}}",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -2080,9 +1908,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/{{calendarId}}/events/{{eventId}}",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -2132,9 +1958,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -2170,9 +1994,7 @@
                                                         },
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -2236,9 +2058,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}?timeZone={{timeZone}}&alwaysIncludeEmail=true&maxAttendees=10",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -2280,9 +2100,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -2347,9 +2165,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}/instances?timeMin=2024-01-01T00:00:00Z&timeMax=2027-12-31T23:59:59Z&maxResults=50&timeZone={{timeZone}}&showDeleted=false",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -2400,9 +2216,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}/instances?timeMin=2024-01-01T00:00:00Z&timeMax=2027-12-31T23:59:59Z&maxResults=50&timeZone={{timeZone}}&showDeleted=false",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -2500,9 +2314,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{eventId}}",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -2541,9 +2353,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{eventId}}",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -2619,9 +2429,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{eventId}}",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -2660,9 +2468,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{eventId}}",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -2738,9 +2544,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{eventId}}/instances",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -2780,9 +2584,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{eventId}}/instances",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -2858,9 +2660,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}/future",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -2898,9 +2698,7 @@
                                                         },
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{eventId}}/future",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -2976,9 +2774,7 @@
                                                 "url": {
                                                     "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{eventId}}/reschedule",
                                                     "protocol": "http",
-                                                    "host": [
-                                                        "localhost"
-                                                    ],
+                                                    "host": ["localhost"],
                                                     "port": "3000",
                                                     "path": [
                                                         "api",
@@ -3018,9 +2814,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{eventId}}/reschedule",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -3095,9 +2889,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/batch",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -3133,9 +2925,7 @@
                                                         },
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/batch",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -3214,9 +3004,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -3253,9 +3041,7 @@
                                                         },
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -3320,9 +3106,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -3352,9 +3136,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -3421,9 +3203,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}/instances?timeMin=2024-01-01T00:00:00Z&timeMax=2024-12-31T23:59:59Z&maxResults=50&timeZone=UTC&showDeleted=false",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -3480,9 +3260,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}/instances?timeMin=2024-01-01T00:00:00Z&timeMax=2024-12-31T23:59:59Z&maxResults=50&timeZone=UTC&showDeleted=false",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -3585,9 +3363,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -3626,9 +3402,7 @@
                                                         "url": {
                                                             "raw": "http://localhost:3000/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}",
                                                             "protocol": "http",
-                                                            "host": [
-                                                                "localhost"
-                                                            ],
+                                                            "host": ["localhost"],
                                                             "port": "3000",
                                                             "path": [
                                                                 "api",
@@ -3704,9 +3478,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}/reschedule",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -3745,9 +3517,7 @@
                                                         },
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}/reschedule",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -3823,9 +3593,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}/instances",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -3864,9 +3632,7 @@
                                                         },
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}/instances",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -3942,9 +3708,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}/future",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -3983,9 +3747,7 @@
                                                         },
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}/future",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -4061,9 +3823,7 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -4101,9 +3861,7 @@
                                                         },
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/recurring-events/{{calendarId}}/{{eventId}}",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -4182,15 +3940,8 @@
                                                 },
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "path": [
-                                                        "api",
-                                                        "v1",
-                                                        "calendar",
-                                                        "search"
-                                                    ]
+                                                    "host": ["{{baseUrl}}"],
+                                                    "path": ["api", "v1", "calendar", "search"]
                                                 },
                                                 "description": "Search events in the primary calendar with advanced filtering options"
                                             },
@@ -4215,9 +3966,7 @@
                                                         },
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -4276,9 +4025,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/quick?q=team meeting",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -4309,9 +4056,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/quick?q=team meeting",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -4384,9 +4129,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/presets",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -4410,9 +4153,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/presets",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -4472,9 +4213,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=todaysMeetings",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -4505,9 +4244,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=todaysMeetings",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -4574,9 +4311,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=upcomingWeek",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -4607,9 +4342,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=upcomingWeek",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -4676,9 +4409,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=recentlyCreated&days=14",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -4714,9 +4445,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=recentlyCreated&days=14",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -4788,9 +4517,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=withPerson&email=colleague@example.com&days=60",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -4831,9 +4558,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=withPerson&email=colleague@example.com&days=60",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -4910,9 +4635,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=longMeetings&minMinutes=90",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -4948,9 +4671,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=longMeetings&minMinutes=90",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -5022,9 +4743,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=recurringEvents",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -5055,9 +4774,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=recurringEvents",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -5124,9 +4841,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=pastMeetings&days=30",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -5162,9 +4877,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=pastMeetings&days=30",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -5236,9 +4949,7 @@
                                                 ],
                                                 "url": {
                                                     "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=freeTextSearch&query=meet",
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
+                                                    "host": ["{{baseUrl}}"],
                                                     "path": [
                                                         "api",
                                                         "v1",
@@ -5274,9 +4985,7 @@
                                                         ],
                                                         "url": {
                                                             "raw": "{{baseUrl}}/api/v1/calendar/search/presets?preset=freeTextSearch&query=meet",
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
+                                                            "host": ["{{baseUrl}}"],
                                                             "path": [
                                                                 "api",
                                                                 "v1",
@@ -5362,14 +5071,8 @@
                         ],
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/working-hours",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "working-hours"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "working-hours"]
                         }
                     },
                     "response": []
@@ -5401,14 +5104,8 @@
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/working-hours",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "working-hours"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "working-hours"]
                         }
                     },
                     "response": []
@@ -5440,15 +5137,8 @@
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/working-hours/{{availabilityId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "working-hours",
-                                "{{availabilityId}}"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "working-hours", "{{availabilityId}}"]
                         }
                     },
                     "response": []
@@ -5466,15 +5156,8 @@
                         ],
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/working-hours/{{availabilityId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "working-hours",
-                                "{{availabilityId}}"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "working-hours", "{{availabilityId}}"]
                         }
                     },
                     "response": []
@@ -5492,15 +5175,8 @@
                         ],
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/working-hours/check?date=2024-01-01&time=10:00",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "working-hours",
-                                "check"
-                            ],
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "working-hours", "check"],
                             "query": [
                                 {
                                     "key": "date",
@@ -5542,15 +5218,8 @@
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/inbox/webhook",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "inbox",
-                                "webhook"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "inbox", "webhook"]
                         }
                     },
                     "response": []
@@ -5573,14 +5242,8 @@
                         ],
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/preferences",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "preferences"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "preferences"]
                         }
                     },
                     "response": []
@@ -5612,14 +5275,8 @@
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/preferences",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "preferences"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "preferences"]
                         }
                     },
                     "response": []
@@ -5651,14 +5308,8 @@
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/preferences",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "preferences"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "preferences"]
                         }
                     },
                     "response": []
@@ -5676,14 +5327,8 @@
                         ],
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/preferences",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "preferences"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "preferences"]
                         }
                     },
                     "response": []
@@ -5701,15 +5346,8 @@
                         ],
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/preferences/primary-options",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "preferences",
-                                "primary-options"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "preferences", "primary-options"]
                         }
                     },
                     "response": []
@@ -5741,15 +5379,8 @@
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/preferences/primary-email",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "preferences",
-                                "primary-email"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "preferences", "primary-email"]
                         }
                     },
                     "response": []
@@ -5781,15 +5412,8 @@
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/preferences/primary-account",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "preferences",
-                                "primary-account"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "preferences", "primary-account"]
                         }
                     },
                     "response": []
@@ -5807,15 +5431,8 @@
                         ],
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/preferences/generate-document",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "preferences",
-                                "generate-document"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "preferences", "generate-document"]
                         }
                     },
                     "response": []
@@ -5838,14 +5455,8 @@
                         ],
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/user-emails",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "user-emails"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "user-emails"]
                         }
                     },
                     "response": []
@@ -5877,14 +5488,8 @@
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/user-emails",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "user-emails"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "user-emails"]
                         }
                     },
                     "response": []
@@ -5916,15 +5521,8 @@
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/user-emails/{{userEmailId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "user-emails",
-                                "{{userEmailId}}"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "user-emails", "{{userEmailId}}"]
                         }
                     },
                     "response": []
@@ -5942,15 +5540,8 @@
                         ],
                         "url": {
                             "raw": "{{baseUrl}}/api/v1/user-emails/{{userEmailId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "user-emails",
-                                "{{userEmailId}}"
-                            ]
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "user-emails", "{{userEmailId}}"]
                         }
                     },
                     "response": []
@@ -5983,13 +5574,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6014,13 +5600,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6045,13 +5626,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6081,13 +5657,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6112,13 +5683,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6143,13 +5709,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6174,13 +5735,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6210,13 +5766,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6241,13 +5792,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6272,13 +5818,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6303,13 +5844,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6334,13 +5870,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6365,13 +5896,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6396,13 +5922,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6427,13 +5948,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6458,13 +5974,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6489,13 +6000,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6520,13 +6026,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6556,13 +6057,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6587,13 +6083,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6618,13 +6109,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6649,13 +6135,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6680,13 +6161,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6711,13 +6187,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6742,13 +6213,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6773,13 +6239,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6809,13 +6270,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6840,13 +6296,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6871,13 +6322,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6902,13 +6348,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6933,13 +6374,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6964,13 +6400,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -6995,13 +6426,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7026,13 +6452,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7057,13 +6478,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7088,13 +6504,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7119,13 +6530,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7155,13 +6561,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7186,13 +6587,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7217,13 +6613,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7248,13 +6639,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7284,13 +6670,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7315,13 +6696,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7346,13 +6722,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7382,13 +6753,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7413,13 +6779,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7444,13 +6805,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7475,13 +6831,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7511,13 +6862,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7542,13 +6888,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7573,13 +6914,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7609,13 +6945,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7640,13 +6971,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7671,13 +6997,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7707,13 +7028,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7738,13 +7054,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7769,13 +7080,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7800,13 +7106,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7831,13 +7132,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7862,13 +7158,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7893,13 +7184,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7924,13 +7210,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7955,13 +7236,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -7986,13 +7262,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8017,13 +7288,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8048,13 +7314,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8079,13 +7340,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8110,13 +7366,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8141,13 +7392,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8172,13 +7418,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8203,13 +7444,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8234,13 +7470,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8265,13 +7496,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8296,13 +7522,8 @@
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/mockingbird",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "mockingbird"
-                                    ]
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "mockingbird"]
                                 }
                             },
                             "response": []
@@ -8318,9 +7539,7 @@
             "script": {
                 "type": "text/javascript",
                 "packages": {},
-                "exec": [
-                    ""
-                ]
+                "exec": [""]
             }
         },
         {
@@ -8328,9 +7547,7 @@
             "script": {
                 "type": "text/javascript",
                 "packages": {},
-                "exec": [
-                    ""
-                ]
+                "exec": [""]
             }
         }
     ],

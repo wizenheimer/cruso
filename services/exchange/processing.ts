@@ -1,5 +1,5 @@
 import { EmailData, RawEmailData } from '@/types/exchange';
-import { ExchangeDataService } from './exchangeDataService';
+import { ExchangeDataService } from './data';
 import { EmailParsingService } from './parsing';
 import { EmailService } from '../email';
 import { Context } from 'hono';

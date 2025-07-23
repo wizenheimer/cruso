@@ -1,10 +1,8 @@
 import { db } from '@/db';
 import { calendarConnections } from '@/db/schema/calendars';
 import { google, calendar_v3 } from 'googleapis';
-import { GoogleAuthManager } from './manager';
+import { GoogleAuthManager } from './auth';
 import {
-    GoogleAccount,
-    UserProfile,
     GoogleCalendar,
     ConnectionManagerParams,
     GoogleCalendarConnectionParams,

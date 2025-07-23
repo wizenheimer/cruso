@@ -13,4 +13,4 @@ export type {
 } from './db/types';
 
 // Export React hooks
-export { useCalendarConnections, useGoogleAccounts, useAvailabilityCheck } from './client/calendar';
+export { useCalendarConnections, useGoogleAccounts } from './client/calendar';

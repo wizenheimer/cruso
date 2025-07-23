@@ -1,61 +1,9 @@
-/**
- * CalendarConnection is the response from the calendar API when getting calendar connections.
- */
-export interface CalendarConnection {
-    id: number;
-    accountId: string;
-    googleAccountId: string;
-    googleEmail: string;
-    calendarName: string;
-    calendarId: string;
-    isPrimary: boolean;
-    includeInAvailability: boolean;
-    isActive: boolean;
-    lastSyncAt: string;
-    syncStatus: 'active' | 'error' | 'paused';
-    errorMessage?: string;
-}
-
-/**
- * GoogleAccount is the response from the calendar API when getting Google accounts.
- */
-export interface GoogleAccount {
-    accountId: string;
-    googleAccountId: string;
-    email: string;
-    calendarCount: number;
-    calendars: Array<{
-        id: number;
-        calendarId: string;
-        name: string;
-        isPrimary: boolean;
-        includeInAvailability: boolean;
-        syncStatus: string;
-    }>;
-}
-
-/**
- * AvailabilityRequest is the request body for checking availability.
- */
-export interface AvailabilityRequest {
-    startTime: string;
-    endTime: string;
-}
-
-/**
- * AvailabilityResponse is the response from the calendar API when checking availability.
- */
-export interface AvailabilityResponse {
-    events: Array<{
-        id: string;
-        summary: string;
-        start: string;
-        end: string;
-        calendarId: string;
-        calendarName: string;
-    }>;
-    calendarsChecked: number;
-}
+import {
+    CalendarConnection,
+    CalendarClientGoogleAccount,
+    AvailabilityRequest,
+    AvailabilityResponse,
+} from '@/types/calendar';
 
 /**
  * CalendarClient is a class that provides a client for interacting with the calendar API.
@@ -103,7 +51,7 @@ export class CalendarClient {
      * Get user's Google accounts
      * @returns The user's Google accounts.
      */
-    async getGoogleAccounts(): Promise<GoogleAccount[]> {
+    async getGoogleAccounts(): Promise<CalendarClientGoogleAccount[]> {
         return this.fetchWithAuth('/v1/calendar/accounts');
     }
 
@@ -137,18 +85,6 @@ export class CalendarClient {
     async syncConnection(id: number): Promise<void> {
         await this.fetchWithAuth(`/v1/calendar/${id}/sync`, {
             method: 'POST',
-        });
-    }
-
-    /**
-     * Check availability across all calendars
-     * @param request - The request body for checking availability.
-     * @returns The response from the calendar API when checking availability.
-     */
-    async checkAvailability(request: AvailabilityRequest): Promise<AvailabilityResponse> {
-        return this.fetchWithAuth('/v1/calendar/availability', {
-            method: 'POST',
-            body: JSON.stringify(request),
         });
     }
 }

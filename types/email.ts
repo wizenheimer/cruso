@@ -1,42 +1,57 @@
-import { EmailData } from '@/types/exchange';
+import { z } from 'zod';
+import {
+    SendEmailConfigSchema,
+    ReplyConfigSchema,
+    EmailSendParamsSchema,
+    ReplyRecipientsSchema,
+    ThreadContextSchema,
+} from '@/schema/email';
 
-// Email Configuration Types
-export interface SendEmailConfig {
-    recipients: string[];
-    subject: string;
-    body: string;
-    cc?: string[];
-    bcc?: string[];
-    replyTo?: EmailData; // If replying to an email
-    newThread?: boolean; // Force new thread (default: true if no replyTo)
-}
+// Inferred Types from Zod Schemas
 
-// Reply Configuration Types
-export interface ReplyConfig {
-    type: 'sender-only' | 'all-including-sender' | 'all-excluding-sender' | 'all-with-cc-to-sender';
-    body: string;
-    subject?: string;
-}
+/**
+ * Configuration for sending emails.
+ * Contains email service settings and authentication parameters.
+ * Used for configuring email sending operations.
+ * @see schema/email.ts - SendEmailConfigSchema definition
+ * @see services/email/index.ts - Used in email service configuration
+ */
+export type SendEmailConfig = z.infer<typeof SendEmailConfigSchema>;
 
-// Email Send Parameters Types
-export interface EmailSendParams {
-    to: string[];
-    cc: string[];
-    bcc: string[];
-    subject: string;
-    body: string;
-    exchangeId: string;
-    previousMessageId: string | null;
-}
+/**
+ * Configuration for email reply operations.
+ * Contains reply-specific settings and formatting options.
+ * Used when setting up email reply functionality.
+ * @see schema/email.ts - ReplyConfigSchema definition
+ * @see services/email/index.ts - Used in reply email operations
+ */
+export type ReplyConfig = z.infer<typeof ReplyConfigSchema>;
 
-// Reply Recipients Types
-export interface ReplyRecipients {
-    to: string[];
-    cc: string[];
-}
+/**
+ * Parameters for sending emails.
+ * Contains recipient, subject, content, and other email sending parameters.
+ * Used as input for email sending operations.
+ * @see schema/email.ts - EmailSendParamsSchema definition
+ * @see services/email/index.ts - Used in sendEmail function
+ * @see api/routes/email/index.ts - Used in email sending endpoints
+ */
+export type EmailSendParams = z.infer<typeof EmailSendParamsSchema>;
 
-// Thread Context Types
-export interface ThreadContext {
-    exchangeId: string;
-    previousMessageId: string | null;
-}
+/**
+ * Recipient information for email replies.
+ * Contains email addresses and names for reply recipients.
+ * Used when determining who should receive email replies.
+ * @see schema/email.ts - ReplyRecipientsSchema definition
+ * @see services/email/index.ts - Used in reply email operations
+ */
+export type ReplyRecipients = z.infer<typeof ReplyRecipientsSchema>;
+
+/**
+ * Context information for email threads.
+ * Contains thread metadata and conversation history.
+ * Used for maintaining email conversation context.
+ * @see schema/email.ts - ThreadContextSchema definition
+ * @see services/email/index.ts - Used in thread-based email operations
+ * @see components/dashboard/InboxSection.tsx - Used in email thread display
+ */
+export type ThreadContext = z.infer<typeof ThreadContextSchema>;

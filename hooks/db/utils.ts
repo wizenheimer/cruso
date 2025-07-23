@@ -131,10 +131,7 @@ export async function handleNewUserPreferences(account: Account, context: Generi
     }
 }
 
-export async function handleNewUserWorkingHours(
-    account: Account,
-    context: GenericEndpointContext,
-) {
+export async function handleNewUserWorkingHours(account: Account, context: GenericEndpointContext) {
     // Check if the user is newly created
     const isNewUser = context.context.isNewUser;
     if (!isNewUser) {

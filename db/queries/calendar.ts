@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { calendarConnections } from '@/db/schema/calendars';
 import { account } from '@/db/schema/auth';
 import { eq, and, desc } from 'drizzle-orm';
-import { GoogleAuthManager } from '@/services/calendar/manager';
+import { GoogleAuthManager } from '@/services/calendar/auth';
 
 const authManager = new GoogleAuthManager();
 

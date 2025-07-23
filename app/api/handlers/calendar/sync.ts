@@ -16,7 +16,7 @@ export async function handleSyncAllCalendars(c: Context) {
         const calendarService = createCalendarService(user.id);
 
         // Use the new method to fetch all calendar lists
-        const result = await calendarService.fetchAllCalendarLists();
+        const result = await calendarService.refreshCalendars();
 
         console.log(`Finished manual sync. Total calendars synced: ${result.calendarsSynced}`);
 

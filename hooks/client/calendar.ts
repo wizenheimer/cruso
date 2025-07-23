@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CalendarConnection, GoogleAccount, AvailabilityResponse } from '@/client/calendar';
+import {
+    CalendarConnection,
+    CalendarClientGoogleAccount,
+    AvailabilityResponse,
+} from '@/types/calendar';
 import { calendarClient } from '@/client/calendar';
 
 /**
@@ -79,7 +83,7 @@ export function useCalendarConnections() {
  * @returns The user's Google accounts.
  */
 export function useGoogleAccounts() {
-    const [accounts, setAccounts] = useState<GoogleAccount[]>([]);
+    const [accounts, setAccounts] = useState<CalendarClientGoogleAccount[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -105,40 +109,5 @@ export function useGoogleAccounts() {
         loading,
         error,
         fetchAccounts,
-    };
-}
-
-/**
- * useAvailabilityCheck is a hook that checks the user's availability.
- * @returns The user's availability.
- */
-export function useAvailabilityCheck() {
-    const [checking, setChecking] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const checkAvailability = async (
-        startTime: string,
-        endTime: string,
-    ): Promise<AvailabilityResponse | null> => {
-        try {
-            setChecking(true);
-            setError(null);
-            const result = await calendarClient.checkAvailability({
-                startTime,
-                endTime,
-            });
-            return result;
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to check availability');
-            return null;
-        } finally {
-            setChecking(false);
-        }
-    };
-
-    return {
-        checkAvailability,
-        checking,
-        error,
     };
 }
