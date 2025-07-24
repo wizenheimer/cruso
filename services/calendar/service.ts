@@ -38,6 +38,19 @@ export class CalendarService {
     }
 
     // ==================================================
+    // Private Helper Methods
+    // ==================================================
+
+    /**
+     * Handle errors consistently across all service methods
+     */
+    private handleError(error: unknown, operation: string, args?: any): string {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const argsString = args ? `received args: ${JSON.stringify(args)}, ` : '';
+        return `Error ${operation}: ${argsString}error: ${errorMessage}`;
+    }
+
+    // ==================================================
     // Calendar Management
     // ==================================================
 
@@ -60,7 +73,7 @@ export class CalendarService {
             return await this.eventsService.listEventsFromPrimaryCalendar(options);
         } catch (error) {
             console.error('Error listing events:', error);
-            return `Error listing events from primary calendar: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            return this.handleError(error, 'listing events from calendar', options);
         }
     }
 
@@ -72,7 +85,7 @@ export class CalendarService {
             return await this.eventsService.createEventInPrimaryCalendar(options);
         } catch (error) {
             console.error('Error creating event:', error);
-            return `Error creating event in primary calendar: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            return this.handleError(error, 'creating event in calendar', options);
         }
     }
 
@@ -84,7 +97,7 @@ export class CalendarService {
             return await this.eventsService.updateEventInPrimaryCalendar(options);
         } catch (error) {
             console.error('Error updating event:', error);
-            return `Error updating event in primary calendar: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            return this.handleError(error, 'updating event in calendar', options);
         }
     }
 
@@ -97,7 +110,7 @@ export class CalendarService {
             return 'Event deleted successfully';
         } catch (error) {
             console.error('Error deleting event:', error);
-            return `Error deleting event: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            return this.handleError(error, 'deleting event in calendar', options);
         }
     }
 
@@ -113,7 +126,7 @@ export class CalendarService {
             return await this.availabilityService.getAvailability(options);
         } catch (error) {
             console.error('Error checking availability:', error);
-            return `Error checking availability: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            return this.handleError(error, 'checking availability in calendar', options);
         }
     }
 
@@ -129,7 +142,7 @@ export class CalendarService {
             return await this.searchService.search(options);
         } catch (error) {
             console.error('Error searching events:', error);
-            return `Error searching events: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            return this.handleError(error, 'searching events in calendar', options);
         }
     }
 }

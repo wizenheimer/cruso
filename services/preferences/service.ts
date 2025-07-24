@@ -81,6 +81,20 @@ export class PreferenceService {
     }
 
     /**
+     * Get stringified user preferences
+     * @param userId - The user ID
+     * @returns The stringified user preferences
+     */
+    async getStringifiedPreference(userId: string): Promise<string> {
+        const userPreferences = await this.getPreferences(userId);
+        if (!userPreferences.success || !userPreferences.data) {
+            return 'User preferences not found';
+        }
+
+        return JSON.stringify(userPreferences.data?.preferences ?? 'User preferences not found');
+    }
+
+    /**
      * Get basic user preferences (without joins)
      */
     async getBasicPreferences(userId: string): Promise<ServiceResult<Preference>> {
