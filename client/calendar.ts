@@ -1,9 +1,4 @@
-import {
-    CalendarConnection,
-    CalendarClientGoogleAccount,
-    AvailabilityRequest,
-    AvailabilityResponse,
-} from '@/types/calendar';
+import { CalendarConnection, CalendarClientGoogleAccount } from '@/types/calendar';
 
 /**
  * CalendarClient is a class that provides a client for interacting with the calendar API.

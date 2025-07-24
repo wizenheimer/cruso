@@ -84,22 +84,3 @@ export const CalendarClientGoogleAccountSchema = z.object({
         }),
     ),
 });
-
-export const AvailabilityRequestSchema = z.object({
-    startTime: z.string(),
-    endTime: z.string(),
-});
-
-export const AvailabilityResponseSchema = z.object({
-    events: z.array(
-        z.object({
-            id: z.string(),
-            summary: z.string(),
-            start: z.string(),
-            end: z.string(),
-            calendarId: z.string(),
-            calendarName: z.string(),
-        }),
-    ),
-    calendarsChecked: z.number(),
-});
