@@ -8,8 +8,6 @@ import {
     CalendarRefreshResultSchema,
     CalendarConnectionSchema,
     CalendarClientGoogleAccountSchema,
-    AvailabilityRequestSchema,
-    AvailabilityResponseSchema,
 } from '@/schema/calendar';
 
 // Inferred Types from Zod Schemas
@@ -95,19 +93,19 @@ export type CalendarConnection = z.infer<typeof CalendarConnectionSchema>;
 export type CalendarClientGoogleAccount = z.infer<typeof CalendarClientGoogleAccountSchema>;
 
 /**
- * Request parameters for checking calendar availability.
- * Contains start and end times for availability checking.
- * Used when users want to check their availability for a specific time period.
- * @see client/calendar.ts - Used in checkAvailability method
- * @see hooks/client/calendar.ts - Used in useAvailabilityCheck hook
- */
-export type AvailabilityRequest = z.infer<typeof AvailabilityRequestSchema>;
+//  * Request parameters for checking calendar availability.
+//  * Contains start and end times for availability checking.
+//  * Used when users want to check their availability for a specific time period.
+//  * @see client/calendar.ts - Used in checkAvailability method
+//  * @see hooks/client/calendar.ts - Used in useAvailabilityCheck hook
+//  */
+// export type AvailabilityRequest = z.infer<typeof AvailabilityRequestSchema>;
 
-/**
- * Response from calendar availability check.
- * Contains events found during the specified time period and count of calendars checked.
- * Used to display conflicts and availability information to users.
- * @see client/calendar.ts - Used in checkAvailability method
- * @see hooks/client/calendar.ts - Used in useAvailabilityCheck hook
- */
-export type AvailabilityResponse = z.infer<typeof AvailabilityResponseSchema>;
+// /**
+//  * Response from calendar availability check.
+//  * Contains events found during the specified time period and count of calendars checked.
+//  * Used to display conflicts and availability information to users.
+//  * @see client/calendar.ts - Used in checkAvailability method
+//  * @see hooks/client/calendar.ts - Used in useAvailabilityCheck hook
+//  */
+// export type AvailabilityResponse = z.infer<typeof AvailabilityResponseSchema>;

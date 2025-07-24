@@ -2,7 +2,7 @@ import {
     GoogleCalendarListEntry,
     GoogleCalendarListOptions,
     GoogleCalendarListResponse,
-} from '@/types/google-calendar/list-calendar';
+} from '@/types/google/calendar';
 import { BaseCalendarService } from './base';
 import { CalendarRefreshResult } from '@/types/calendar';
 import { Account } from 'better-auth';
