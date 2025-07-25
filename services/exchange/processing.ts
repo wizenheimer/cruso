@@ -247,7 +247,7 @@ ${signature}`;
 
         // Generate the response
         const result = await agent.generate(emailData.body, {
-            maxSteps: 5, // Allow up to 5 tool usage steps
+            maxSteps: 10, // Allow up to 10 tool usage steps
             resourceId: user.id,
             threadId: emailData.exchangeId,
             runtimeContext,

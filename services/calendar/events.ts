@@ -341,14 +341,11 @@ export class EventsService extends BaseCalendarService {
             const newEvent = {
                 ...this.cleanEventForDuplication(originalEvent),
                 ...requestBody,
-                start: {
-                    dateTime: options.start || options.futureStartDate,
-                    timeZone: effectiveTimeZone,
-                },
-                end: {
-                    dateTime: endTime,
-                    timeZone: effectiveTimeZone,
-                },
+                start: this.createTimeObject(
+                    options.start || options.futureStartDate || '',
+                    effectiveTimeZone,
+                ),
+                end: this.createTimeObject(endTime || '', effectiveTimeZone),
             };
 
             const response = await calendar.events.insert({
@@ -499,11 +496,11 @@ export class EventsService extends BaseCalendarService {
             const effectiveTimeZone = args.timeZone || defaultTimeZone;
 
             if (args.start !== undefined && args.start !== null) {
-                requestBody.start = { dateTime: args.start, timeZone: effectiveTimeZone };
+                requestBody.start = this.createTimeObject(args.start, effectiveTimeZone);
                 timeChanged = true;
             }
             if (args.end !== undefined && args.end !== null) {
-                requestBody.end = { dateTime: args.end, timeZone: effectiveTimeZone };
+                requestBody.end = this.createTimeObject(args.end, effectiveTimeZone);
                 timeChanged = true;
             }
 

@@ -55,15 +55,21 @@ export class AvailabilityService extends BaseCalendarService {
         options: FreeBusyIncludeCalendarsOptions,
     ): Promise<FreeBusyResponse> {
         try {
+            // Convert timezone-naive datetime strings to RFC 3339 format
+            const timeMin = this.convertToRFC3339(options.timeMin, options.timeZone || 'UTC');
+            const timeMax = this.convertToRFC3339(options.timeMax, options.timeZone || 'UTC');
+
+            const requestBody = {
+                timeMin,
+                timeMax,
+                timeZone: options.timeZone,
+                groupExpansionMax: options.groupExpansionMax,
+                calendarExpansionMax: options.calendarExpansionMax,
+                items: options.calendars,
+            };
+
             const response = await calendar.freebusy.query({
-                requestBody: {
-                    timeMin: options.timeMin,
-                    timeMax: options.timeMax,
-                    timeZone: options.timeZone,
-                    groupExpansionMax: options.groupExpansionMax,
-                    calendarExpansionMax: options.calendarExpansionMax,
-                    items: options.calendars,
-                },
+                requestBody,
             });
 
             if (!response.data) throw new Error('Failed to get free/busy information');
@@ -97,17 +103,18 @@ export class AvailabilityService extends BaseCalendarService {
             return Object.entries(response.calendars)
                 .map(([email, calendarInfo]) => {
                     if (calendarInfo.errors?.some((error) => error.reason === 'notFound')) {
-                        return `Cannot check availability for ${email} (account not found)\n`;
+                        console.error(`could not find host's calendar, skipping calendar\n`);
+                        return ``; // NOTE: prevent context pollution
                     }
 
                     if (calendarInfo.busy.length === 0) {
-                        return `${email} is available during ${response.timeMin} to ${response.timeMax}, please schedule calendar to ${email} if you want \n`;
+                        return `host is available during ${response.timeMin} to ${response.timeMax} \n`;
                     }
 
                     const busyTimes = calendarInfo.busy
                         .map((slot) => `- From ${slot.start} to ${slot.end}`)
                         .join('\n');
-                    return `${email} is busy during:\n${busyTimes}\n`;
+                    return `host is busy during:\n${busyTimes}\n`;
                 })
                 .join('\n')
                 .trim();
@@ -122,7 +129,7 @@ export class AvailabilityService extends BaseCalendarService {
             return responses
                 .map((response, index) => {
                     const summary = this.generateAvailabilitySummary(response);
-                    return `Account ${index + 1}:\n${summary}`;
+                    return `Account ${index + 1} :\n${summary}`;
                 })
                 .join('\n\n')
                 .trim();

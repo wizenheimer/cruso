@@ -41,3 +41,4 @@ next-env.d.ts
 
 # agentic
 .mastra
+runtime-context.json

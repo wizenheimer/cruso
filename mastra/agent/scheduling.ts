@@ -4,12 +4,19 @@ import { openai } from '@ai-sdk/openai';
 import { calendarTools, preferenceTools } from '../tools';
 import { Memory } from '@mastra/memory';
 import { storage } from '../storage/pg';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { User } from '@/types/users';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { preferenceService } from '@/services/preferences/service';
-import { USER_CONTEXT_KEY, PREFERENCE_CONTEXT_KEY, TIMESTAMP_CONTEXT_KEY } from '../commons';
+import {
+    USER_CONTEXT_KEY,
+    PREFERENCE_CONTEXT_KEY,
+    TIMESTAMP_CONTEXT_KEY,
+    getUserFromRuntimeContext,
+    getUserPreferenceFromRuntimeContext,
+    getTimestampFromRuntimeContext,
+} from '../commons';
 
 /**
  * Cache the prompt at module level
@@ -20,10 +27,36 @@ let cachedAgentPrompt: string | null = null;
  * Get the agent prompt
  * @returns The agent prompt
  */
-function getAgentPrompt(): string {
+async function getAgentPrompt(): Promise<string> {
     if (cachedAgentPrompt === null) {
         const promptPath = join(process.cwd(), 'mastra', 'prompt', 'scheduling.txt');
-        cachedAgentPrompt = readFileSync(promptPath, 'utf-8');
+
+        // Try to read from local file first
+        if (existsSync(promptPath)) {
+            try {
+                cachedAgentPrompt = readFileSync(promptPath, 'utf-8');
+            } catch (error) {
+                console.warn('Failed to read local prompt file:', error);
+            }
+        }
+
+        // Fallback to URL if local file doesn't exist or failed to read
+        if (!cachedAgentPrompt) {
+            try {
+                const response = await fetch(
+                    'https://gist.githubusercontent.com/wizenheimer/192ce0af1560aa1c9ffa1075f84f3561/raw/2fac1bc582e16581ae520ac997fceebbc1a450c4/cruso-prompt',
+                );
+                if (response.ok) {
+                    cachedAgentPrompt = await response.text();
+                } else {
+                    throw new Error(`Failed to fetch prompt from URL: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Failed to fetch prompt from URL:', error);
+                // Provide a minimal fallback prompt
+                cachedAgentPrompt = `You are cruso, a seasoned executive assistant specializing in calendar management and scheduling. Your primary objective is to manage calendars on behalf of the user, handling scheduling, rescheduling, availability checks, conflict resolution, and preference management with minimal back-and-forth to ensure task completion.`;
+            }
+        }
     }
     return cachedAgentPrompt;
 }
@@ -40,66 +73,24 @@ type SchedulingAgentRuntimeContext = {
 /**
  * Scheduling working memory template
  */
-export const SchedulingWorkingMemoryTemplate = `
-# Scheduling Working Memory
+// export const SchedulingWorkingMemoryTemplate = `
+// # Scheduling Working Memory
 
-- *Host Name*:
+// - *Host Name*:
 
-- *Current Objectives (list of objectives)*:
+// - *Current Objectives (list of objectives)*:
 
-- *Attendee Names (if any)*:
+// - *Attendee Names (if any)*:
 
-- *Slots Recommended (if any)*:
+// - *Slots Recommended (if any)*:
 
-- *Slots Declined (if any)*:
+// - *Slots Declined (if any)*:
 
-- *Special Notes (by host, if any)*:
+// - *Special Notes (by host, if any)*:
 
-- *Special Notes (by attendees, if any)*:
+// - *Special Notes (by attendees, if any)*:
 
-`;
-
-/**
- * Get the user from the runtime context
- * @param runtimeContext - The runtime context
- * @returns The user
- */
-export const getUserFromSchedulingAgentRuntimeContext = (runtimeContext: RuntimeContext) => {
-    const user: User = runtimeContext.get(USER_CONTEXT_KEY);
-    if (!user) {
-        throw new Error('User is required');
-    }
-    return user;
-};
-
-/**
- * Get the user preference from the runtime context
- * @param runtimeContext - The runtime context
- * @returns The user preference
- */
-export const getUserPreferenceFromSchedulingAgentRuntimeContext = (
-    runtimeContext: RuntimeContext,
-) => {
-    let preference: string | undefined = runtimeContext.get(PREFERENCE_CONTEXT_KEY);
-    if (!preference) {
-        preference =
-            'Make reasonable assumptions based on context, implied preferences, and calendar access';
-    }
-    return `<preference>\n\n${preference}\n\n</preference>`;
-};
-
-/**
- * Get the timestamp from the runtime context
- * @param runtimeContext - The runtime context
- * @returns The timestamp
- */
-export const getTimestampFromSchedulingAgentRuntimeContext = (runtimeContext: RuntimeContext) => {
-    let timestamp: Date | undefined = runtimeContext.get(TIMESTAMP_CONTEXT_KEY);
-    if (!timestamp) {
-        timestamp = new Date();
-    }
-    return timestamp;
-};
+// `;
 
 /**
  * Get the agent runtime context
@@ -128,7 +119,6 @@ export const getSchedulingAgentRuntimeContext = async (
     }
 
     context.set(PREFERENCE_CONTEXT_KEY, `<preference>\n\n${preferenceString}\n\n</preference>`);
-
     return context;
 };
 
@@ -138,11 +128,11 @@ export const getSchedulingAgentRuntimeContext = async (
 const schedulingAgentMemory = new Memory({
     storage,
     options: {
-        workingMemory: {
-            enabled: true,
-            scope: 'thread',
-            template: SchedulingWorkingMemoryTemplate,
-        },
+        // workingMemory: {
+        //     enabled: true,
+        //     scope: 'thread',
+        //     template: SchedulingWorkingMemoryTemplate,
+        // },
         lastMessages: 10,
     },
 });
@@ -152,19 +142,23 @@ const schedulingAgentMemory = new Memory({
  * @param runtimeContext - The runtime context
  * @returns The agent instructions
  */
-const getAgentInstructions = ({ runtimeContext }: { runtimeContext: RuntimeContext }) => {
-    const user = getUserFromSchedulingAgentRuntimeContext(runtimeContext);
+const getAgentInstructions = async ({ runtimeContext }: { runtimeContext: RuntimeContext }) => {
+    const user = getUserFromRuntimeContext(runtimeContext);
     if (!user) {
         console.error('no user found in runtime context');
     }
 
-    const agentPrompt = getAgentPrompt();
+    const agentPrompt = await getAgentPrompt();
 
-    const preference = getUserPreferenceFromSchedulingAgentRuntimeContext(runtimeContext);
+    const preference = getUserPreferenceFromRuntimeContext(runtimeContext);
 
-    const timestamp = getTimestampFromSchedulingAgentRuntimeContext(runtimeContext);
+    const timestamp = getTimestampFromRuntimeContext(runtimeContext);
 
-    return `${agentPrompt}\n\n<preference>${preference}</preference>\n\n<timestamp>$system_time:${timestamp.toISOString()}</timestamp>`;
+    return `
+    ${agentPrompt.trim()}\n
+    <timestamp> Remember, today is ${timestamp}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${timestamp}) in mind. Always make sure to use the correct date and resolve conflicts based on this date. Use this timestamp ONLY for determining time and DO NOT use it for determining timezones.</timestamp>\n
+    ${preference.trim()}\n
+    `;
 };
 
 /**
