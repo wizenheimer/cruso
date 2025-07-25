@@ -13,6 +13,9 @@ import {
 } from '@/constants/email';
 import { ExchangeData } from '@/types/exchange';
 import { User } from '@/types/users';
+import { Mastra } from '@mastra/core/mastra';
+import { mastra } from '@/mastra';
+import { getSchedulingAgentRuntimeContext } from '@/mastra/agent/scheduling';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
 
@@ -21,11 +24,13 @@ export class ExchangeProcessingService {
     private exchangeDataService: ExchangeDataService;
     private emailParsingService: EmailParsingService;
     private emailService: EmailService;
+    private mastra: Mastra;
 
     private constructor() {
         this.exchangeDataService = ExchangeDataService.getInstance();
         this.emailParsingService = EmailParsingService.getInstance();
         this.emailService = EmailService.getInstance();
+        this.mastra = mastra;
     }
 
     public static getInstance(): ExchangeProcessingService {
@@ -231,20 +236,41 @@ ${signature}`;
      * @description This method handles existing user interactions with Cruso
      */
     async handleEngagementForExistingUser(emailData: EmailData, user: User) {
+        // Save the email to the database
+        await this.exchangeDataService.saveEmail(emailData, user.id);
+
+        // Get the agent
+        const agent = await this.getAgent();
+
+        // Prepare the runtime context
+        const runtimeContext = await getSchedulingAgentRuntimeContext(user, emailData.timestamp);
+
+        // Generate the response
+        const result = await agent.generate(emailData.body, {
+            maxSteps: 5, // Allow up to 5 tool usage steps
+            resourceId: user.id,
+            threadId: emailData.exchangeId,
+            runtimeContext,
+        });
+
+        // Get the signature and add it to the response
         const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
+        const body = result.text + `\n\nBest, \n\n${signature}`;
 
-        const body = `You have been pinged!
-
-${signature}`;
-
+        // Send the reply
         const sentEmail = await this.emailService.sendReply(emailData, {
             type: 'all-including-sender',
             body,
         });
 
         // Save the sent email to the database
-        const savedEmail = await this.exchangeDataService.saveEmail(sentEmail, user.id);
+        await this.exchangeDataService.saveEmail(sentEmail, user.id);
 
         return sentEmail;
+    }
+
+    private async getAgent() {
+        const agent = await this.mastra.getAgent('experimentalAgent');
+        return agent;
     }
 }

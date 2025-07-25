@@ -1,3 +1,4 @@
+import { preferenceService } from '@/services/preferences';
 import { User } from '@/types/users';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { PinoLogger } from '@mastra/loggers';
@@ -10,10 +11,6 @@ export const logger = new PinoLogger({
     level: 'info',
 });
 
-export const getUserFromRuntimeContext = (runtimeContext: RuntimeContext) => {
-    const user: User = runtimeContext.get('user');
-    if (!user) {
-        throw new Error('User is required');
-    }
-    return user;
-};
+export const USER_CONTEXT_KEY = 'user';
+export const PREFERENCE_CONTEXT_KEY = 'preference';
+export const TIMESTAMP_CONTEXT_KEY = 'timestamp';

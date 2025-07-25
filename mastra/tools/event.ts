@@ -1,5 +1,5 @@
 import { createTool } from '@mastra/core/tools';
-import { getUserFromRuntimeContext } from '@/mastra/commons';
+import { getUserFromSchedulingAgentRuntimeContext } from '@/mastra/agent/scheduling';
 import { z } from 'zod';
 import { createCalendarService } from '@/services/calendar/service';
 import {
@@ -23,7 +23,7 @@ export const createEventTool = createTool({
     inputSchema: createEventInPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
-        const user = await getUserFromRuntimeContext(runtimeContext);
+        const user = await getUserFromSchedulingAgentRuntimeContext(runtimeContext);
         if (!user) {
             throw new Error('user not found in runtime context');
         }
@@ -49,7 +49,7 @@ export const listEventsTool = createTool({
     inputSchema: listEventsFromPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
-        const user = await getUserFromRuntimeContext(runtimeContext);
+        const user = await getUserFromSchedulingAgentRuntimeContext(runtimeContext);
         if (!user) {
             throw new Error('user not found in runtime context');
         }
@@ -73,7 +73,7 @@ export const updateEventTool = createTool({
     inputSchema: updateEventInPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
-        const user = await getUserFromRuntimeContext(runtimeContext);
+        const user = await getUserFromSchedulingAgentRuntimeContext(runtimeContext);
         if (!user) {
             throw new Error('user not found in runtime context');
         }
@@ -97,7 +97,7 @@ export const deleteEventTool = createTool({
     inputSchema: deleteEventInPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
-        const user = await getUserFromRuntimeContext(runtimeContext);
+        const user = await getUserFromSchedulingAgentRuntimeContext(runtimeContext);
         if (!user) {
             throw new Error('user not found in runtime context');
         }
@@ -121,7 +121,7 @@ export const getAvailabilityTool = createTool({
     inputSchema: freeBusyOmitCalendarsSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
-        const user = await getUserFromRuntimeContext(runtimeContext);
+        const user = await getUserFromSchedulingAgentRuntimeContext(runtimeContext);
         if (!user) {
             throw new Error('user not found in runtime context');
         }
@@ -145,7 +145,7 @@ export const searchEventsTool = createTool({
     inputSchema: searchEventsFromPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
-        const user = await getUserFromRuntimeContext(runtimeContext);
+        const user = await getUserFromSchedulingAgentRuntimeContext(runtimeContext);
         if (!user) {
             throw new Error('user not found in runtime context');
         }

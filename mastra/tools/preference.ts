@@ -1,5 +1,5 @@
 import { createTool } from '@mastra/core/tools';
-import { getUserFromRuntimeContext } from '@/mastra/commons';
+import { getUserFromSchedulingAgentRuntimeContext } from '@/mastra/agent/scheduling';
 import { z } from 'zod';
 import { preferenceService } from '@/services/preferences';
 
@@ -14,7 +14,7 @@ export const getPreferencesTool = createTool({
     description: 'Get default scheduling preferences',
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
-        const user = await getUserFromRuntimeContext(runtimeContext);
+        const user = await getUserFromSchedulingAgentRuntimeContext(runtimeContext);
         if (!user) {
             throw new Error('user not found in runtime context');
         }
@@ -40,7 +40,7 @@ export const setPreferencesTool = createTool({
         updatedPreferences: z.string(),
     }),
     execute: async ({ context, runtimeContext }) => {
-        const user = await getUserFromRuntimeContext(runtimeContext);
+        const user = await getUserFromSchedulingAgentRuntimeContext(runtimeContext);
         if (!user) {
             throw new Error('user not found in runtime context');
         }
