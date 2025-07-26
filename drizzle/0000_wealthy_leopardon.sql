@@ -46,17 +46,6 @@ CREATE TABLE "verification" (
 	"updated_at" timestamp
 );
 --> statement-breakpoint
-CREATE TABLE "availability" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"user_id" text,
-	"days" integer[],
-	"start_time" time NOT NULL,
-	"end_time" time NOT NULL,
-	"timezone" varchar(100) NOT NULL,
-	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now()
-);
---> statement-breakpoint
 CREATE TABLE "calendar_connections" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text,
@@ -123,9 +112,19 @@ CREATE TABLE "user_emails" (
 	CONSTRAINT "user_emails_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
+CREATE TABLE "working_hours" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" text,
+	"days" integer[],
+	"start_time" time NOT NULL,
+	"end_time" time NOT NULL,
+	"timezone" varchar(100) NOT NULL,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "availability" ADD CONSTRAINT "availability_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "calendar_connections" ADD CONSTRAINT "calendar_connections_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "calendar_connections" ADD CONSTRAINT "calendar_connections_account_id_account_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."account"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "exchange_data" ADD CONSTRAINT "exchange_data_exchange_owner_id_user_id_fk" FOREIGN KEY ("exchange_owner_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -133,7 +132,7 @@ ALTER TABLE "preferences" ADD CONSTRAINT "preferences_user_id_user_id_fk" FOREIG
 ALTER TABLE "preferences" ADD CONSTRAINT "preferences_primary_user_email_id_user_emails_id_fk" FOREIGN KEY ("primary_user_email_id") REFERENCES "public"."user_emails"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "preferences" ADD CONSTRAINT "preferences_primary_account_id_account_id_fk" FOREIGN KEY ("primary_account_id") REFERENCES "public"."account"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_emails" ADD CONSTRAINT "user_emails_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "idx_availability_user_days" ON "availability" USING btree ("user_id","days");--> statement-breakpoint
+ALTER TABLE "working_hours" ADD CONSTRAINT "working_hours_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "idx_calendar_connections_user" ON "calendar_connections" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "idx_calendar_connections_account" ON "calendar_connections" USING btree ("account_id");--> statement-breakpoint
 CREATE INDEX "idx_calendar_connections_google_account" ON "calendar_connections" USING btree ("google_account_id");--> statement-breakpoint
@@ -151,4 +150,5 @@ CREATE INDEX "idx_preferences_primary_email" ON "preferences" USING btree ("prim
 CREATE INDEX "idx_preferences_primary_account" ON "preferences" USING btree ("primary_account_id");--> statement-breakpoint
 CREATE INDEX "idx_user_emails_email" ON "user_emails" USING btree ("email");--> statement-breakpoint
 CREATE INDEX "idx_user_emails_user" ON "user_emails" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "idx_user_emails_user_active" ON "user_emails" USING btree ("user_id","is_active");
+CREATE INDEX "idx_user_emails_user_active" ON "user_emails" USING btree ("user_id","is_active");--> statement-breakpoint
+CREATE INDEX "idx_working_hours_user_days" ON "working_hours" USING btree ("user_id","days");
