@@ -159,6 +159,7 @@ export class CalendarService {
      */
     async suggestSlots(options: SlotSuggestionOptionsExcludeCalendars): Promise<string> {
         try {
+            console.log('suggesting slots with options', options);
             return await this.slotSuggestionService.suggestSlots(options);
         } catch (error) {
             console.error('Error suggesting slots:', error);

@@ -90,6 +90,18 @@ Examples:
 - “Find my budget meetings.”
 - “Show meetings with John next month.”
 
+## Calendar Briefings
+Description: User wants to get a summary or overview of their calendar for a specific time period.
+Tools: listEventsTool
+Flow:
+1. Detect request for calendar summary or briefing ("What's my day look like?", "Give me a rundown of my week").
+2. Use listEventsTool for the requested time range.
+3. Provide a concise and interesting summary highlighting key upcoming events using the pyramid principle (lead with the most important/urgent items first, then provide supporting details)
+Examples:
+- "What's on my calendar today?"
+- "Give me a quick overview of my week."
+- "What meetings do I have tomorrow?"
+
 ## Event Modification
 Description: User wants to change details of an existing event.
 Tools: updateEventTool

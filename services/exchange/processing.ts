@@ -19,6 +19,7 @@ import { getFirstPartySchedulingAgentRuntimeContext } from '@/mastra/agent/fpsch
 import { Agent } from '@mastra/core/agent';
 import { getThirdPartySchedulingAgentRuntimeContext } from '@/mastra/agent/tpscheduling';
 import { getUserById } from '@/db/queries/users';
+import { formatEmailText } from '@/mastra/agent/formatter';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
 
@@ -214,6 +215,19 @@ export class ExchangeProcessingService {
             return this.handleInvalidEngagementForNonUser(emailData);
         }
 
+        // Merge the previous message receipts with the current message
+        const previousMessageReceipts = previousMessage.recipients;
+        const currentMessageReceipts = emailData.recipients;
+        let mergedReceipts = [...new Set([...previousMessageReceipts, ...currentMessageReceipts])];
+
+        // Remove the sender and any @crusolabs.com emails from the merged receipts
+        mergedReceipts = mergedReceipts.filter(
+            (recipient) => recipient !== emailData.sender && !recipient.includes('@crusolabs.com'),
+        );
+
+        // Update the email data with the merged receipts
+        emailData.recipients = mergedReceipts;
+
         // Save the current email to the database
         const exchangeData = await this.exchangeDataService.saveEmail(
             emailData,
@@ -248,12 +262,14 @@ export class ExchangeProcessingService {
 
         // Get the signature and add it to the response
         const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
-        const body = result.text + `\n\nBest, \n\n${signature}`;
+
+        const formattedBody = await formatEmailText(result.text + `\n${signature}`);
 
         // Send the reply
         const sentEmail = await this.emailService.sendReply(emailData, {
             type: 'all-including-sender',
-            body,
+            body: formattedBody.content,
+            bodyHTML: formattedBody.success ? formattedBody.content : undefined,
         });
 
         // Save the sent email to the database
@@ -270,6 +286,34 @@ export class ExchangeProcessingService {
      * @description This method handles existing user interactions with Cruso
      */
     async handleEngagementForExistingUser(emailData: EmailData, user: User) {
+        // Check if the previous message exists
+        if (emailData.previousMessageId) {
+            const previousMessage = await this.exchangeDataService.getByMessageId(
+                emailData.previousMessageId,
+            );
+
+            if (previousMessage) {
+                console.log('found a previous message, merging receipts', previousMessage);
+
+                // Merge the previous message receipts with the current message
+                const previousMessageReceipts = previousMessage.recipients;
+                const currentMessageReceipts = emailData.recipients;
+                let mergedReceipts = [
+                    ...new Set([...previousMessageReceipts, ...currentMessageReceipts]),
+                ];
+
+                // Remove the sender and any @crusolabs.com emails from the merged receipts
+                mergedReceipts = mergedReceipts.filter(
+                    (recipient) =>
+                        recipient !== emailData.sender && !recipient.includes('@crusolabs.com'),
+                );
+
+                console.log('merged receipts', mergedReceipts);
+                // Update the email data with the merged receipts
+                emailData.recipients = mergedReceipts;
+            }
+        }
+
         // Save the email to the database
         const exchangeData = await this.exchangeDataService.saveEmail(emailData, user.id);
 
@@ -294,12 +338,18 @@ export class ExchangeProcessingService {
 
         // Get the signature and add it to the response
         const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
-        const body = result.text + `\n\nBest, \n\n${signature}`;
+        const body = result.text.trim() + `\n${signature}`;
+
+        // Prepare a formatted html response for the email
+        const formattedBody = await formatEmailText(result.text + `\n${signature}`);
+
+        console.log('formattedBody', formattedBody);
 
         // Send the reply
         const sentEmail = await this.emailService.sendReply(emailData, {
             type: 'all-including-sender',
-            body,
+            body: body,
+            bodyHTML: formattedBody.success ? formattedBody.content : undefined,
         });
 
         // Save the sent email to the database

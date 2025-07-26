@@ -5,6 +5,7 @@ export const SendEmailConfigSchema = z.object({
     recipients: z.array(z.string().email()),
     subject: z.string(),
     body: z.string(),
+    bodyHTML: z.string().optional(),
     cc: z.array(z.string().email()).optional(),
     bcc: z.array(z.string().email()).optional(),
     replyTo: z.any().optional(), // EmailData type - will need to be defined if available
@@ -20,6 +21,7 @@ export const ReplyConfigSchema = z.object({
         'all-with-cc-to-sender',
     ]),
     body: z.string(),
+    bodyHTML: z.string().optional(),
     subject: z.string().optional(),
 });
 
@@ -30,6 +32,7 @@ export const EmailSendParamsSchema = z.object({
     bcc: z.array(z.string().email()),
     subject: z.string(),
     body: z.string(),
+    bodyHTML: z.string().optional(),
     exchangeId: z.string(),
     previousMessageId: z.string().nullable(),
 });

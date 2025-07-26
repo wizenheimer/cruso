@@ -49,6 +49,7 @@ export class EmailService {
             recipients,
             subject,
             body,
+            bodyHTML,
             cc = [],
             bcc = [],
             replyTo,
@@ -70,6 +71,7 @@ export class EmailService {
             bcc: processedBCC,
             subject,
             body,
+            bodyHTML,
             ...threadContext,
         });
     }
@@ -82,16 +84,21 @@ export class EmailService {
      * @description This method is used to send a reply to an email with different reply behaviors
      */
     async sendReply(originalEmail: EmailData, replyConfig: ReplyConfig): Promise<EmailData> {
-        const { type, body, subject } = replyConfig;
+        const { type, body, subject, bodyHTML } = replyConfig;
         const replySubject = subject || `Re: ${originalEmail.subject.replace(/^Re:\s*/, '')}`;
 
         const recipients = this.getReplyRecipients(originalEmail, type);
+
+        console.log('recipients', recipients);
+        console.log('body', body);
+        console.log('bodyHTML', bodyHTML);
 
         return this.sendEmail({
             recipients: recipients.to,
             cc: recipients.cc,
             subject: replySubject,
             body,
+            bodyHTML,
             replyTo: originalEmail,
         });
     }
@@ -171,7 +178,7 @@ export class EmailService {
      * @description This method is used to execute the email send
      */
     private async executeEmailSend(params: EmailSendParams): Promise<EmailData> {
-        const { to, cc, bcc, subject, body, exchangeId, previousMessageId } = params;
+        const { to, cc, bcc, subject, body, bodyHTML, exchangeId, previousMessageId } = params;
 
         try {
             const mg = this.mailgun.client({
@@ -179,18 +186,37 @@ export class EmailService {
                 key: this.apiKey,
             });
 
-            const messageData: MailgunMessageData = {
-                from: `Cruso <${this.senderEmail}>`,
-                to,
-                subject,
-                text: body,
-                ...(cc.length > 0 && { cc }),
-                ...(bcc.length > 0 && { bcc }),
-                ...(previousMessageId && {
-                    'h:In-Reply-To': previousMessageId,
-                    'h:References': previousMessageId,
-                }),
-            };
+            let messageData: MailgunMessageData;
+
+            if (bodyHTML) {
+                console.log('sending email with html');
+                messageData = {
+                    from: `Cruso <${this.senderEmail}>`,
+                    to,
+                    subject,
+                    html: bodyHTML,
+                    ...(cc.length > 0 && { cc }),
+                    ...(bcc.length > 0 && { bcc }),
+                    ...(previousMessageId && {
+                        'h:In-Reply-To': previousMessageId,
+                        'h:References': previousMessageId,
+                    }),
+                };
+            } else {
+                console.log('sending email with plain text');
+                messageData = {
+                    from: `Cruso <${this.senderEmail}>`,
+                    to,
+                    subject,
+                    text: body,
+                    ...(cc.length > 0 && { cc }),
+                    ...(bcc.length > 0 && { bcc }),
+                    ...(previousMessageId && {
+                        'h:In-Reply-To': previousMessageId,
+                        'h:References': previousMessageId,
+                    }),
+                };
+            }
 
             const response = await mg.messages.create(this.domain, messageData);
 
@@ -215,6 +241,55 @@ export class EmailService {
                 type: 'outbound',
             };
         } catch (error) {
+            // If HTML failed and we have plain text, try with plain text
+            if (bodyHTML && body) {
+                console.error('email dispatch failed, attempting with plain text');
+                try {
+                    const mg = this.mailgun.client({
+                        username: 'api',
+                        key: this.apiKey,
+                    });
+
+                    const textMessageData = {
+                        from: `Cruso <${this.senderEmail}>`,
+                        to,
+                        subject,
+                        text: body,
+                        ...(cc.length > 0 && { cc }),
+                        ...(bcc.length > 0 && { bcc }),
+                        ...(previousMessageId && {
+                            'h:In-Reply-To': previousMessageId,
+                            'h:References': previousMessageId,
+                        }),
+                    };
+
+                    const response = await mg.messages.create(this.domain, textMessageData);
+
+                    if (response.status !== 200) {
+                        throw new Error(response.details?.[0] || 'Failed to send email');
+                    }
+
+                    if (!response.id) {
+                        throw new Error('Response ID is missing from the email response');
+                    }
+
+                    return {
+                        id: randomUUID(),
+                        exchangeId,
+                        messageId: response.id,
+                        previousMessageId,
+                        sender: this.senderEmail,
+                        recipients: [...to, ...cc, ...bcc],
+                        subject,
+                        body,
+                        timestamp: new Date(),
+                        type: 'outbound',
+                    };
+                } catch (textError) {
+                    throw error; // Throw original HTML error
+                }
+            }
+
             console.error('Failed to send email:', error);
             throw new Error(
                 `Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`,

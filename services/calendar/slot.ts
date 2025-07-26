@@ -192,9 +192,13 @@ export class SlotSuggestionService extends BaseCalendarService {
         options: FreeBusyIncludeCalendarsOptions,
     ): Promise<FreeBusyResponse> {
         try {
+            console.log('querying free/busy with options', options);
             // Convert timezone-naive datetime strings to RFC 3339 format
             const timeMin = this.convertToRFC3339(options.timeMin, options.timeZone || 'UTC');
             const timeMax = this.convertToRFC3339(options.timeMax, options.timeZone || 'UTC');
+
+            console.log('timeMin post convert', timeMin);
+            console.log('timeMax post convert', timeMax);
 
             const requestBody = {
                 timeMin,

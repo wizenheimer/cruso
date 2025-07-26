@@ -52,7 +52,15 @@ export const getUserFromRuntimeContext = (runtimeContext: RuntimeContext) => {
  * @returns The host
  */
 export const getHostFromRuntimeContext = (runtimeContext: RuntimeContext) => {
-    return runtimeContext.get(HOST_CONTEXT_KEY) as string;
+    // Filter out any email address that are from crusolabs.com domain
+    const host = runtimeContext.get(HOST_CONTEXT_KEY) as string;
+    if (!host) {
+        return '';
+    }
+    if (host.includes('@crusolabs.com')) {
+        return '';
+    }
+    return host;
 };
 
 /**
@@ -61,7 +69,12 @@ export const getHostFromRuntimeContext = (runtimeContext: RuntimeContext) => {
  * @returns The attendees
  */
 export const getAttendeesFromRuntimeContext = (runtimeContext: RuntimeContext) => {
-    return runtimeContext.get(ATTENDEES_CONTEXT_KEY) as string[];
+    // Filter out any email address that are from crusolabs.com domain
+    const attendees = runtimeContext.get(ATTENDEES_CONTEXT_KEY) as string[];
+    if (!attendees || !Array.isArray(attendees)) {
+        return [];
+    }
+    return attendees.filter((attendee) => !attendee.includes('@crusolabs.com'));
 };
 /**
  * Get the user preference from the runtime context

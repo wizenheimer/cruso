@@ -1,5 +1,5 @@
 import { Agent } from '@mastra/core/agent';
-import { DEFAULT_LARGE_LANGUAGE_MODEL } from '@/constants/model';
+import { DEFAULT_LARGE_LANGUAGE_MODEL, DEFAULT_SMALL_LANGUAGE_MODEL } from '@/constants/model';
 import { openai } from '@ai-sdk/openai';
 import { calendarTools, preferenceTools } from '../tools';
 import { Memory } from '@mastra/memory';
@@ -143,6 +143,13 @@ const schedulingAgentMemory = new Memory({
         //     scope: 'thread',
         //     template: SchedulingWorkingMemoryTemplate,
         // },
+        threads: {
+            generateTitle: {
+                model: openai(DEFAULT_SMALL_LANGUAGE_MODEL), // Use cheaper model for titles
+                instructions:
+                    'Generate a concise title for the email exchange. The title should be a single sentence that captures the essence of the conversation.',
+            },
+        },
         lastMessages: 10,
     },
 });

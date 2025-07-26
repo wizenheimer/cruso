@@ -94,14 +94,14 @@ export class ExchangeDataService {
             const userPreferences = await getUserPreferences(exchangeOwner.exchangeOwnerId);
 
             if (userPreferences?.signature) {
-                return `Best,\n\n${userPreferences.signature}`;
+                return `Best,\n${userPreferences.signature}`;
             }
 
             // Fallback to the original logic if no signature is set
-            return `Best,\n\n${exchangeOwner.userEmail}'s AI Assistant`;
+            return `Best,\n${exchangeOwner.userEmail}'s AI Assistant`;
         }
 
-        return `Best,\n\nCruso`;
+        return `Best,\nCruso`;
     }
 
     /**
