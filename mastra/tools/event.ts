@@ -8,6 +8,7 @@ import {
     freeBusyOmitCalendarsSchema,
     listEventsFromPrimaryCalendarToolSchema,
     searchEventsFromPrimaryCalendarToolSchema,
+    slotSuggestionToolSchema,
     updateEventInPrimaryCalendarToolSchema,
 } from '@/schema/tools/event';
 
@@ -154,5 +155,23 @@ export const searchEventsTool = createTool({
 
         const calendarService = createCalendarService(user.id);
         return calendarService.searchEvents(options);
+    },
+});
+
+export const findAvailabilitySlotsTool = createTool({
+    id: 'find-availability-slots',
+    description: 'Find availability slots',
+    inputSchema: slotSuggestionToolSchema,
+    outputSchema: z.string(),
+    execute: async ({ context, runtimeContext }) => {
+        const user = await getUserFromRuntimeContext(runtimeContext);
+        if (!user) {
+            throw new Error('user not found in runtime context');
+        }
+
+        const { ...options } = context;
+
+        const calendarService = createCalendarService(user.id);
+        return calendarService.suggestSlots(options);
     },
 });

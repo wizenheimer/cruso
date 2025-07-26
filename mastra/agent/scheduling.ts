@@ -44,7 +44,7 @@ async function getAgentPrompt(): Promise<string> {
         if (!cachedAgentPrompt) {
             try {
                 const response = await fetch(
-                    'https://gist.githubusercontent.com/wizenheimer/192ce0af1560aa1c9ffa1075f84f3561/raw/2fac1bc582e16581ae520ac997fceebbc1a450c4/cruso-prompt',
+                    'https://gist.githubusercontent.com/wizenheimer/192ce0af1560aa1c9ffa1075f84f3561/raw/c4a375ec5929ed83b9325655dff6dc2f7b4c6256/cruso-prompt',
                 );
                 if (response.ok) {
                     cachedAgentPrompt = await response.text();
@@ -115,10 +115,10 @@ export const getSchedulingAgentRuntimeContext = async (
 
     if (!preferenceString) {
         preferenceString =
-            'Make reasonable assumptions based on context, implied preferences, and calendar access\n\n';
+            'Make reasonable assumptions based on context, implied preferences, and calendar access.';
     }
 
-    context.set(PREFERENCE_CONTEXT_KEY, `<preference>\n\n${preferenceString}\n\n</preference>`);
+    context.set(PREFERENCE_CONTEXT_KEY, preferenceString);
     return context;
 };
 
@@ -156,7 +156,9 @@ const getAgentInstructions = async ({ runtimeContext }: { runtimeContext: Runtim
 
     return `
     ${agentPrompt.trim()}\n
-    <timestamp> Remember, today is ${timestamp}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${timestamp}) in mind. Always make sure to use the correct date and resolve conflicts based on this date. Use this timestamp ONLY for determining time and DO NOT use it for determining timezones.</timestamp>\n
+    # Current Time\n
+    Remember, today is ${timestamp}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${timestamp}) in mind. Always make sure to use the correct date and resolve conflicts based on this date. Use this timestamp ONLY for determining time and DO NOT use it for determining timezones.\n
+    # Default Preferences\n
     ${preference.trim()}\n
     `;
 };

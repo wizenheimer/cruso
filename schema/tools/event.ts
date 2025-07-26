@@ -438,3 +438,39 @@ export const freeBusyOmitCalendarsSchema = availabilityToolSchema.omit({
 });
 
 export const freeBusyIncludeCalendarsSchema = availabilityToolSchema;
+
+export const slotSuggestionToolSchema = freeBusyOmitCalendarsSchema.extend({
+    excludeSlots: z.array(
+        z.object({
+            startTime: z
+                .string()
+                .describe('Start time of the slot in ISO 8601 format')
+                .refine((val) => {
+                    const withTimezone =
+                        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/.test(val);
+                    const withoutTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(val);
+                    return withTimezone || withoutTimezone;
+                }, "Must be ISO 8601 format: '2026-01-01T00:00:00'"),
+            endTime: z
+                .string()
+                .describe('End time of the slot in ISO 8601 format')
+                .refine((val) => {
+                    const withTimezone =
+                        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/.test(val);
+                    const withoutTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(val);
+                    return withTimezone || withoutTimezone;
+                }, "Must be ISO 8601 format: '2026-01-01T00:00:00'"),
+        }),
+    ),
+    slotDurationMinutes: z.number().int().min(15).describe('Duration of the slot in minutes'),
+});
+
+export const slotSuggestionToolSchemaIncludeCalendars = slotSuggestionToolSchema.extend({
+    calendars: z
+        .array(
+            z.object({
+                id: z.string().describe("ID of the calendar (use 'primary' for the main calendar)"),
+            }),
+        )
+        .describe('List of calendars and/or groups to query for free/busy information'),
+});

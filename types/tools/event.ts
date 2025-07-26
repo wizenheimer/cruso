@@ -9,6 +9,8 @@ import {
     listEventsToolSchema,
     searchEventsFromPrimaryCalendarToolSchema,
     searchEventsToolSchema,
+    slotSuggestionToolSchema,
+    slotSuggestionToolSchemaIncludeCalendars,
     updateEventInPrimaryCalendarToolSchema,
     updateEventToolSchema,
 } from '@/schema/tools/event';
@@ -47,3 +49,9 @@ export type DeleteEventFromAnyCalendarOptions = z.infer<typeof deleteEventToolSc
 export type FreeBusyOmitCalendarsOptions = z.infer<typeof freeBusyOmitCalendarsSchema>;
 
 export type FreeBusyIncludeCalendarsOptions = z.infer<typeof freeBusyIncludeCalendarsSchema>;
+
+export type SlotSuggestionOptionsExcludeCalendars = z.infer<typeof slotSuggestionToolSchema>;
+
+export type SlotSuggestionOptionsIncludeCalendars = z.infer<
+    typeof slotSuggestionToolSchemaIncludeCalendars
+>;

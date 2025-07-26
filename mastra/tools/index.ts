@@ -5,6 +5,7 @@ import {
     deleteEventTool,
     getAvailabilityTool,
     searchEventsTool,
+    findAvailabilitySlotsTool,
 } from './event';
 import { getPreferencesTool, setPreferencesTool } from './preference';
 
@@ -15,6 +16,7 @@ export const calendarTools = {
     deleteEventTool,
     getAvailabilityTool,
     searchEventsTool,
+    findAvailabilitySlotsTool,
 };
 
 export const preferenceTools = {

@@ -12,8 +12,10 @@ import {
     DeleteEventInPrimaryCalendarOptions,
     FreeBusyOmitCalendarsOptions,
     SearchEventsFromPrimaryCalendarOptions,
+    SlotSuggestionOptionsExcludeCalendars,
 } from '@/types/tools/event';
 import { calendar_v3 } from 'googleapis';
+import { SlotSuggestionService } from './slot';
 
 // ==================================================
 // Calendar Service
@@ -26,6 +28,7 @@ import { calendar_v3 } from 'googleapis';
 export class CalendarService {
     private eventsService: EventsService;
     private availabilityService: AvailabilityService;
+    private slotSuggestionService: SlotSuggestionService;
     private googleCalendarService: GoogleCalendarService;
     private searchService: SearchService;
 
@@ -33,6 +36,7 @@ export class CalendarService {
         // Initialize all subsystem services
         this.eventsService = new EventsService(userId);
         this.availabilityService = new AvailabilityService(userId);
+        this.slotSuggestionService = new SlotSuggestionService(userId);
         this.googleCalendarService = new GoogleCalendarService(userId);
         this.searchService = new SearchService(userId);
     }
@@ -143,6 +147,22 @@ export class CalendarService {
         } catch (error) {
             console.error('Error searching events:', error);
             return this.handleError(error, 'searching events in calendar', options);
+        }
+    }
+
+    // ==================================================
+    // Slot Suggestion Management
+    // ==================================================
+
+    /**
+     * Suggest availability slots
+     */
+    async suggestSlots(options: SlotSuggestionOptionsExcludeCalendars): Promise<string> {
+        try {
+            return await this.slotSuggestionService.suggestSlots(options);
+        } catch (error) {
+            console.error('Error suggesting slots:', error);
+            return this.handleError(error, 'suggesting slots in calendar', options);
         }
     }
 }
