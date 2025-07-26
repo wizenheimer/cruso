@@ -7,3 +7,8 @@ export const getUserByEmail = async (email: string): Promise<User | null> => {
     const [userRecord] = await db.select().from(user).where(eq(user.email, email));
     return userRecord;
 };
+
+export const getUserById = async (id: string): Promise<User | null> => {
+    const [userRecord] = await db.select().from(user).where(eq(user.id, id));
+    return userRecord;
+};

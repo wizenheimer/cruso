@@ -129,7 +129,7 @@ export class AvailabilityService extends BaseCalendarService {
             return responses
                 .map((response, index) => {
                     const summary = this.generateAvailabilitySummary(response);
-                    return `Account ${index + 1} :\n${summary}`;
+                    return `Calendar ${index + 1} :\n${summary}`;
                 })
                 .join('\n\n')
                 .trim();

@@ -15,7 +15,10 @@ import { ExchangeData } from '@/types/exchange';
 import { User } from '@/types/users';
 import { Mastra } from '@mastra/core/mastra';
 import { mastra } from '@/mastra';
-import { getSchedulingAgentRuntimeContext } from '@/mastra/agent/scheduling';
+import { getFirstPartySchedulingAgentRuntimeContext } from '@/mastra/agent/fpscheduling';
+import { Agent } from '@mastra/core/agent';
+import { getThirdPartySchedulingAgentRuntimeContext } from '@/mastra/agent/tpscheduling';
+import { getUserById } from '@/db/queries/users';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
 
@@ -188,42 +191,73 @@ export class ExchangeProcessingService {
      * @description This method handles non-user exchanges - triggered when Cruso acts on behalf of a user
      */
     async handleEngagementForNonUser(emailData: EmailData) {
+        // Check if the previous message exists
+        if (!emailData.previousMessageId) {
+            console.error('No previous message ID found');
+            return this.handleInvalidEngagementForNonUser(emailData);
+        }
+
         // Look up the previous message to find the exchange owner
         const previousMessage = await this.exchangeDataService.getByMessageId(
-            emailData.previousMessageId!,
+            emailData.previousMessageId,
         );
         if (!previousMessage) {
-            throw new Error(
+            console.error(
                 `No previous message found for message ID: ${emailData.previousMessageId}`,
             );
+            return this.handleInvalidEngagementForNonUser(emailData);
         }
 
         // Get the exchange owner from the previous message
         if (!previousMessage.exchangeOwnerId) {
-            throw new Error(
-                `No exchange owner found for exchange ID: ${previousMessage.exchangeId}`,
-            );
+            console.error(`No exchange owner found for exchange ID: ${previousMessage.exchangeId}`);
+            return this.handleInvalidEngagementForNonUser(emailData);
         }
 
-        await this.exchangeDataService.saveEmail(emailData, previousMessage.exchangeOwnerId);
+        // Save the current email to the database
+        const exchangeData = await this.exchangeDataService.saveEmail(
+            emailData,
+            previousMessage.exchangeOwnerId,
+        );
 
+        // Get the user from the previous message
+        const user = await getUserById(previousMessage.exchangeOwnerId);
+        if (!user) {
+            console.error(`User not found for ID: ${previousMessage.exchangeOwnerId}`);
+            return this.handleInvalidEngagementForNonUser(emailData);
+        }
+
+        // Get the agent
+        const agent = await this.getAgent('thirdParty');
+
+        // Prepare the runtime context
+        const runtimeContext = await this.getRuntimeContext(
+            'thirdParty',
+            user,
+            emailData,
+            exchangeData,
+        );
+
+        // Generate the response
+        const result = await agent.generate(emailData.body, {
+            maxSteps: 10, // Allow up to 10 tool usage steps
+            resourceId: previousMessage.exchangeOwnerId,
+            threadId: emailData.exchangeId,
+            runtimeContext,
+        });
+
+        // Get the signature and add it to the response
         const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
+        const body = result.text + `\n\nBest, \n\n${signature}`;
 
-        const body = `You have been pinged!
-
-${signature}`;
-
-        // NOTE: sender-only mode might not be viable for real world use case tbh
+        // Send the reply
         const sentEmail = await this.emailService.sendReply(emailData, {
             type: 'all-including-sender',
             body,
         });
 
         // Save the sent email to the database
-        const savedEmail = await this.exchangeDataService.saveEmail(
-            sentEmail,
-            previousMessage.exchangeOwnerId,
-        );
+        await this.exchangeDataService.saveEmail(sentEmail, previousMessage.exchangeOwnerId);
 
         return sentEmail;
     }
@@ -237,13 +271,18 @@ ${signature}`;
      */
     async handleEngagementForExistingUser(emailData: EmailData, user: User) {
         // Save the email to the database
-        await this.exchangeDataService.saveEmail(emailData, user.id);
+        const exchangeData = await this.exchangeDataService.saveEmail(emailData, user.id);
 
         // Get the agent
-        const agent = await this.getAgent();
+        const agent = await this.getAgent('firstParty');
 
         // Prepare the runtime context
-        const runtimeContext = await getSchedulingAgentRuntimeContext(user, emailData.timestamp);
+        const runtimeContext = await this.getRuntimeContext(
+            'firstParty',
+            user,
+            emailData,
+            exchangeData,
+        );
 
         // Generate the response
         const result = await agent.generate(emailData.body, {
@@ -269,8 +308,26 @@ ${signature}`;
         return sentEmail;
     }
 
-    private async getAgent() {
-        const agent = await this.mastra.getAgent('experimentalAgent');
+    private async getAgent(userType: 'firstParty' | 'thirdParty') {
+        let agent: Agent;
+        if (userType === 'firstParty') {
+            agent = await this.mastra.getAgent('firstPartySchedulingAgent');
+        } else {
+            agent = await this.mastra.getAgent('thirdPartySchedulingAgent');
+        }
         return agent;
+    }
+
+    private async getRuntimeContext(
+        userType: 'firstParty' | 'thirdParty',
+        user: User,
+        emailData: EmailData,
+        exchangeData: ExchangeData,
+    ) {
+        if (userType === 'firstParty') {
+            return await getFirstPartySchedulingAgentRuntimeContext(user, emailData, exchangeData);
+        } else {
+            return await getThirdPartySchedulingAgentRuntimeContext(user, emailData, exchangeData);
+        }
     }
 }
