@@ -19,7 +19,17 @@ export const calendarTools = {
     findAvailabilitySlotsTool,
 };
 
+export const thirdPartyCalendarTools = {
+    findAvailabilitySlotsTool,
+    createEventTool,
+    updateEventTool,
+};
+
 export const preferenceTools = {
     getPreferencesTool,
     setPreferencesTool,
+};
+
+export const thirdPartyPreferenceTools = {
+    getPreferencesTool,
 };

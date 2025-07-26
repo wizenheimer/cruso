@@ -5,6 +5,8 @@ import { PinoLogger } from '@mastra/loggers';
 export const USER_CONTEXT_KEY = 'user';
 export const PREFERENCE_CONTEXT_KEY = 'preference';
 export const TIMESTAMP_CONTEXT_KEY = 'timestamp';
+export const HOST_CONTEXT_KEY = 'host';
+export const ATTENDEES_CONTEXT_KEY = 'attendees';
 
 /**
  * Logger - It is used to log the data of the workflow and agent.
@@ -44,6 +46,23 @@ export const getUserFromRuntimeContext = (runtimeContext: RuntimeContext) => {
     return user;
 };
 
+/**
+ * Get the host from the runtime context
+ * @param runtimeContext - The runtime context
+ * @returns The host
+ */
+export const getHostFromRuntimeContext = (runtimeContext: RuntimeContext) => {
+    return runtimeContext.get(HOST_CONTEXT_KEY) as string;
+};
+
+/**
+ * Get the attendees from the runtime context
+ * @param runtimeContext - The runtime context
+ * @returns The attendees
+ */
+export const getAttendeesFromRuntimeContext = (runtimeContext: RuntimeContext) => {
+    return runtimeContext.get(ATTENDEES_CONTEXT_KEY) as string[];
+};
 /**
  * Get the user preference from the runtime context
  * @param runtimeContext - The runtime context

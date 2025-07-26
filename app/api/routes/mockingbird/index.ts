@@ -2,7 +2,12 @@ import { Context, Hono } from 'hono';
 import { requireAuth } from '../../middleware/auth';
 import { EmailDataSchema } from '@/schema/exchange';
 import { mastra } from '@/mastra';
-import { getSchedulingAgentRuntimeContext } from '@/mastra/agent/scheduling';
+import { getFirstPartySchedulingAgentRuntimeContext } from '@/mastra/agent/fpscheduling';
+import { Agent } from '@mastra/core/agent';
+import { RuntimeContext } from '@mastra/core/runtime-context';
+import { getThirdPartySchedulingAgentRuntimeContext } from '@/mastra/agent/tpscheduling';
+import { ExchangeDataService } from '@/services/exchange/data';
+
 const mockingbird = new Hono();
 
 /**
@@ -38,6 +43,15 @@ mockingbird.post('/', async (c) => {
         // Get emailData from the request body
         const { emailData: rawEmailData } = await c.req.json();
 
+        // Get type of user from header
+        let userType = c.req.header('x-user-type');
+        if (!userType || (userType !== 'firstParty' && userType !== 'thirdParty')) {
+            console.log('defaulting to firstParty');
+            userType = 'firstParty';
+        } else {
+            console.log('userType', userType);
+        }
+
         // Transform timestamp string to Date if needed before parsing
         const transformedEmailData = {
             ...rawEmailData,
@@ -54,13 +68,28 @@ mockingbird.post('/', async (c) => {
         // Parse emailData as EmailData type
         const emailData = EmailDataSchema.parse(transformedEmailData);
 
-        console.log('emailData', emailData);
+        // Save the email to the database
+        const exchangeDataService = ExchangeDataService.getInstance();
+        const exchangeData = await exchangeDataService.saveEmail(emailData, user.id);
 
-        // Prepare the runtime context
-        const runtimeContext = await getSchedulingAgentRuntimeContext(user, emailData.timestamp);
-
+        let agent: Agent;
+        let runtimeContext: RuntimeContext;
         // Get the scheduling agent
-        const agent = await mastra.getAgent('schedulingAgent');
+        if (userType === 'firstParty') {
+            agent = await mastra.getAgent('firstPartySchedulingAgent');
+            runtimeContext = await getFirstPartySchedulingAgentRuntimeContext(
+                user,
+                emailData,
+                exchangeData,
+            );
+        } else {
+            agent = await mastra.getAgent('thirdPartySchedulingAgent');
+            runtimeContext = await getThirdPartySchedulingAgentRuntimeContext(
+                user,
+                emailData,
+                exchangeData,
+            );
+        }
 
         // Generate the response
         const result = await agent.generate(emailData.body, {
