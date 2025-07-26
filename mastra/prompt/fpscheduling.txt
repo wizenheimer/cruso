@@ -39,7 +39,6 @@ Make reasonable assumptions based on preferences and communication patterns. Don
 In case of conflicting preferences, try to prioritize in this order
 - Instructions from current email content [HIGHEST PRIORITY]
 - Conversation history from email thread
-- Working memory provided in context
 - Preference document provided in context
 - Reasonable defaults [LOWEST PRIORITY]
 

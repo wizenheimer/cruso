@@ -1,7 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { DEFAULT_LARGE_LANGUAGE_MODEL } from '@/constants/model';
 import { openai } from '@ai-sdk/openai';
-import { calendarTools, preferenceTools } from '../tools';
+import { thirdPartyCalendarTools, thirdPartyPreferenceTools } from '../tools';
 import { Memory } from '@mastra/memory';
 import { storage } from '../storage/pg';
 import { readFileSync, existsSync } from 'fs';
@@ -16,7 +16,12 @@ import {
     getUserFromRuntimeContext,
     getUserPreferenceFromRuntimeContext,
     getTimestampFromRuntimeContext,
+    HOST_CONTEXT_KEY,
+    ATTENDEES_CONTEXT_KEY,
+    getHostFromRuntimeContext,
+    getAttendeesFromRuntimeContext,
 } from '../commons';
+import { EmailData, ExchangeData } from '@/types/exchange';
 
 /**
  * Cache the prompt at module level
@@ -29,7 +34,7 @@ let cachedAgentPrompt: string | null = null;
  */
 async function getAgentPrompt(): Promise<string> {
     if (cachedAgentPrompt === null) {
-        const promptPath = join(process.cwd(), 'mastra', 'prompt', 'scheduling.txt');
+        const promptPath = join(process.cwd(), 'mastra', 'prompt', 'tpscheduling.txt');
 
         // Try to read from local file first
         if (existsSync(promptPath)) {
@@ -44,7 +49,7 @@ async function getAgentPrompt(): Promise<string> {
         if (!cachedAgentPrompt) {
             try {
                 const response = await fetch(
-                    'https://gist.githubusercontent.com/wizenheimer/192ce0af1560aa1c9ffa1075f84f3561/raw/c4a375ec5929ed83b9325655dff6dc2f7b4c6256/cruso-prompt',
+                    'https://gist.githubusercontent.com/wizenheimer/2f6988eb0771ae366bbd4d6aa19a9bbb/raw/57e4338b3e87e7a90ec5f281a2e893f30f090aa7/tpscheduling.txt',
                 );
                 if (response.ok) {
                     cachedAgentPrompt = await response.text();
@@ -54,7 +59,7 @@ async function getAgentPrompt(): Promise<string> {
             } catch (error) {
                 console.error('Failed to fetch prompt from URL:', error);
                 // Provide a minimal fallback prompt
-                cachedAgentPrompt = `You are cruso, a seasoned executive assistant specializing in calendar management and scheduling. Your primary objective is to manage calendars on behalf of the user, handling scheduling, rescheduling, availability checks, conflict resolution, and preference management with minimal back-and-forth to ensure task completion.`;
+                cachedAgentPrompt = `You are cruso, a seasoned executive assistant specializing in scheduling negotiations with external parties. Your primary objective is to facilitate scheduling agreements between your executive and third parties, suggesting slots, performing availability checks, handling counteroffers, constraint management, and relationship preservation with minimal back-and-forth to ensure successful booking.`;
             }
         }
     }
@@ -64,10 +69,12 @@ async function getAgentPrompt(): Promise<string> {
 /**
  * Scheduling agent runtime context
  */
-type SchedulingAgentRuntimeContext = {
+type ThirdPartySchedulingAgentRuntimeContext = {
     user: User;
     preference: string;
     timestamp: Date;
+    host: string;
+    attendees: string[];
 };
 
 /**
@@ -98,14 +105,17 @@ type SchedulingAgentRuntimeContext = {
  * @param timestamp - The timestamp
  * @returns The agent runtime context
  */
-export const getSchedulingAgentRuntimeContext = async (
+export const getThirdPartySchedulingAgentRuntimeContext = async (
     user: User,
-    timestamp: Date,
-): Promise<RuntimeContext<SchedulingAgentRuntimeContext>> => {
-    const context = new RuntimeContext<SchedulingAgentRuntimeContext>();
+    emailData: EmailData,
+    exchangeData: ExchangeData,
+): Promise<RuntimeContext<ThirdPartySchedulingAgentRuntimeContext>> => {
+    const context = new RuntimeContext<ThirdPartySchedulingAgentRuntimeContext>();
 
     context.set(USER_CONTEXT_KEY, user);
-    context.set(TIMESTAMP_CONTEXT_KEY, timestamp);
+    context.set(TIMESTAMP_CONTEXT_KEY, emailData.timestamp);
+    context.set(HOST_CONTEXT_KEY, exchangeData.sender);
+    context.set(ATTENDEES_CONTEXT_KEY, exchangeData.recipients);
 
     let preferenceString: string | undefined;
     const preferences = await preferenceService.getPreferences(user.id);
@@ -125,7 +135,7 @@ export const getSchedulingAgentRuntimeContext = async (
 /**
  * Scheduling agent memory
  */
-const schedulingAgentMemory = new Memory({
+const thirdPartySchedulingAgentMemory = new Memory({
     storage,
     options: {
         // workingMemory: {
@@ -154,11 +164,19 @@ const getAgentInstructions = async ({ runtimeContext }: { runtimeContext: Runtim
 
     const timestamp = getTimestampFromRuntimeContext(runtimeContext);
 
+    const host = getHostFromRuntimeContext(runtimeContext);
+
+    const attendees = getAttendeesFromRuntimeContext(runtimeContext);
+
     return `
     ${agentPrompt.trim()}\n
     # Current Time\n
     Remember, today is ${timestamp}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${timestamp}) in mind. Always make sure to use the correct date and resolve conflicts based on this date. Use this timestamp ONLY for determining time and DO NOT use it for determining timezones.\n
-    # Default Preferences\n
+    # Host\n
+    The host is ${host}.\n
+    # Attendees\n
+    The attendees are ${attendees.join(', ')}.\n
+    # Executive's Preferences\n
     ${preference.trim()}\n
     `;
 };
@@ -166,13 +184,13 @@ const getAgentInstructions = async ({ runtimeContext }: { runtimeContext: Runtim
 /**
  * Scheduling agent instance
  */
-export const schedulingAgent = new Agent({
-    name: 'schedulingAgent',
+export const thirdPartySchedulingAgent = new Agent({
+    name: 'thirdPartySchedulingAgent',
     instructions: getAgentInstructions,
     tools: {
-        ...calendarTools,
-        ...preferenceTools,
+        ...thirdPartyCalendarTools,
+        ...thirdPartyPreferenceTools,
     },
     model: openai(DEFAULT_LARGE_LANGUAGE_MODEL),
-    memory: schedulingAgentMemory,
+    memory: thirdPartySchedulingAgentMemory,
 });
