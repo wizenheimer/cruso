@@ -6,20 +6,16 @@ import { Context } from 'hono';
 import { randomUUID } from 'crypto';
 import { cleanTextContent, generatePrefixForBody } from './parsing/text';
 import {
-    ONBOARDING_EMAIL_SUBJECT,
     ONBOARDING_EMAIL_TEMPLATE,
     USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
     NON_USER_REPLYING_TO_OLDER_EMAIL_TEMPLATE,
+    ONBOARDING_EMAIL_REPLY_TEMPLATE,
+    getRandomOnboardingSubject,
 } from '@/constants/email';
 import { ExchangeData } from '@/types/exchange';
 import { User } from '@/types/users';
-import { Mastra } from '@mastra/core/mastra';
-import { mastra } from '@/mastra';
-import { getFirstPartySchedulingAgentRuntimeContext } from '@/mastra/agent/fpscheduling';
-import { Agent } from '@mastra/core/agent';
-import { getThirdPartySchedulingAgentRuntimeContext } from '@/mastra/agent/tpscheduling';
+import { handleFirstPartyFlow, handleThirdPartyFlow, mastra } from '@/mastra';
 import { getUserById } from '@/db/queries/users';
-import { formatEmailText } from '@/mastra/agent/formatter';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
 
@@ -28,13 +24,11 @@ export class ExchangeProcessingService {
     private exchangeDataService: ExchangeDataService;
     private emailParsingService: EmailParsingService;
     private emailService: EmailService;
-    private mastra: Mastra;
 
     private constructor() {
         this.exchangeDataService = ExchangeDataService.getInstance();
         this.emailParsingService = EmailParsingService.getInstance();
         this.emailService = EmailService.getInstance();
-        this.mastra = mastra;
     }
 
     public static getInstance(): ExchangeProcessingService {
@@ -139,15 +133,7 @@ export class ExchangeProcessingService {
      * @description This method is used to onboard a user
      */
     async handleNewUser(inboundEmailData: EmailData) {
-        const outboundEmailData = await this.emailService.sendEmail({
-            recipients: [inboundEmailData.sender],
-            cc: [ONBOARDING_EMAIL_RECIPIENT],
-            subject: ONBOARDING_EMAIL_SUBJECT,
-            body: ONBOARDING_EMAIL_TEMPLATE,
-            newThread: true, // Force new thread for onboarding
-        });
-
-        return outboundEmailData;
+        return this.handleOnboardingFlowForNonUser(inboundEmailData);
     }
 
     /**
@@ -186,6 +172,29 @@ export class ExchangeProcessingService {
     }
 
     /**
+     * Handle onboarding flow for non-user
+     * @param emailData - The email data of the email
+     * @returns The email data of the sent email
+     * @description This method handles onboarding for non-users
+     */
+    async handleOnboardingFlowForNonUser(emailData: EmailData) {
+        // First send a reply to the user
+        await this.emailService.sendReply(emailData, {
+            type: 'sender-only',
+            body: ONBOARDING_EMAIL_REPLY_TEMPLATE,
+        });
+
+        // Then send the onboarding email
+        await this.emailService.sendEmail({
+            recipients: [emailData.sender],
+            cc: [ONBOARDING_EMAIL_RECIPIENT],
+            subject: getRandomOnboardingSubject(), // Random subject to prevent threading
+            body: ONBOARDING_EMAIL_TEMPLATE,
+            newThread: true, // Force new thread for onboarding
+        });
+    }
+
+    /**
      * Handle engagement for non-user
      * @param emailData - The email data of the email
      * @returns The email data of the sent email
@@ -194,8 +203,7 @@ export class ExchangeProcessingService {
     async handleEngagementForNonUser(emailData: EmailData) {
         // Check if the previous message exists
         if (!emailData.previousMessageId) {
-            console.error('No previous message ID found');
-            return this.handleInvalidEngagementForNonUser(emailData);
+            return this.handleOnboardingFlowForNonUser(emailData);
         }
 
         // Look up the previous message to find the exchange owner
@@ -203,30 +211,22 @@ export class ExchangeProcessingService {
             emailData.previousMessageId,
         );
         if (!previousMessage) {
-            console.error(
-                `No previous message found for message ID: ${emailData.previousMessageId}`,
-            );
-            return this.handleInvalidEngagementForNonUser(emailData);
+            return this.handleOnboardingFlowForNonUser(emailData);
         }
 
         // Get the exchange owner from the previous message
         if (!previousMessage.exchangeOwnerId) {
-            console.error(`No exchange owner found for exchange ID: ${previousMessage.exchangeId}`);
-            return this.handleInvalidEngagementForNonUser(emailData);
+            return this.handleOnboardingFlowForNonUser(emailData);
         }
 
-        // Merge the previous message receipts with the current message
-        const previousMessageReceipts = previousMessage.recipients;
-        const currentMessageReceipts = emailData.recipients;
-        let mergedReceipts = [...new Set([...previousMessageReceipts, ...currentMessageReceipts])];
+        // Get the user from the previous message
+        const user = await getUserById(previousMessage.exchangeOwnerId);
+        if (!user) {
+            return this.handleOnboardingFlowForNonUser(emailData);
+        }
 
-        // Remove the sender and any @crusolabs.com emails from the merged receipts
-        mergedReceipts = mergedReceipts.filter(
-            (recipient) => recipient !== emailData.sender && !recipient.includes('@crusolabs.com'),
-        );
-
-        // Update the email data with the merged receipts
-        emailData.recipients = mergedReceipts;
+        // Get the receipts for the email
+        emailData.recipients = this.getReceiptsForEmail(previousMessage, emailData);
 
         // Save the current email to the database
         const exchangeData = await this.exchangeDataService.saveEmail(
@@ -234,42 +234,16 @@ export class ExchangeProcessingService {
             previousMessage.exchangeOwnerId,
         );
 
-        // Get the user from the previous message
-        const user = await getUserById(previousMessage.exchangeOwnerId);
-        if (!user) {
-            console.error(`User not found for ID: ${previousMessage.exchangeOwnerId}`);
-            return this.handleInvalidEngagementForNonUser(emailData);
-        }
-
-        // Get the agent
-        const agent = await this.getAgent('thirdParty');
-
-        // Prepare the runtime context
-        const runtimeContext = await this.getRuntimeContext(
-            'thirdParty',
-            user,
-            emailData,
-            exchangeData,
-        );
-
-        // Generate the response
-        const result = await agent.generate(emailData.body, {
-            maxSteps: 10, // Allow up to 10 tool usage steps
-            resourceId: previousMessage.exchangeOwnerId,
-            threadId: emailData.exchangeId,
-            runtimeContext,
-        });
-
         // Get the signature and add it to the response
         const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
 
-        const formattedBody = await formatEmailText(result.text + `\n${signature}`);
+        const result = await handleThirdPartyFlow(emailData, signature, exchangeData);
 
         // Send the reply
         const sentEmail = await this.emailService.sendReply(emailData, {
             type: 'all-including-sender',
-            body: formattedBody.content,
-            bodyHTML: formattedBody.success ? formattedBody.content : undefined,
+            body: result.content,
+            bodyHTML: result.success ? result.content : undefined,
         });
 
         // Save the sent email to the database
@@ -288,68 +262,27 @@ export class ExchangeProcessingService {
     async handleEngagementForExistingUser(emailData: EmailData, user: User) {
         // Check if the previous message exists
         if (emailData.previousMessageId) {
-            const previousMessage = await this.exchangeDataService.getByMessageId(
+            const previousExchangeData = await this.exchangeDataService.getByMessageId(
                 emailData.previousMessageId,
             );
 
-            if (previousMessage) {
-                console.log('found a previous message, merging receipts', previousMessage);
-
-                // Merge the previous message receipts with the current message
-                const previousMessageReceipts = previousMessage.recipients;
-                const currentMessageReceipts = emailData.recipients;
-                let mergedReceipts = [
-                    ...new Set([...previousMessageReceipts, ...currentMessageReceipts]),
-                ];
-
-                // Remove the sender and any @crusolabs.com emails from the merged receipts
-                mergedReceipts = mergedReceipts.filter(
-                    (recipient) =>
-                        recipient !== emailData.sender && !recipient.includes('@crusolabs.com'),
-                );
-
-                console.log('merged receipts', mergedReceipts);
-                // Update the email data with the merged receipts
-                emailData.recipients = mergedReceipts;
+            if (previousExchangeData) {
+                emailData.recipients = this.getReceiptsForEmail(previousExchangeData, emailData);
             }
         }
 
         // Save the email to the database
         const exchangeData = await this.exchangeDataService.saveEmail(emailData, user.id);
 
-        // Get the agent
-        const agent = await this.getAgent('firstParty');
-
-        // Prepare the runtime context
-        const runtimeContext = await this.getRuntimeContext(
-            'firstParty',
-            user,
-            emailData,
-            exchangeData,
-        );
-
-        // Generate the response
-        const result = await agent.generate(emailData.body, {
-            maxSteps: 10, // Allow up to 10 tool usage steps
-            resourceId: user.id,
-            threadId: emailData.exchangeId,
-            runtimeContext,
-        });
-
-        // Get the signature and add it to the response
         const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
-        const body = result.text.trim() + `\n${signature}`;
 
-        // Prepare a formatted html response for the email
-        const formattedBody = await formatEmailText(result.text + `\n${signature}`);
-
-        console.log('formattedBody', formattedBody);
+        const result = await handleFirstPartyFlow(user, signature, emailData, exchangeData);
 
         // Send the reply
         const sentEmail = await this.emailService.sendReply(emailData, {
             type: 'all-including-sender',
-            body: body,
-            bodyHTML: formattedBody.success ? formattedBody.content : undefined,
+            body: result.content,
+            bodyHTML: result.success ? result.content : undefined,
         });
 
         // Save the sent email to the database
@@ -358,26 +291,23 @@ export class ExchangeProcessingService {
         return sentEmail;
     }
 
-    private async getAgent(userType: 'firstParty' | 'thirdParty') {
-        let agent: Agent;
-        if (userType === 'firstParty') {
-            agent = await this.mastra.getAgent('firstPartySchedulingAgent');
-        } else {
-            agent = await this.mastra.getAgent('thirdPartySchedulingAgent');
-        }
-        return agent;
-    }
+    /**
+     * Get the receipts for an email
+     * @param previousExchangeData - The previous exchange data
+     * @param currentEmailData - The current email data
+     * @returns The merged receipts
+     */
+    private getReceiptsForEmail(previousExchangeData: ExchangeData, currentEmailData: EmailData) {
+        const previousMessageReceipts = previousExchangeData.recipients;
+        const currentMessageReceipts = currentEmailData.recipients;
+        let mergedReceipts = [...new Set([...previousMessageReceipts, ...currentMessageReceipts])];
 
-    private async getRuntimeContext(
-        userType: 'firstParty' | 'thirdParty',
-        user: User,
-        emailData: EmailData,
-        exchangeData: ExchangeData,
-    ) {
-        if (userType === 'firstParty') {
-            return await getFirstPartySchedulingAgentRuntimeContext(user, emailData, exchangeData);
-        } else {
-            return await getThirdPartySchedulingAgentRuntimeContext(user, emailData, exchangeData);
-        }
+        // Remove the sender and any @crusolabs.com emails from the merged receipts
+        mergedReceipts = mergedReceipts.filter(
+            (recipient) =>
+                recipient !== currentEmailData.sender && !recipient.includes('@crusolabs.com'),
+        );
+
+        return mergedReceipts;
     }
 }

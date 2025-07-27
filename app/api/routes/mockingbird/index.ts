@@ -1,11 +1,7 @@
 import { Context, Hono } from 'hono';
 import { requireAuth } from '../../middleware/auth';
 import { EmailDataSchema } from '@/schema/exchange';
-import { mastra } from '@/mastra';
-import { getFirstPartySchedulingAgentRuntimeContext } from '@/mastra/agent/fpscheduling';
-import { Agent } from '@mastra/core/agent';
-import { RuntimeContext } from '@mastra/core/runtime-context';
-import { getThirdPartySchedulingAgentRuntimeContext } from '@/mastra/agent/tpscheduling';
+import { handleFirstPartyFlow, handleThirdPartyFlow } from '@/mastra';
 import { ExchangeDataService } from '@/services/exchange/data';
 
 const mockingbird = new Hono();
@@ -72,32 +68,21 @@ mockingbird.post('/', async (c) => {
         const exchangeDataService = ExchangeDataService.getInstance();
         const exchangeData = await exchangeDataService.saveEmail(emailData, user.id);
 
-        let agent: Agent;
-        let runtimeContext: RuntimeContext;
+        let result: {
+            content: string;
+            success: boolean;
+        };
+
         // Get the scheduling agent
         if (userType === 'firstParty') {
-            agent = await mastra.getAgent('firstPartySchedulingAgent');
-            runtimeContext = await getFirstPartySchedulingAgentRuntimeContext(
-                user,
-                emailData,
-                exchangeData,
-            );
-        } else {
-            agent = await mastra.getAgent('thirdPartySchedulingAgent');
-            runtimeContext = await getThirdPartySchedulingAgentRuntimeContext(
-                user,
-                emailData,
-                exchangeData,
-            );
-        }
+            const signature = await exchangeDataService.getSignature(emailData.exchangeId);
 
-        // Generate the response
-        const result = await agent.generate(emailData.body, {
-            maxSteps: 10,
-            resourceId: user.id,
-            threadId: emailData.exchangeId,
-            runtimeContext,
-        });
+            result = await handleFirstPartyFlow(user, signature, emailData, exchangeData);
+        } else {
+            const signature = await exchangeDataService.getSignature(emailData.exchangeId);
+
+            result = await handleThirdPartyFlow(emailData, signature, exchangeData);
+        }
 
         return c.json({
             result,
