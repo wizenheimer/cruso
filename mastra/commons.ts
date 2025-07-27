@@ -125,6 +125,7 @@ export async function getBasePromptForAgent(
     remotePromptPath?: string,
 ): Promise<string> {
     if (localPromptPath) {
+        console.log('getting base prompt for agent from local file', localPromptPath);
         const promptPath = join(process.cwd(), 'mastra', 'prompt', localPromptPath);
 
         // Try to read from local file first
@@ -139,6 +140,7 @@ export async function getBasePromptForAgent(
 
     // Fallback to URL if local file doesn't exist or failed to read
     if (remotePromptPath) {
+        console.log('getting base prompt for agent from remote url', remotePromptPath);
         try {
             const response = await fetch(remotePromptPath);
             if (response.ok) {
@@ -151,6 +153,7 @@ export async function getBasePromptForAgent(
         }
     }
 
+    console.log('getting base prompt for agent from default prompt', defaultPrompt);
     return defaultPrompt;
 }
 

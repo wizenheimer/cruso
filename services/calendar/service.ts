@@ -1,5 +1,4 @@
 import { auth } from '@/lib/auth';
-import { BaseCalendarService } from './base';
 import { EventsService } from './events';
 import { AvailabilityService } from './availability';
 import { GoogleCalendarService } from './calendar';
@@ -13,7 +12,6 @@ import {
     FreeBusyOmitCalendarsOptions,
     SearchEventsFromPrimaryCalendarOptions,
     SlotSuggestionOptionsExcludeCalendars,
-    RequestReschedulingOptions,
     RequestReschedulingInPrimaryCalendarOptions,
     SchedulingInPrimaryCalendarOptions,
 } from '@/types/tools/event';
@@ -68,6 +66,7 @@ export class CalendarService {
      * Refresh all calendar connections for the user
      */
     async refreshCalendars(): Promise<CalendarRefreshResult> {
+        console.log('refreshCalendars called');
         return this.googleCalendarService.refreshCalendars();
     }
 
@@ -80,6 +79,7 @@ export class CalendarService {
      */
     async listEvents(options: ListEventsFromPrimaryCalendarOptions): Promise<string> {
         try {
+            console.log('listEvents called with options:', JSON.stringify(options, null, 2));
             return await this.eventsService.listEventsFromPrimaryCalendar(options);
         } catch (error) {
             console.error('Error listing events:', error);
@@ -92,6 +92,7 @@ export class CalendarService {
      */
     async createEvent(options: CreateEventInPrimaryCalendarOptions): Promise<string> {
         try {
+            console.log('createEvent called with options:', JSON.stringify(options, null, 2));
             return await this.eventsService.createEventInPrimaryCalendar(options);
         } catch (error) {
             console.error('Error creating event:', error);
@@ -104,6 +105,7 @@ export class CalendarService {
      */
     async updateEvent(options: UpdateEventInPrimaryCalendarOptions): Promise<string> {
         try {
+            console.log('updateEvent called with options:', JSON.stringify(options, null, 2));
             return await this.eventsService.updateEventInPrimaryCalendar(options);
         } catch (error) {
             console.error('Error updating event:', error);
@@ -116,6 +118,7 @@ export class CalendarService {
      */
     async deleteEvent(options: DeleteEventInPrimaryCalendarOptions): Promise<string> {
         try {
+            console.log('deleteEvent called with options:', JSON.stringify(options, null, 2));
             await this.eventsService.deleteEventFromPrimaryCalendar(options);
             return 'Event deleted successfully';
         } catch (error) {
@@ -133,6 +136,7 @@ export class CalendarService {
      */
     async checkAvailability(options: FreeBusyOmitCalendarsOptions): Promise<string> {
         try {
+            console.log('checkAvailability called with options:', JSON.stringify(options, null, 2));
             return await this.availabilityService.getAvailability(options);
         } catch (error) {
             console.error('Error checking availability:', error);
@@ -149,6 +153,7 @@ export class CalendarService {
      */
     async searchEvents(options: SearchEventsFromPrimaryCalendarOptions): Promise<string> {
         try {
+            console.log('searchEvents called with options:', JSON.stringify(options, null, 2));
             return await this.searchService.search(options);
         } catch (error) {
             console.error('Error searching events:', error);
@@ -165,7 +170,7 @@ export class CalendarService {
      */
     async suggestSlots(options: SlotSuggestionOptionsExcludeCalendars): Promise<string> {
         try {
-            console.log('suggesting slots with options', options);
+            console.log('suggestSlots called with options:', JSON.stringify(options, null, 2));
             return await this.slotSuggestionService.suggestSlots(options);
         } catch (error) {
             console.error('Error suggesting slots:', error);
@@ -181,6 +186,10 @@ export class CalendarService {
         options: RequestReschedulingInPrimaryCalendarOptions,
     ): Promise<string> {
         try {
+            console.log(
+                'requestReschedulingForEvent called with options:',
+                JSON.stringify(options, null, 2),
+            );
             return await this.requestSchedulingService.requestReschedulingForEvent(options);
         } catch (error) {
             console.error('Error requesting rescheduling for event:', error);
@@ -194,6 +203,10 @@ export class CalendarService {
 
     async requestSchedulingForEvent(options: SchedulingInPrimaryCalendarOptions): Promise<string> {
         try {
+            console.log(
+                'requestSchedulingForEvent called with options:',
+                JSON.stringify(options, null, 2),
+            );
             return await this.requestSchedulingService.requestSchedulingForEvent(options);
         } catch (error) {
             console.error('Error requesting scheduling for event:', error);
