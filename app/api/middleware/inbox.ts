@@ -11,7 +11,7 @@ const disallowedWebhookStatusCode = 426;
 /**
  * The flag to return when the webhook is disallowed
  */
-const rejectDisallowedDomainFlag = process.env.NODE_ENV === 'production';
+const rejectDisallowedDomainFlag = false; // process.env.NODE_ENV === 'production';
 
 /**
  * Parse email data from the webhook - this is the first middleware to run
