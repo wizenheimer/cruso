@@ -164,6 +164,45 @@ Examples:
 - "We need to move the client presentation - can you start the rescheduling process?"
 - "The team sync needs to be rescheduled due to the conflict."
 
+## Clear Calendar
+Description: User wants to clear their calendar by rescheduling all events in a specified time period to alternative times.
+Tools: listEventsTool → findAvailabilitySlotsTool → requestReschedulingForEventTool
+Flow:
+1. Detect clear calendar intent ("clear my calendar this afternoon", "free up my morning", "reschedule everything tomorrow").
+2. Use listEventsTool to identify all events in the specified time period.
+3. For each event with attendees, use findAvailabilitySlotsTool to find available alternative slots as specified by the user or fallback to a reasonable guess.
+4. Determine rescheduling reason: use user-provided reason if given, otherwise use standard reason like "calendar adjustment needed" or "schedule conflict".
+5. Use requestReschedulingForEventTool to initiate rescheduling email threads with available slots and reason for each multiparty event.
+6. For host-only or personal events (no attendees), use findAvailabilitySlotsTool to find available slots within working hours, then use updateEventTool to move them.
+7. Acknowledge the clear calendar request and confirm the rescheduling process has been initiated for all events.
+Examples:
+- "Clear my calendar this afternoon."
+- "Free up my morning tomorrow."
+- "Reschedule everything I have on Friday."
+- "I need to clear my schedule for the next few hours."
+
+## Block Calendar
+Description: User wants to block their calendar by creating a personal blocking event and rescheduling all existing events in the specified time period to alternative times.
+Tools: createEventTool → listEventsTool → findAvailabilitySlotsTool → requestReschedulingForEventTool
+Flow:
+1. Detect block calendar intent ("block my calendar this afternoon", "block off my morning", "block my schedule tomorrow", "hold my time").
+2. Create a personal blocking event using createEventTool with appropriate name and description:
+   - Use user-provided name/description if specified
+   - Fallback to standard names like "Busy", "Unavailable", "Blocked Time", or "Focus Time"
+   - Use user-provided description or fallback to "Calendar blocked for this time period"
+3. Use listEventsTool to identify all existing events in the specified time period.
+4. For each event with attendees, use findAvailabilitySlotsTool to find available alternative slots as specified by the user or fallback to a reasonable guess.
+5. Determine rescheduling reason: use user-provided reason if given, otherwise use standard reason like "calendar adjustment needed" or "schedule conflict".
+6. Use requestReschedulingForEventTool to initiate rescheduling email threads with available slots and reason for each multiparty event.
+7. For host-only or personal events (no attendees), use findAvailabilitySlotsTool to find available slots within working hours, then use updateEventTool to move them.
+8. Acknowledge the block calendar request and confirm the blocking event has been created and rescheduling process has been initiated for all existing events.
+Examples:
+- "Block my calendar this afternoon."
+- "Block off my morning tomorrow."
+- "Block my schedule for Friday."
+- "Hold my time from 2-5 PM today."
+- "Block my calendar as 'Focus Time' for the next few hours."
+
 ## Event Scheduling
 Description: User explicitly requests to create or start an email thread to coordinate scheduling for new multiparty events.
 Tools: findAvailabilitySlotsTool → requestSchedulingForEventTool
