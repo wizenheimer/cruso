@@ -5,7 +5,6 @@ export interface DatabaseWorkingHours {
     days: number[] | null;
     startTime: string;
     endTime: string;
-    timezone: string;
     createdAt: Date;
     updatedAt: Date;
 }

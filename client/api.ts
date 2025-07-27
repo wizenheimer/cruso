@@ -332,12 +332,10 @@ class ApiClient {
      * Check if user is available at a specific date and time
      * @param date - The date to check (YYYY-MM-DD format)
      * @param time - The time to check (HH:MM format)
-     * @param timezone - Optional timezone for the check
      * @returns Promise with availability status and available slots
      */
-    async checkUserAvailability(date: string, time: string, timezone?: string) {
+    async checkUserAvailability(date: string, time: string) {
         const params = new URLSearchParams({ date, time });
-        if (timezone) params.append('timezone', timezone);
 
         return this.request(`/working-hours/check?${params.toString()}`);
     }

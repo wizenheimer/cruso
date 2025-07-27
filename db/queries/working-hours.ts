@@ -12,7 +12,6 @@ export async function getUserWorkingHours(userId: string) {
             days: workingHours.days,
             startTime: workingHours.startTime,
             endTime: workingHours.endTime,
-            timezone: workingHours.timezone,
             createdAt: workingHours.createdAt,
             updatedAt: workingHours.updatedAt,
         })
@@ -22,7 +21,7 @@ export async function getUserWorkingHours(userId: string) {
 }
 
 /**
- * Get a specific working hours slot by ID
+ * Get working hours by ID
  */
 export async function getWorkingHoursById(workingHoursId: number, userId: string) {
     const result = await db
@@ -42,7 +41,6 @@ export async function createWorkingHours(data: {
     days: number[];
     startTime: string;
     endTime: string;
-    timezone?: string;
 }) {
     const [newWorkingHours] = await db
         .insert(workingHours)
@@ -51,7 +49,6 @@ export async function createWorkingHours(data: {
             days: data.days,
             startTime: data.startTime,
             endTime: data.endTime,
-            timezone: data.timezone || 'America/New_York',
             createdAt: new Date(),
             updatedAt: new Date(),
         })
@@ -61,7 +58,7 @@ export async function createWorkingHours(data: {
 }
 
 /**
- * Update an existing working hours slot
+ * Update working hours by ID
  */
 export async function updateWorkingHours(
     workingHoursId: number,
@@ -70,7 +67,6 @@ export async function updateWorkingHours(
         days: number[];
         startTime: string;
         endTime: string;
-        timezone: string;
     }>,
 ) {
     const [updatedWorkingHours] = await db

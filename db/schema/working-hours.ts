@@ -1,13 +1,4 @@
-import {
-    pgTable,
-    serial,
-    integer,
-    varchar,
-    time,
-    timestamp,
-    index,
-    text,
-} from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, time, timestamp, index, text } from 'drizzle-orm/pg-core';
 import { user } from '@/db/schema/auth';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
@@ -25,7 +16,6 @@ export const workingHours = pgTable(
         days: integer('days').array(), // [1,2,3,4,5] for Mon-Fri
         startTime: time('start_time').notNull(),
         endTime: time('end_time').notNull(),
-        timezone: varchar('timezone', { length: 100 }).notNull(),
         createdAt: timestamp('created_at').defaultNow(),
         updatedAt: timestamp('updated_at').defaultNow(),
     },

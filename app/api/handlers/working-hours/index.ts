@@ -26,7 +26,6 @@ export async function handleGetWorkingHours(c: Context) {
                 days: workingHours.days,
                 startTime: workingHours.startTime,
                 endTime: workingHours.endTime,
-                timezone: workingHours.timezone,
                 createdAt: workingHours.createdAt,
                 updatedAt: workingHours.updatedAt,
             })
@@ -78,7 +77,6 @@ export async function handleCreateWorkingHours(c: Context) {
                 days: body.days,
                 startTime: body.startTime,
                 endTime: body.endTime,
-                timezone: body.timezone || 'America/New_York',
                 createdAt: new Date(),
                 updatedAt: new Date(),
             })
@@ -138,7 +136,6 @@ export async function handleUpdateWorkingHours(c: Context) {
                 days: body.days,
                 startTime: body.startTime,
                 endTime: body.endTime,
-                timezone: body.timezone,
                 updatedAt: new Date(),
             })
             .where(

@@ -24,7 +24,6 @@ export class WorkingHoursService {
                     days: [1, 2, 3, 4, 5], // Monday to Friday (0=Sunday, 1=Monday, 2=Tuesday, etc.)
                     startTime: '09:00:00', // 9:00 AM
                     endTime: '17:00:00', // 5:00 PM
-                    timezone: 'America/New_York', // Default timezone
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 })
@@ -55,7 +54,6 @@ export class WorkingHoursService {
                     days: workingHours.days,
                     startTime: workingHours.startTime,
                     endTime: workingHours.endTime,
-                    timezone: workingHours.timezone,
                     createdAt: workingHours.createdAt,
                     updatedAt: workingHours.updatedAt,
                 })
@@ -87,7 +85,6 @@ export class WorkingHoursService {
             days: number[];
             startTime: string;
             endTime: string;
-            timezone?: string;
         },
     ): Promise<CreateWorkingHoursResult> {
         try {
@@ -98,7 +95,6 @@ export class WorkingHoursService {
                     days: workingHoursData.days,
                     startTime: workingHoursData.startTime,
                     endTime: workingHoursData.endTime,
-                    timezone: workingHoursData.timezone || 'America/New_York',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 })
@@ -130,7 +126,6 @@ export class WorkingHoursService {
             days: number[];
             startTime: string;
             endTime: string;
-            timezone: string;
         }>,
     ): Promise<CreateWorkingHoursResult> {
         try {

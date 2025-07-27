@@ -5,7 +5,6 @@ export interface WorkingHoursSlot {
     days: number[]; // [1,2,3,4,5] for Mon-Fri (1=Monday, 7=Sunday)
     startTime: string; // "09:00" or "09:00:00"
     endTime: string; // "17:00" or "17:00:00"
-    // timezone: string;
 }
 
 export interface PreferencesData {
@@ -57,7 +56,7 @@ export function generatePreferencesMarkdown(data: PreferencesData): string {
             sections.push(`- My working hours are typically ${hours}.\n`);
         });
 
-        // Use timezone from first working hours slot, or fallback to default
+        // Use timezone from preferences table, or fallback to default
         const timezone = data.defaultTimezone;
         if (timezone) {
             sections.push(`- My timezone is usually ${timezone}.\n`);

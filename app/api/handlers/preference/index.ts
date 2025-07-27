@@ -150,7 +150,6 @@ export async function handleGeneratePreferencesDocument(requestContext: Context)
                 days: workingHours.days,
                 startTime: workingHours.startTime,
                 endTime: workingHours.endTime,
-                timezone: workingHours.timezone,
             })
             .from(workingHours)
             .where(eq(workingHours.userId, authenticatedUser.id))
@@ -164,7 +163,6 @@ export async function handleGeneratePreferencesDocument(requestContext: Context)
                 days: avail.days || [],
                 startTime: avail.startTime,
                 endTime: avail.endTime,
-                timezone: avail.timezone,
             })),
             defaultTimezone: userPreferences.timezone || undefined,
             minNoticeMinutes: userPreferences.minNoticeMinutes || undefined,

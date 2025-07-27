@@ -790,7 +790,6 @@ Please provide the final updated preferences object that combines both the exist
                     days: workingHours.days,
                     startTime: workingHours.startTime,
                     endTime: workingHours.endTime,
-                    timezone: workingHours.timezone,
                 })
                 .from(workingHours)
                 .where(eq(workingHours.userId, userId))
@@ -804,7 +803,6 @@ Please provide the final updated preferences object that combines both the exist
                     days: avail.days || [],
                     startTime: avail.startTime,
                     endTime: avail.endTime,
-                    timezone: avail.timezone,
                 })),
                 defaultTimezone: timezone || undefined,
                 minNoticeMinutes: PREFERENCES_DEFAULTS.MIN_NOTICE_MINUTES,
