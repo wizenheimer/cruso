@@ -11,8 +11,9 @@ import preferences from '../routes/preference';
 import userEmails from '../routes/user-email';
 import workingHours from '../routes/working-hours';
 import mockingbird from '../routes/mockingbird';
+
 /**
- * The runtime
+ * Force Node.js runtime to support googleapis and other Node.js modules
  */
 export const runtime = 'nodejs';
 
