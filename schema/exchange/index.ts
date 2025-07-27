@@ -10,7 +10,7 @@ export const RawEmailDataSchema = z.object({
         .min(1, 'At least one recipient is required'), // Email addresses of the recipients - includes CC and BCC
     rawSubject: z.string(), // Subject of the email
     rawBody: z.string(), // Body of the email
-    timestamp: z.date(), // Timestamp of the email
+    timestamp: z.number().int().positive('Timestamp must be a positive integer'), // Unix timestamp in milliseconds
     type: z.enum(['inbound', 'outbound']), // Type of the email - inbound or outbound
 });
 
@@ -25,7 +25,7 @@ export const EmailDataSchema = z.object({
         .min(1, 'At least one recipient is required'), // Email addresses of the recipients - includes CC and BCC
     subject: z.string(), // Subject of the email - sanitized
     body: z.string(), // Body of the email - sanitized
-    timestamp: z.date(), // Timestamp of the email
+    timestamp: z.number().int().positive('Timestamp must be a positive integer'), // Unix timestamp in milliseconds
     type: z.enum(['inbound', 'outbound']), // Type of the email - inbound or outbound
 });
 
@@ -40,7 +40,7 @@ export const ExchangeDataSchema = z.object({
     recipients: z
         .array(z.string().email('Invalid recipient email address'))
         .min(1, 'At least one recipient is required'), // Email addresses of the recipients - includes CC and BCC
-    timestamp: z.date(), // Timestamp of the email
+    timestamp: z.number().int().positive('Timestamp must be a positive integer'), // Unix timestamp in milliseconds
     type: z.enum(['inbound', 'outbound']), // Type of the email - inbound or outbound
     // Note: subject and body are omitted from database storage
     // They are handled by agent memory instead
@@ -64,10 +64,16 @@ export const CreateExchangeDataSchema = z.object({
     sender: z.string().max(255), // Matches varchar(255) in DB
     recipients: z.array(z.string().email()).min(1), // Custom validation for email array
     timestamp: z
-        .string()
-        .datetime()
+        .number()
+        .int()
+        .positive('Timestamp must be a positive integer')
+        .or(z.string().datetime())
         .or(z.date())
-        .transform((val) => (val instanceof Date ? val : new Date(val))),
+        .transform((val) => {
+            if (typeof val === 'number') return val;
+            if (val instanceof Date) return val.getTime();
+            return new Date(val).getTime();
+        }),
     type: z.enum(['inbound', 'outbound']),
 });
 
@@ -79,10 +85,16 @@ export const UpdateExchangeDataSchema = z.object({
     sender: z.string().max(255).optional(),
     recipients: z.array(z.string().email()).min(1).optional(),
     timestamp: z
-        .string()
-        .datetime()
+        .number()
+        .int()
+        .positive('Timestamp must be a positive integer')
+        .or(z.string().datetime())
         .or(z.date())
-        .transform((val) => (val instanceof Date ? val : new Date(val)))
+        .transform((val) => {
+            if (typeof val === 'number') return val;
+            if (val instanceof Date) return val.getTime();
+            return new Date(val).getTime();
+        })
         .optional(),
     type: z.enum(['inbound', 'outbound']).optional(),
 });

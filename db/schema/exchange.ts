@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, bigint, jsonb, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { relations } from 'drizzle-orm/relations';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
@@ -26,7 +26,7 @@ export const exchangeData = pgTable(
         previousMessageId: varchar('previous_message_id', { length: 500 }),
         sender: varchar('sender', { length: 255 }).notNull(),
         recipients: jsonb('recipients').$type<string[]>().notNull(),
-        timestamp: timestamp('timestamp').notNull(),
+        timestamp: bigint('timestamp', { mode: 'number' }).notNull(), // Unix timestamp in milliseconds
         type: varchar('type', { length: 10 }).notNull().$type<'inbound' | 'outbound'>(),
     },
     (table) => [

@@ -288,7 +288,7 @@ export async function parseEmailDataFromMailgunWebhookFormData(
         // Type of the email
         type: 'inbound',
         // Timestamp
-        timestamp: new Date(timestamp),
+        timestamp: timestamp, // Unix timestamp in milliseconds
     };
 
     return emailData;

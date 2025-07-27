@@ -252,8 +252,7 @@ export class ExchangeDataService {
         }
 
         // Check if the exchange is older than 30 days
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days ago in milliseconds
 
         const firstMessage = messagesInExchange[0];
         if (firstMessage.timestamp < thirtyDaysAgo) {
@@ -501,11 +500,13 @@ export class ExchangeDataService {
         }
 
         if (filters.startDate) {
-            conditions.push(sql`${exchangeData.timestamp} >= ${filters.startDate}`);
+            const startTimestamp = new Date(filters.startDate).getTime();
+            conditions.push(sql`${exchangeData.timestamp} >= ${startTimestamp}`);
         }
 
         if (filters.endDate) {
-            conditions.push(sql`${exchangeData.timestamp} <= ${filters.endDate}`);
+            const endTimestamp = new Date(filters.endDate).getTime();
+            conditions.push(sql`${exchangeData.timestamp} <= ${endTimestamp}`);
         }
 
         const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

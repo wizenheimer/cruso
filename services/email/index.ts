@@ -237,7 +237,7 @@ export class EmailService {
                 recipients: [...to, ...cc, ...bcc],
                 subject,
                 body,
-                timestamp: new Date(),
+                timestamp: Date.now(), // Unix timestamp in milliseconds
                 type: 'outbound',
             };
         } catch (error) {
@@ -282,7 +282,7 @@ export class EmailService {
                         recipients: [...to, ...cc, ...bcc],
                         subject,
                         body,
-                        timestamp: new Date(),
+                        timestamp: Date.now(), // Unix timestamp in milliseconds
                         type: 'outbound',
                     };
                 } catch (textError) {

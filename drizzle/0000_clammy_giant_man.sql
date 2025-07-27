@@ -80,7 +80,7 @@ CREATE TABLE "exchange_data" (
 	"previous_message_id" varchar(500),
 	"sender" varchar(255) NOT NULL,
 	"recipients" jsonb NOT NULL,
-	"timestamp" timestamp NOT NULL,
+	"timestamp" bigint NOT NULL,
 	"type" varchar(10) NOT NULL,
 	CONSTRAINT "exchange_data_id_unique" UNIQUE("id"),
 	CONSTRAINT "exchange_data_message_id_unique" UNIQUE("message_id")
@@ -124,7 +124,6 @@ CREATE TABLE "working_hours" (
 	"days" integer[],
 	"start_time" time NOT NULL,
 	"end_time" time NOT NULL,
-	"timezone" varchar(100) NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now()
 );

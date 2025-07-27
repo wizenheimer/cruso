@@ -79,13 +79,14 @@ export function sanitizeContent(content: string): string {
  * Generate a prefix for the body of an email.
  * @description This function is used to generate a prefix for the body of an email.
  * @param sender - The sender of the email.
- * @param timestamp - The timestamp of the email.
+ * @param timestamp - The timestamp of the email (Unix timestamp in milliseconds).
  * @returns The prefix for the subject of the email.
  */
 export function generatePrefixForBody(
     sender: { name: string; address: string },
-    timestamp: Date,
+    timestamp: number,
 ): string {
+    const date = new Date(timestamp);
     const formattedDate = new Intl.DateTimeFormat('en-US', {
         weekday: 'short',
         month: 'short',
@@ -94,7 +95,7 @@ export function generatePrefixForBody(
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-    }).format(timestamp);
+    }).format(date);
 
     return `${sender.name} <${sender.address}> wrote on ${formattedDate}:`.toLowerCase().trim();
 }
