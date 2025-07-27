@@ -4,8 +4,6 @@ import { openai } from '@ai-sdk/openai';
 import { thirdPartyCalendarTools, thirdPartyPreferenceTools } from '../tools';
 import { Memory } from '@mastra/memory';
 import { storage } from '../storage/pg';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
 import { User } from '@/types/users';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { preferenceService } from '@/services/preferences/service';
@@ -20,51 +18,18 @@ import {
     ATTENDEES_CONTEXT_KEY,
     getHostFromRuntimeContext,
     getAttendeesFromRuntimeContext,
+    getBasePromptForAgent,
+    getPreferencePrompt,
+    getTimestampPrompt,
+    getHostPrompt,
+    getAttendeesPrompt,
 } from '../commons';
 import { EmailData, ExchangeData } from '@/types/exchange';
 
 /**
  * Cache the prompt at module level
  */
-let cachedAgentPrompt: string | null = null;
-
-/**
- * Get the agent prompt
- * @returns The agent prompt
- */
-async function getAgentPrompt(): Promise<string> {
-    if (cachedAgentPrompt === null) {
-        const promptPath = join(process.cwd(), 'mastra', 'prompt', 'tpscheduling.txt');
-
-        // Try to read from local file first
-        if (existsSync(promptPath)) {
-            try {
-                cachedAgentPrompt = readFileSync(promptPath, 'utf-8');
-            } catch (error) {
-                console.warn('Failed to read local prompt file:', error);
-            }
-        }
-
-        // Fallback to URL if local file doesn't exist or failed to read
-        if (!cachedAgentPrompt) {
-            try {
-                const response = await fetch(
-                    'https://gist.githubusercontent.com/wizenheimer/2f6988eb0771ae366bbd4d6aa19a9bbb/raw/57e4338b3e87e7a90ec5f281a2e893f30f090aa7/tpscheduling.txt',
-                );
-                if (response.ok) {
-                    cachedAgentPrompt = await response.text();
-                } else {
-                    throw new Error(`Failed to fetch prompt from URL: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Failed to fetch prompt from URL:', error);
-                // Provide a minimal fallback prompt
-                cachedAgentPrompt = `You are cruso, a seasoned executive assistant specializing in scheduling negotiations with external parties. Your primary objective is to facilitate scheduling agreements between your executive and third parties, suggesting slots, performing availability checks, handling counteroffers, constraint management, and relationship preservation with minimal back-and-forth to ensure successful booking.`;
-            }
-        }
-    }
-    return cachedAgentPrompt;
-}
+let baseThirdPartySchedulingPrompt: string | null = null;
 
 /**
  * Scheduling agent runtime context
@@ -78,26 +43,9 @@ type ThirdPartySchedulingAgentRuntimeContext = {
 };
 
 /**
- * Scheduling working memory template
+ * Default prompt
  */
-// export const SchedulingWorkingMemoryTemplate = `
-// # Scheduling Working Memory
-
-// - *Host Name*:
-
-// - *Current Objectives (list of objectives)*:
-
-// - *Attendee Names (if any)*:
-
-// - *Slots Recommended (if any)*:
-
-// - *Slots Declined (if any)*:
-
-// - *Special Notes (by host, if any)*:
-
-// - *Special Notes (by attendees, if any)*:
-
-// `;
+const defaultPrompt = `You are cruso, a seasoned executive assistant specializing in scheduling negotiations with external parties. Your primary objective is to facilitate scheduling agreements between your executive and third parties, suggesting slots, performing availability checks, handling counteroffers, constraint management, and relationship preservation with minimal back-and-forth to ensure successful booking.`;
 
 /**
  * Get the agent runtime context
@@ -138,11 +86,6 @@ export const getThirdPartySchedulingAgentRuntimeContext = async (
 const thirdPartySchedulingAgentMemory = new Memory({
     storage,
     options: {
-        // workingMemory: {
-        //     enabled: true,
-        //     scope: 'thread',
-        //     template: SchedulingWorkingMemoryTemplate,
-        // },
         lastMessages: 10,
     },
 });
@@ -158,26 +101,39 @@ const getAgentInstructions = async ({ runtimeContext }: { runtimeContext: Runtim
         console.error('no user found in runtime context');
     }
 
-    const agentPrompt = await getAgentPrompt();
+    if (baseThirdPartySchedulingPrompt === null) {
+        baseThirdPartySchedulingPrompt = await getBasePromptForAgent(
+            defaultPrompt,
+            process.env.TPSCHEDULING_AGENT_PROMPT_FILE,
+            process.env.TPSCHEDULING_AGENT_PROMPT_URI,
+        );
+    }
 
-    const preference = getUserPreferenceFromRuntimeContext(runtimeContext);
+    // Base prompt -- Section 1
+    const basePrompt = baseThirdPartySchedulingPrompt;
 
+    // Timestamp -- Section 2
     const timestamp = getTimestampFromRuntimeContext(runtimeContext);
+    const timestampPrompt = getTimestampPrompt(timestamp);
 
+    // Host -- Section 3
     const host = getHostFromRuntimeContext(runtimeContext);
+    const hostPrompt = getHostPrompt(host);
 
+    // Attendees -- Section 4
     const attendees = getAttendeesFromRuntimeContext(runtimeContext);
+    const attendeesPrompt = getAttendeesPrompt(attendees);
+
+    // Preference -- Section 5
+    const preference = getUserPreferenceFromRuntimeContext(runtimeContext);
+    const preferencePrompt = getPreferencePrompt(preference);
 
     return `
-    ${agentPrompt.trim()}\n
-    # Current Time\n
-    Remember, today is ${timestamp}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${timestamp}) in mind. Always make sure to use the correct date and resolve conflicts based on this date. Use this timestamp ONLY for determining time and DO NOT use it for determining timezones.\n
-    # Host\n
-    The host is ${host}.\n
-    # Attendees\n
-    The attendees are ${attendees.join(', ')}.\n
-    # Executive's Preferences\n
-    ${preference.trim()}\n
+    ${basePrompt.trim()}\n
+    ${timestampPrompt}\n
+    ${hostPrompt}\n
+    ${attendeesPrompt}\n
+    ${preferencePrompt}
     `;
 };
 

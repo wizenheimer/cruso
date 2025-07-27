@@ -1,6 +1,9 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { User } from '@/types/users';
 import { PinoLogger } from '@mastra/loggers';
+import { readFileSync } from 'fs';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 export const USER_CONTEXT_KEY = 'user';
 export const PREFERENCE_CONTEXT_KEY = 'preference';
@@ -76,6 +79,7 @@ export const getAttendeesFromRuntimeContext = (runtimeContext: RuntimeContext) =
     }
     return attendees.filter((attendee) => !attendee.includes('@crusolabs.com'));
 };
+
 /**
  * Get the user preference from the runtime context
  * @param runtimeContext - The runtime context
@@ -109,4 +113,63 @@ export const getTimestampFromRuntimeContext = (runtimeContext: RuntimeContext) =
         timestamp = new Date();
     }
     return timestamp;
+};
+
+/**
+ * Get the agent prompt
+ * @returns The agent prompt
+ */
+export async function getBasePromptForAgent(
+    defaultPrompt: string,
+    localPromptPath?: string,
+    remotePromptPath?: string,
+): Promise<string> {
+    if (localPromptPath) {
+        const promptPath = join(process.cwd(), 'mastra', 'prompt', localPromptPath);
+
+        // Try to read from local file first
+        if (existsSync(promptPath)) {
+            try {
+                return readFileSync(promptPath, 'utf-8');
+            } catch (error) {
+                console.warn('Failed to read local prompt file:', error);
+            }
+        }
+    }
+
+    // Fallback to URL if local file doesn't exist or failed to read
+    if (remotePromptPath) {
+        try {
+            const response = await fetch(remotePromptPath);
+            if (response.ok) {
+                return await response.text();
+            } else {
+                throw new Error(`Failed to fetch prompt from URL: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Failed to fetch prompt from URL:', error);
+        }
+    }
+
+    return defaultPrompt;
+}
+
+export const getTimestampPrompt = (timestamp: Date) => {
+    return `# Current Time\n
+    Remember, today is ${timestamp}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${timestamp}) in mind. Always make sure to use the correct date and resolve conflicts based on this date. Use this timestamp ONLY for determining time and DO NOT use it for determining timezones.`;
+};
+
+export const getHostPrompt = (host: string) => {
+    return `# Host\n
+    The host is ${host}.`;
+};
+
+export const getAttendeesPrompt = (attendees: string[]) => {
+    return `# Attendees\n
+    The attendees are ${attendees.join(', ')}.`;
+};
+
+export const getPreferencePrompt = (preference: string) => {
+    return `# Executive's Preferences\n
+    ${preference.trim()}`;
 };
