@@ -6,6 +6,8 @@ import {
     getAvailabilityTool,
     searchEventsTool,
     findAvailabilitySlotsTool,
+    requestReschedulingForEventTool,
+    requestSchedulingForEventTool,
 } from './event';
 import { getPreferencesTool, setPreferencesTool } from './preference';
 
@@ -17,6 +19,8 @@ export const calendarTools = {
     getAvailabilityTool,
     searchEventsTool,
     findAvailabilitySlotsTool,
+    requestReschedulingForEventTool,
+    requestSchedulingForEventTool,
 };
 
 export const thirdPartyCalendarTools = {

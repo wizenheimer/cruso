@@ -383,6 +383,82 @@ export const deleteEventInPrimaryCalendarToolSchema = deleteEventToolSchema.omit
 });
 
 /**
+ * Schema for requesting rescheduling of a calendar event
+ */
+export const requestReschedulingToolSchema = z.object({
+    calendarId: z.string().describe("ID of the calendar (use 'primary' for the main calendar)"),
+    eventId: z.string().describe('ID of the event to reschedule'),
+    reason: z.string().describe('Reason for rescheduling'),
+    slots: z.array(
+        z
+            .object({
+                startTime: z
+                    .string()
+                    .describe('Start time of the slot in ISO 8601 format')
+                    .refine((val) => {
+                        const withTimezone =
+                            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/.test(val);
+                        const withoutTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(val);
+                        return withTimezone || withoutTimezone;
+                    }, "Must be ISO 8601 format: '2026-01-01T00:00:00'"),
+                endTime: z
+                    .string()
+                    .describe('End time of the slot in ISO 8601 format')
+                    .refine((val) => {
+                        const withTimezone =
+                            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/.test(val);
+                        const withoutTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(val);
+                        return withTimezone || withoutTimezone;
+                    }, "Must be ISO 8601 format: '2026-01-01T00:00:00'"),
+            })
+            .describe('List of slots to consider for rescheduling'),
+    ),
+});
+
+export const requestReschedulingInPrimaryCalendarToolSchema = requestReschedulingToolSchema.omit({
+    calendarId: true,
+});
+
+/**
+ * Schema for requesting scheduling of a calendar event
+ */
+export const requestSchedulingToolSchema = z.object({
+    calendarId: z.string().describe("ID of the calendar (use 'primary' for the main calendar)"),
+    summary: z.string().optional().describe('Title of the event'),
+    description: z.string().optional().describe('Description/notes'),
+    slots: z.array(
+        z
+            .object({
+                startTime: z
+                    .string()
+                    .describe('Start time of the slot in ISO 8601 format')
+                    .refine((val) => {
+                        const withTimezone =
+                            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/.test(val);
+                        const withoutTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(val);
+                        return withTimezone || withoutTimezone;
+                    }, "Must be ISO 8601 format: '2026-01-01T00:00:00'"),
+                endTime: z
+                    .string()
+                    .describe('End time of the slot in ISO 8601 format')
+                    .refine((val) => {
+                        const withTimezone =
+                            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/.test(val);
+                        const withoutTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(val);
+                        return withTimezone || withoutTimezone;
+                    }, "Must be ISO 8601 format: '2026-01-01T00:00:00'"),
+            })
+            .describe('List of slots to consider for rescheduling'),
+    ),
+    attendeeEmails: z.array(z.string().email()).describe('List of attendee emails'),
+    hostEmail: z.string().email().describe('Email address of the host'),
+});
+
+export const requestSchedulingInPrimaryCalendarToolSchema = requestSchedulingToolSchema.omit({
+    calendarId: true,
+});
+
+/**
  * Schema for querying free/busy information for calendars
  * Limited to a maximum of 3 months between timeMin and timeMax
  */

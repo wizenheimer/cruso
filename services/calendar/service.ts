@@ -13,9 +13,13 @@ import {
     FreeBusyOmitCalendarsOptions,
     SearchEventsFromPrimaryCalendarOptions,
     SlotSuggestionOptionsExcludeCalendars,
+    RequestReschedulingOptions,
+    RequestReschedulingInPrimaryCalendarOptions,
+    SchedulingInPrimaryCalendarOptions,
 } from '@/types/tools/event';
 import { calendar_v3 } from 'googleapis';
 import { SlotSuggestionService } from './slot';
+import { RequestSchedulingService } from './rescheduling';
 
 // ==================================================
 // Calendar Service
@@ -30,6 +34,7 @@ export class CalendarService {
     private availabilityService: AvailabilityService;
     private slotSuggestionService: SlotSuggestionService;
     private googleCalendarService: GoogleCalendarService;
+    private requestSchedulingService: RequestSchedulingService;
     private searchService: SearchService;
 
     constructor(userId: string) {
@@ -38,6 +43,7 @@ export class CalendarService {
         this.availabilityService = new AvailabilityService(userId);
         this.slotSuggestionService = new SlotSuggestionService(userId);
         this.googleCalendarService = new GoogleCalendarService(userId);
+        this.requestSchedulingService = new RequestSchedulingService(userId);
         this.searchService = new SearchService(userId);
     }
 
@@ -164,6 +170,34 @@ export class CalendarService {
         } catch (error) {
             console.error('Error suggesting slots:', error);
             return this.handleError(error, 'suggesting slots in calendar', options);
+        }
+    }
+
+    // ==================================================
+    // Rescheduling Management
+    // ==================================================
+
+    async requestReschedulingForEvent(
+        options: RequestReschedulingInPrimaryCalendarOptions,
+    ): Promise<string> {
+        try {
+            return await this.requestSchedulingService.requestReschedulingForEvent(options);
+        } catch (error) {
+            console.error('Error requesting rescheduling for event:', error);
+            return this.handleError(error, 'requesting rescheduling for event', options);
+        }
+    }
+
+    // ==================================================
+    // Scheduling Management
+    // ==================================================
+
+    async requestSchedulingForEvent(options: SchedulingInPrimaryCalendarOptions): Promise<string> {
+        try {
+            return await this.requestSchedulingService.requestSchedulingForEvent(options);
+        } catch (error) {
+            console.error('Error requesting scheduling for event:', error);
+            return this.handleError(error, 'requesting scheduling for event', options);
         }
     }
 }

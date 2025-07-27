@@ -7,6 +7,10 @@ import {
     freeBusyOmitCalendarsSchema,
     listEventsFromPrimaryCalendarToolSchema,
     listEventsToolSchema,
+    requestReschedulingInPrimaryCalendarToolSchema,
+    requestReschedulingToolSchema,
+    requestSchedulingInPrimaryCalendarToolSchema,
+    requestSchedulingToolSchema,
     searchEventsFromPrimaryCalendarToolSchema,
     searchEventsToolSchema,
     slotSuggestionToolSchema,
@@ -54,4 +58,16 @@ export type SlotSuggestionOptionsExcludeCalendars = z.infer<typeof slotSuggestio
 
 export type SlotSuggestionOptionsIncludeCalendars = z.infer<
     typeof slotSuggestionToolSchemaIncludeCalendars
+>;
+
+export type RequestReschedulingOptions = z.infer<typeof requestReschedulingToolSchema>;
+
+export type RequestReschedulingInPrimaryCalendarOptions = z.infer<
+    typeof requestReschedulingInPrimaryCalendarToolSchema
+>;
+
+export type SchedulingOptions = z.infer<typeof requestSchedulingToolSchema>;
+
+export type SchedulingInPrimaryCalendarOptions = z.infer<
+    typeof requestSchedulingInPrimaryCalendarToolSchema
 >;
