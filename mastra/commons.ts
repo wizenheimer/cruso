@@ -4,9 +4,11 @@ import { PinoLogger } from '@mastra/loggers';
 import { readFileSync } from 'fs';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { DateTime, Info } from 'luxon';
 
 export const USER_CONTEXT_KEY = 'user';
 export const PREFERENCE_CONTEXT_KEY = 'preference';
+export const TIMEZONE_CONTEXT_KEY = 'timezone';
 export const TIMESTAMP_CONTEXT_KEY = 'timestamp';
 export const HOST_CONTEXT_KEY = 'host';
 export const ATTENDEES_CONTEXT_KEY = 'attendees';
@@ -107,12 +109,27 @@ export const getUserPreferenceFromRuntimeContext = (runtimeContext: RuntimeConte
  * @returns The timestamp
  */
 export const getTimestampFromRuntimeContext = (runtimeContext: RuntimeContext) => {
-    let timestamp: Date | undefined = runtimeContext.get(TIMESTAMP_CONTEXT_KEY);
+    let timestamp: number | undefined = runtimeContext.get(TIMESTAMP_CONTEXT_KEY);
     if (!timestamp) {
         console.log('no timestamp found in runtime context, using current date');
-        timestamp = new Date();
+        timestamp = Date.now();
     }
     return timestamp;
+};
+
+/**
+ * Get the timezone from the runtime context
+ * @param runtimeContext - The runtime context
+ * @returns The timezone
+ */
+export const getTimezoneFromRuntimeContext = (runtimeContext: RuntimeContext) => {
+    let timezone: string | undefined = runtimeContext.get(TIMEZONE_CONTEXT_KEY);
+    // Validate the timezone
+    if (!timezone || !Info.isValidIANAZone(timezone)) {
+        console.warn('invalid timezone, falling back to UTC', timezone);
+        timezone = 'UTC';
+    }
+    return timezone;
 };
 
 /**
@@ -157,9 +174,27 @@ export async function getBasePromptForAgent(
     return defaultPrompt;
 }
 
-export const getTimestampPrompt = (timestamp: Date) => {
-    return `# Current Time\n
-    Remember, today is ${timestamp}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${timestamp}) in mind. Always make sure to use the correct date and resolve conflicts based on this date. Use this timestamp ONLY for determining time and DO NOT use it for determining timezones.`;
+export const getTimestampPrompt = (timestamp: number, timezone: string) => {
+    let date: DateTime;
+
+    try {
+        // Try to create DateTime with the specified timezone
+        date = DateTime.fromMillis(timestamp).setZone(timezone);
+
+        // Check if the date is valid (this will catch invalid timezone issues too)
+        if (!date.isValid) {
+            throw new Error('Invalid timezone or date');
+        }
+    } catch (error) {
+        console.warn(`Failed to use timezone "${timezone}", falling back to UTC:`, error);
+        // Fallback to UTC if timezone is invalid
+        date = DateTime.fromMillis(timestamp).setZone('UTC');
+    }
+
+    const formattedDate = date.toFormat('yyyy-MM-dd HH:mm:ss ZZZZ');
+
+    return `# Current Time and Timezone\n
+    The USER'S CURRENT TIME is ${formattedDate} and THE USER'S CURRENT TIMEZONE is ${timezone}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${formattedDate}) in mind. Always make sure to use the correct date and resolve conflicts based on this date.`;
 };
 
 export const getHostPrompt = (host: string) => {

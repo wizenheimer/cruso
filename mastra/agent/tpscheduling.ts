@@ -23,6 +23,8 @@ import {
     getTimestampPrompt,
     getHostPrompt,
     getAttendeesPrompt,
+    TIMEZONE_CONTEXT_KEY,
+    getTimezoneFromRuntimeContext,
 } from '../commons';
 import { EmailData, ExchangeData } from '@/types/exchange';
 
@@ -37,7 +39,8 @@ let baseThirdPartySchedulingPrompt: string | null = null;
 type ThirdPartySchedulingAgentRuntimeContext = {
     user: User;
     preference: string;
-    timestamp: Date;
+    timestamp: number; // Unix timestamp in milliseconds
+    timezone: string;
     host: string;
     attendees: string[];
 };
@@ -66,9 +69,15 @@ export const getThirdPartySchedulingAgentRuntimeContext = async (
     context.set(ATTENDEES_CONTEXT_KEY, exchangeData.recipients);
 
     let preferenceString: string | undefined;
+    let timezone: string | undefined;
     const preferences = await preferenceService.getPreferences(user.id);
     if (preferences.success && preferences.data?.preferences) {
         preferenceString = preferences.data.preferences.document;
+        timezone = preferences.data.preferences.timezone;
+    }
+
+    if (!timezone) {
+        timezone = 'UTC';
     }
 
     if (!preferenceString) {
@@ -77,6 +86,8 @@ export const getThirdPartySchedulingAgentRuntimeContext = async (
     }
 
     context.set(PREFERENCE_CONTEXT_KEY, preferenceString);
+    context.set(TIMEZONE_CONTEXT_KEY, timezone);
+
     return context;
 };
 
@@ -114,7 +125,8 @@ const getAgentInstructions = async ({ runtimeContext }: { runtimeContext: Runtim
 
     // Timestamp -- Section 2
     const timestamp = getTimestampFromRuntimeContext(runtimeContext);
-    const timestampPrompt = getTimestampPrompt(timestamp);
+    const timezone = getTimezoneFromRuntimeContext(runtimeContext);
+    const timestampPrompt = getTimestampPrompt(timestamp, timezone);
 
     // Host -- Section 3
     const host = getHostFromRuntimeContext(runtimeContext);

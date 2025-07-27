@@ -23,6 +23,8 @@ import {
     getHostPrompt,
     getAttendeesPrompt,
     getPreferencePrompt,
+    getTimezoneFromRuntimeContext,
+    TIMEZONE_CONTEXT_KEY,
 } from '../commons';
 import { EmailData, ExchangeData } from '@/types/exchange';
 
@@ -37,7 +39,8 @@ let baseFirstPartySchedulingPrompt: string | null = null;
 type SchedulingAgentRuntimeContext = {
     user: User;
     preference: string;
-    timestamp: Date;
+    timestamp: number; // Unix timestamp in milliseconds
+    timezone: string;
     host: string;
     attendees: string[];
 };
@@ -63,9 +66,16 @@ export const getFirstPartySchedulingAgentRuntimeContext = async (
     context.set(ATTENDEES_CONTEXT_KEY, exchangeData.recipients);
 
     let preferenceString: string | undefined;
+    let timezone: string | undefined;
     const preferences = await preferenceService.getPreferences(user.id);
     if (preferences.success && preferences.data?.preferences) {
         preferenceString = preferences.data.preferences.document;
+        timezone = preferences.data.preferences.timezone;
+    }
+
+    if (!timezone) {
+        console.warn('no timezone found in preferences, falling back to UTC');
+        timezone = 'UTC';
     }
 
     if (!preferenceString) {
@@ -74,6 +84,7 @@ export const getFirstPartySchedulingAgentRuntimeContext = async (
     }
 
     context.set(PREFERENCE_CONTEXT_KEY, preferenceString);
+    context.set(TIMEZONE_CONTEXT_KEY, timezone);
     return context;
 };
 
@@ -117,8 +128,9 @@ const getAgentInstructions = async ({ runtimeContext }: { runtimeContext: Runtim
     const basePrompt = baseFirstPartySchedulingPrompt;
 
     // Timestamp -- Section 2
+    const timezone = getTimezoneFromRuntimeContext(runtimeContext);
     const timestamp = getTimestampFromRuntimeContext(runtimeContext);
-    const timestampPrompt = getTimestampPrompt(timestamp);
+    const timestampPrompt = getTimestampPrompt(timestamp, timezone);
 
     // Host -- Section 3
     const host = getHostFromRuntimeContext(runtimeContext);
