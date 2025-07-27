@@ -1,9 +1,72 @@
 {
-    "id": "e51539d7-9ba6-4811-a874-5f502a0dcb06",
+    "id": "f2b5f272-49ca-429c-9063-ee88c88abfac",
     "prevId": "00000000-0000-0000-0000-000000000000",
     "version": "7",
     "dialect": "postgresql",
     "tables": {
+        "public.allowed_list": {
+            "name": "allowed_list",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "serial",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "email": {
+                    "name": "email",
+                    "type": "varchar(255)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "is_allowed": {
+                    "name": "is_allowed",
+                    "type": "boolean",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": true
+                }
+            },
+            "indexes": {
+                "idx_allowed_list_email": {
+                    "name": "idx_allowed_list_email",
+                    "columns": [
+                        {
+                            "expression": "email",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "idx_allowed_list_is_allowed": {
+                    "name": "idx_allowed_list_is_allowed",
+                    "columns": [
+                        {
+                            "expression": "is_allowed",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
         "public.account": {
             "name": "account",
             "schema": "",

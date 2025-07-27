@@ -1,3 +1,9 @@
+CREATE TABLE "allowed_list" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"is_allowed" boolean DEFAULT true NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "account" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,
@@ -133,6 +139,8 @@ ALTER TABLE "preferences" ADD CONSTRAINT "preferences_primary_user_email_id_user
 ALTER TABLE "preferences" ADD CONSTRAINT "preferences_primary_account_id_account_id_fk" FOREIGN KEY ("primary_account_id") REFERENCES "public"."account"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_emails" ADD CONSTRAINT "user_emails_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "working_hours" ADD CONSTRAINT "working_hours_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "idx_allowed_list_email" ON "allowed_list" USING btree ("email");--> statement-breakpoint
+CREATE INDEX "idx_allowed_list_is_allowed" ON "allowed_list" USING btree ("is_allowed");--> statement-breakpoint
 CREATE INDEX "idx_calendar_connections_user" ON "calendar_connections" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "idx_calendar_connections_account" ON "calendar_connections" USING btree ("account_id");--> statement-breakpoint
 CREATE INDEX "idx_calendar_connections_google_account" ON "calendar_connections" USING btree ("google_account_id");--> statement-breakpoint

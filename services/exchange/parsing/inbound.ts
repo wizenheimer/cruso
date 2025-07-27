@@ -8,6 +8,11 @@ import {
     parseMultipartToFormData,
     parseEmailDataFromMailgunWebhookFormData,
 } from '@/services/exchange/parsing/form';
+import {
+    isAllowedListEntry,
+    setAllowedListEntries,
+    setAllowedListEntry,
+} from '@/db/queries/allowed-list';
 
 /**
  * Tolerance options for business emails with higher tolerance settings.
@@ -89,15 +94,17 @@ export async function parseInboundWebhookWithoutAttachments(body: string): Promi
         businessEmailToleranceOptions,
     );
 
-    if (isSpam) {
-        await handleSpam(formData);
-    }
-
     const emailData = await parseEmailDataFromMailgunWebhookFormData(formData);
 
     console.log('emailData', emailData);
 
+    console.log('isSpam', isSpam);
+
     console.log('processed inbound webhook without attachments');
+
+    if (isSpam) {
+        await handleSpam(emailData);
+    }
 
     return emailData;
 }
@@ -131,21 +138,41 @@ export async function parseInboundWebhookWithAttachments(body: string): Promise<
         businessEmailToleranceOptions,
     );
 
-    if (isSpam) {
-        await handleSpam(formData);
-    }
-
     const emailData = await parseEmailDataFromMailgunWebhookFormData(formData);
 
     console.log('emailData', emailData);
 
+    console.log('isSpam', isSpam);
+
     console.log('processed inbound webhook with attachments');
+
+    if (isSpam) {
+        await handleSpam(emailData);
+    }
 
     return emailData;
 }
 
-async function handleSpam(formData: FormData) {
-    // TODO: Check if the sender is paying user then do a passthrough
-    // TODO: Otherwise, throw an error
-    console.log('webhook flagged as spam, but continuing to process');
+/**
+ * Handles spam emails by adding the sender and recipients to the allowed list.
+ *
+ * @param {RawEmailData} emailData - The email data to handle
+ */
+async function handleSpam(emailData: RawEmailData) {
+    // Check if the sender is in allowed list
+    const isAllowed = await isAllowedListEntry(emailData.sender);
+    if (!isAllowed) {
+        throw new Error('sender is not in allowed list, and is flagged as spam');
+        return;
+    }
+
+    console.log('flagged as spam, but the sender is in the allowed list');
+
+    // Add the receiptis to the allowed list if they are not already in the allowed list
+    const recipients = emailData.recipients;
+    try {
+        await setAllowedListEntries(recipients, true);
+    } catch (error) {
+        console.warn('warning: error adding recipients to allowed list:', error);
+    }
 }

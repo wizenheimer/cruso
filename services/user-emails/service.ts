@@ -15,6 +15,8 @@ import {
     EmailAvailabilityResult,
     PrimaryEmailUpdateResult,
 } from '@/types/user-emails';
+import { setAllowedListEntry } from '@/db/queries/allowed-list';
+import * as emailAddresses from 'email-addresses';
 
 export class UserEmailService {
     /**
@@ -144,6 +146,13 @@ export class UserEmailService {
                 })
                 .returning();
 
+            try {
+                // Add the email to the allowed list
+                await setAllowedListEntry(input.email, true);
+            } catch (error) {
+                console.warn('warning: error adding email to allowed list:', error);
+            }
+
             // If this should be primary, update preferences
             if (shouldBePrimary) {
                 const primaryUpdate = await this.updatePrimaryEmail(userId, newEmail[0].id);
@@ -226,6 +235,19 @@ export class UserEmailService {
                 )
                 .returning();
 
+            try {
+                if (updatedEmail.length > 0) {
+                    // Add the email to the allowed list
+                    await setAllowedListEntry(updatedEmail[0].email, true);
+                    // Remove the older email from the allowed list if they are not the same email
+                    if (updatedEmail[0].email !== existingEmail[0].email) {
+                        await setAllowedListEntry(existingEmail[0].email, false);
+                    }
+                }
+            } catch (error) {
+                console.warn('warning: error adding email to allowed list:', error);
+            }
+
             // Get current primary email ID to determine isPrimary status
             const [userPrefs] = await db
                 .select({ primaryUserEmailId: preferences.primaryUserEmailId })
@@ -287,6 +309,13 @@ export class UserEmailService {
                     success: false,
                     error: 'Cannot delete the only email address',
                 };
+            }
+
+            try {
+                // Remove the email from the allowed list
+                await setAllowedListEntry(existingEmail[0].email, false);
+            } catch (error) {
+                console.warn('warning: error removing email from allowed list:', error);
             }
 
             // Check if this is the primary email
@@ -379,8 +408,9 @@ export class UserEmailService {
      * Simple email validation
      */
     private isValidEmail(email: string): boolean {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+        // Use 'email-address' package to validate email
+        const parsed = emailAddresses.parseOneAddress(email);
+        return parsed !== null;
     }
 }
 
