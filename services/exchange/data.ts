@@ -105,6 +105,17 @@ export class ExchangeDataService {
     }
 
     /**
+     * Get the signature for a user id
+     * @param userId - The user ID to retrieve the signature for
+     * @returns Promise<string>
+     */
+    async getSignatureForExchangeOwner(exchangeOwnerId: string): Promise<string> {
+        const { getUserPreferences } = await import('@/db/queries/preferences');
+        const userPreferences = await getUserPreferences(exchangeOwnerId);
+        return `Best,\n${userPreferences?.signature || 'Cruso'}`;
+    }
+
+    /**
      * Associate an exchange with a user (used for acting on behalf of users)
      * @param exchangeId - The exchange ID to associate
      * @param userEmail - The user's email

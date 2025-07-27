@@ -167,4 +167,18 @@ export class ExchangeService {
     async searchEmails(filters: ExchangeFilters): Promise<ExchangeData[]> {
         return this.exchangeDataService.searchEmails(filters);
     }
+
+    async createNewExchangeOnBehalfOfUser(
+        exchangeOwnerId: string,
+        subject: string,
+        body: string,
+        recipients: string[],
+    ) {
+        return this.exchangeProcessingService.createNewExchangeOnBehalfOfUser(
+            exchangeOwnerId,
+            subject,
+            body,
+            recipients,
+        );
+    }
 }

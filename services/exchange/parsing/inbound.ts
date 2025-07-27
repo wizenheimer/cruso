@@ -90,7 +90,7 @@ export async function parseInboundWebhookWithoutAttachments(body: string): Promi
     );
 
     if (isSpam) {
-        throw new Error('webhook flagged as spam');
+        await handleSpam(formData);
     }
 
     const emailData = await parseEmailDataFromMailgunWebhookFormData(formData);
@@ -132,7 +132,7 @@ export async function parseInboundWebhookWithAttachments(body: string): Promise<
     );
 
     if (isSpam) {
-        throw new Error('webhook flagged as spam');
+        await handleSpam(formData);
     }
 
     const emailData = await parseEmailDataFromMailgunWebhookFormData(formData);
@@ -142,4 +142,10 @@ export async function parseInboundWebhookWithAttachments(body: string): Promise<
     console.log('processed inbound webhook with attachments');
 
     return emailData;
+}
+
+async function handleSpam(formData: FormData) {
+    // TODO: Check if the sender is paying user then do a passthrough
+    // TODO: Otherwise, throw an error
+    console.log('webhook flagged as spam, but continuing to process');
 }
