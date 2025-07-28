@@ -3,6 +3,14 @@ import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { z } from 'zod';
 import { preferenceService } from '@/services/preferences';
 
+// Helper function to log tool execution
+const logToolExecution = (toolName: string, input: any, output: any) => {
+    console.log('='.repeat(50));
+    console.log(`[${toolName}] Input:`, JSON.stringify(input, null, 2));
+    console.log(`[${toolName}] Output:`, output);
+    console.log('='.repeat(50));
+};
+
 /**
  * Get default scheduling preferences
  * @param context - The context of the get instruction
@@ -19,7 +27,9 @@ export const getPreferencesTool = createTool({
             throw new Error('user not found in runtime context');
         }
 
-        return await preferenceService.getStringifiedPreference(user.id);
+        const result = await preferenceService.getStringifiedPreference(user.id);
+        logToolExecution('get-preferences', context, result);
+        return result;
     },
 });
 
@@ -51,11 +61,14 @@ export const setPreferencesTool = createTool({
             updateInstruction,
         );
 
-        return {
+        const output = {
             success: result.success,
             updatedPreferences: result.data
                 ? JSON.stringify(result.data)
                 : 'Failed to update preferences',
         };
+
+        logToolExecution('set-preferences', context, output);
+        return output;
     },
 });

@@ -14,6 +14,14 @@ import {
     updateEventInPrimaryCalendarToolSchema,
 } from '@/schema/tools/event';
 
+// Helper function to log tool execution
+const logToolExecution = (toolName: string, input: any, output: any) => {
+    console.log('='.repeat(50));
+    console.log(`[${toolName}] Input:`, JSON.stringify(input, null, 2));
+    console.log(`[${toolName}] Output:`, output);
+    console.log('='.repeat(50));
+};
+
 /**
  * Create a new event
  * @param context - The context of the event
@@ -34,9 +42,12 @@ export const createEventTool = createTool({
         const { ...options } = context;
 
         const calendarService = createCalendarService(user.id);
-        return calendarService.createEvent({
+        const result = await calendarService.createEvent({
             ...options,
         });
+
+        logToolExecution('create-event', context, result);
+        return result;
     },
 });
 
@@ -60,7 +71,10 @@ export const listEventsTool = createTool({
         const { ...options } = context;
 
         const calendarService = createCalendarService(user.id);
-        return calendarService.listEvents(options);
+        const result = await calendarService.listEvents(options);
+
+        logToolExecution('list-events', context, result);
+        return result;
     },
 });
 
@@ -84,7 +98,10 @@ export const updateEventTool = createTool({
         const { ...options } = context;
 
         const calendarService = createCalendarService(user.id);
-        return calendarService.updateEvent(options);
+        const result = await calendarService.updateEvent(options);
+
+        logToolExecution('update-event', context, result);
+        return result;
     },
 });
 
@@ -108,7 +125,10 @@ export const deleteEventTool = createTool({
         const { ...options } = context;
 
         const calendarService = createCalendarService(user.id);
-        return calendarService.deleteEvent(options);
+        const result = await calendarService.deleteEvent(options);
+
+        logToolExecution('delete-event', context, result);
+        return result;
     },
 });
 
@@ -132,7 +152,10 @@ export const getAvailabilityTool = createTool({
         const { ...options } = context;
 
         const calendarService = createCalendarService(user.id);
-        return calendarService.checkAvailability(options);
+        const result = await calendarService.checkAvailability(options);
+
+        logToolExecution('get-availability', context, result);
+        return result;
     },
 });
 
@@ -156,7 +179,10 @@ export const searchEventsTool = createTool({
         const { ...options } = context;
 
         const calendarService = createCalendarService(user.id);
-        return calendarService.searchEvents(options);
+        const result = await calendarService.searchEvents(options);
+
+        logToolExecution('search-events', context, result);
+        return result;
     },
 });
 
@@ -174,7 +200,10 @@ export const findAvailabilitySlotsTool = createTool({
         const { ...options } = context;
 
         const calendarService = createCalendarService(user.id);
-        return calendarService.suggestSlots(options);
+        const result = await calendarService.suggestSlots(options);
+
+        logToolExecution('find-availability-slots', context, result);
+        return result;
     },
 });
 
@@ -199,7 +228,10 @@ export const requestReschedulingForEventTool = createTool({
         const { ...options } = context;
 
         const calendarService = createCalendarService(user.id);
-        return calendarService.requestReschedulingForEvent(options);
+        const result = await calendarService.requestReschedulingForEvent(options);
+
+        logToolExecution('request-rescheduling-for-event', context, result);
+        return result;
     },
 });
 
@@ -224,6 +256,9 @@ export const requestSchedulingForEventTool = createTool({
         const { ...options } = context;
 
         const calendarService = createCalendarService(user.id);
-        return calendarService.requestSchedulingForEvent(options);
+        const result = await calendarService.requestSchedulingForEvent(options);
+
+        logToolExecution('request-scheduling-for-event', context, result);
+        return result;
     },
 });

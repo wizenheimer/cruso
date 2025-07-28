@@ -28,6 +28,14 @@ import {
 } from '../commons';
 import { EmailData, ExchangeData } from '@/types/exchange';
 
+// Helper function to log context setting
+const logContextSetting = (agentName: string, contextKey: string, value: any) => {
+    console.log('='.repeat(50));
+    console.log(`[${agentName}] Setting context: ${contextKey}`);
+    console.log(`[${agentName}] Value:`, JSON.stringify(value, null, 2));
+    console.log('='.repeat(50));
+};
+
 /**
  * Cache the prompt at module level
  */
@@ -61,9 +69,16 @@ export const getFirstPartySchedulingAgentRuntimeContext = async (
     const context = new RuntimeContext<SchedulingAgentRuntimeContext>();
 
     context.set(USER_CONTEXT_KEY, user);
+    logContextSetting('firstPartySchedulingAgent', USER_CONTEXT_KEY, user);
+
     context.set(TIMESTAMP_CONTEXT_KEY, emailData.timestamp);
+    logContextSetting('firstPartySchedulingAgent', TIMESTAMP_CONTEXT_KEY, emailData.timestamp);
+
     context.set(HOST_CONTEXT_KEY, exchangeData.sender);
+    logContextSetting('firstPartySchedulingAgent', HOST_CONTEXT_KEY, exchangeData.sender);
+
     context.set(ATTENDEES_CONTEXT_KEY, exchangeData.recipients);
+    logContextSetting('firstPartySchedulingAgent', ATTENDEES_CONTEXT_KEY, exchangeData.recipients);
 
     let preferenceString: string | undefined;
     let timezone: string | undefined;
@@ -84,7 +99,11 @@ export const getFirstPartySchedulingAgentRuntimeContext = async (
     }
 
     context.set(PREFERENCE_CONTEXT_KEY, preferenceString);
+    logContextSetting('firstPartySchedulingAgent', PREFERENCE_CONTEXT_KEY, preferenceString);
+
     context.set(TIMEZONE_CONTEXT_KEY, timezone);
+    logContextSetting('firstPartySchedulingAgent', TIMEZONE_CONTEXT_KEY, timezone);
+
     return context;
 };
 

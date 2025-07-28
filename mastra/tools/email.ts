@@ -2,6 +2,14 @@ import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { HtmlValidate, ConfigData, Message } from 'html-validate';
 
+// Helper function to log tool execution
+const logToolExecution = (toolName: string, input: any, output: any) => {
+    console.log('='.repeat(50));
+    console.log(`[${toolName}] Input:`, JSON.stringify(input, null, 2));
+    console.log(`[${toolName}] Output:`, output);
+    console.log('='.repeat(50));
+};
+
 /**
  * HTML validation configuration optimized for email HTML
  */
@@ -101,12 +109,15 @@ export const validateEmailHTMLTool = createTool({
 
         try {
             const result = await validateHTMLContent(html, EMAIL_HTML_CONFIG);
+            logToolExecution('validate-email-html', context, result);
             return result;
         } catch (error) {
-            return {
+            const errorResult = {
                 isValid: false,
                 validationSummary: `Validation failed with error: ${error instanceof Error ? error.message : 'Unknown error'}`,
             };
+            logToolExecution('validate-email-html', context, errorResult);
+            return errorResult;
         }
     },
 });
