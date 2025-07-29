@@ -40,8 +40,6 @@ This is Nick, founder of Cruso. Quick auth, and you'd be all set.
 
 https://crusolabs.com/signup
 
-As you explore the platform, please do not hesitate to reach out to me directly. I would be delighted to hear from you at nick@crusolabs.com.
-
 Best,
 Nick
 `;
@@ -76,20 +74,23 @@ Welcome to Cruso! I'm your new executive assistant, and I'm here to help manage 
 
 I can handle meeting scheduling, rescheduling, finding available slots, and keeping your calendar organized - all with minimal back-and-forth.
 
-Here are some examples of what I can do for you:
+Here's a quick rundown of some of the things you can ask me to do:
 
-• "Schedule 30 mins tomorrow to prep for the board meeting"
-• "Find us a time for a sync with Sarah and Mike next week"
-• "What's on my calendar this afternoon?"
-• "Reschedule the quarterly review meeting with the board"
-• "Clear my calendar this afternoon"
-• "Change my working hours to 11 AM - 2 PM, Monday to Friday"
+- Schedule 30 mins tomorrow to prep for the board meeting
+- Find us a time for a sync with Sarah and Mike next week
+- What's on my calendar this afternoon?
+- Reschedule the quarterly review meeting with the board
+- Clear my calendar this afternoon
+- Change my working hours to 11 AM - 2 PM, Monday to Friday
+
+I'm a work in progress, so please bear with me as I learn more about you and your preferences. You could also help me get better by simply replying to this email or by changing your preference document in the dashboard.
 
 To get started, simply forward me any email with scheduling context, and I'll take care of the rest.
 
-I'm a work in progress, so please bear with me as I learn more about you and your preferences. You could also help me get better by simply replying to this email or by changing your preference document in the dashboard.`;
+Cheers,
+Cruso`;
 
-export const WELCOME_EMAIL_SIGNATURE = 'Cheers, \nCruso';
+// export const WELCOME_EMAIL_SIGNATURE = 'Cheers, \nCruso';
 
 /**
  * ===============================
@@ -97,20 +98,22 @@ export const WELCOME_EMAIL_SIGNATURE = 'Cheers, \nCruso';
  * ===============================
  */
 export const WAITLIST_EMAIL_SUBJECT =
-    "Good things come to those who... actually, let's speed this up";
+    "Good things come to those who wait ... actually, let's speed this up";
 
-export const WAITLIST_EMAIL_BODY = `Hi there,
+export const WAITLIST_EMAIL_BODY = `Hey there,
 
-Thanks for your interest in Cruso! We're thrilled to have you on board.
-
-Cruso is an AI executive assistant designed to handle calendar and scheduling needs with minimal back-and-forth. It can schedule meetings, find available slots, reschedule appointments, and keep calendars organized.
+Thanks for signing up! We're thrilled to have you on board.
 
 We're gradually rolling out access for new teams, and will reach out with onboarding details as soon as your spot opens up.
 
+If waiting doesn't work for you (we understand!), let us know at https://cal.com/nayann/cruso. We occasionally fast-track access for individuals who are ready to dive straight in.
 
-If waiting doesn't work for you (we understand!), let us know at https://cal.com/nayann/cruso. We're founders too and we occasionally fast-track access for individuals who are ready to dive straight in.`;
+Cruso is an AI executive assistant designed to handle calendar and scheduling needs with minimal back-and-forth. It can schedule meetings, find available slots, reschedule appointments, and keep calendars organized.
 
-export const WAITLIST_EMAIL_SIGNATURE = 'Cheers, \nCruso';
+Stay tuned,
+Cruso`;
+
+// export const WAITLIST_EMAIL_SIGNATURE = 'Cheers, \nCruso';
 
 /**
  * ===============================
