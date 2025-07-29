@@ -190,7 +190,8 @@ export class AvailabilityService extends BaseCalendarService {
                 const minInTz = minDt.setZone(timezone);
                 const maxInTz = maxDt.setZone(timezone);
                 const timezoneAbbr = this.getTimezoneAbbreviation(timezone);
-                timeRangeDescription = `${minInTz.toISO({ suppressMilliseconds: true })} to ${maxInTz.toISO({ suppressMilliseconds: true })} (${timezoneAbbr})`;
+                // AI-friendly format with standardized structure
+                timeRangeDescription = `${minInTz.toFormat('ccc, MMM d, h:mm a')} - ${maxInTz.toFormat('h:mm a')} (${timezoneAbbr})`;
             } else {
                 timeRangeDescription = `${timeMin} to ${timeMax}`;
             }
@@ -376,10 +377,12 @@ export class AvailabilityService extends BaseCalendarService {
                         endLocal: slotEnd.toFormat('h:mm a'),
                     });
 
+                    const timezoneAbbr = this.getTimezoneAbbreviation(options.timeZone);
+
                     availableSlots.push({
                         start: currentTime.toISO({ suppressMilliseconds: true }) || '',
                         end: slotEnd.toISO({ suppressMilliseconds: true }) || '',
-                        displayText: `${currentTime.toFormat('ccc, MMM d')} from ${currentTime.toFormat('h:mm a')} to ${slotEnd.toFormat('h:mm a')} (${this.getTimezoneAbbreviation(options.timeZone)})`,
+                        displayText: `${currentTime.toFormat('ccc, MMM d, h:mm a')} - ${slotEnd.toFormat('h:mm a')} (${timezoneAbbr})`,
                     });
 
                     currentTime = currentTime.plus({ minutes: incrementMinutes });
@@ -416,10 +419,12 @@ export class AvailabilityService extends BaseCalendarService {
                     endLocal: slotEnd.toFormat('h:mm a'),
                 });
 
+                const timezoneAbbr = this.getTimezoneAbbreviation(options.timeZone);
+
                 availableSlots.push({
                     start: currentTime.toISO({ suppressMilliseconds: true }) || '',
                     end: slotEnd.toISO({ suppressMilliseconds: true }) || '',
-                    displayText: `${currentTime.toFormat('ccc, MMM d')} from ${currentTime.toFormat('h:mm a')} to ${slotEnd.toFormat('h:mm a')} (${this.getTimezoneAbbreviation(options.timeZone)})`,
+                    displayText: `${currentTime.toFormat('ccc, MMM d, h:mm a')} - ${slotEnd.toFormat('h:mm a')} (${timezoneAbbr})`,
                 });
 
                 currentTime = currentTime.plus({ minutes: incrementMinutes });

@@ -231,13 +231,13 @@ export class SlotSuggestionService extends BaseCalendarService {
         return merged;
     }
 
+    /**
+     * Format slots with AI-friendly, standardized output
+     */
     private formatSlots(slots: { startTime: string; endTime: string }[], timezone: string): string {
         if (slots.length === 0) {
             return 'No available slots found in the specified time range.';
         }
-
-        // Get timezone abbreviation for display
-        const timezoneAbbr = this.getTimezoneAbbreviation(timezone);
 
         return slots
             .map((slot, index) => {
@@ -250,13 +250,15 @@ export class SlotSuggestionService extends BaseCalendarService {
                         return `${index + 1}. Invalid slot time`;
                     }
 
-                    // Format using Luxon in the requested timezone
-                    const dateStr = startDate.toFormat('ccc, MMM d');
-                    const startTimeStr = startDate.toFormat('h:mm a');
-                    const endTimeStr = endDate.toFormat('h:mm a');
+                    // Standardized English format (no locale dependency)
+                    const timezoneAbbr = this.getTimezoneAbbreviation(timezone);
 
-                    // Include timezone info for AI clarity
-                    return `${index + 1}. ${dateStr} from ${startTimeStr} to ${endTimeStr} (${timezoneAbbr})`;
+                    // Use Luxon's toFormat for consistent, predictable output
+                    const formattedStart = startDate.toFormat('ccc, MMM d, h:mm a');
+                    const formattedEnd = endDate.toFormat('h:mm a');
+
+                    // AI-friendly format: human-readable + timezone clarity
+                    return `${index + 1}. ${formattedStart} - ${formattedEnd} (${timezoneAbbr})`;
                 } catch (error) {
                     console.error('Error formatting slot:', error, slot);
                     return `${index + 1}. Error formatting slot`;
