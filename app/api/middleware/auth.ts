@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { Context } from 'hono';
 import { Next } from 'hono';
 import { User } from '@/types/users';
+import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 
 /**
  * Get the session from the request headers
@@ -28,7 +29,7 @@ export async function requireAuth(c: Context, next: Next) {
     }
 
     // Set user in context for handlers to access
-    c.set('user', session.user as User);
+    c.set(USER_MIDDLEWARE_CONTEXT_KEY, session.user as User);
 
     await next();
 }

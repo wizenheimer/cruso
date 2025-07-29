@@ -2,9 +2,10 @@ import { Context } from 'hono';
 import { db } from '@/db';
 import { workingHours } from '@/db/schema/working-hours';
 import { eq, and } from 'drizzle-orm';
+import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 
 export const getUser = (c: Context) => {
-    const user = c.get('user');
+    const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
     if (!user) {
         throw new Error('User not found in context');
     }

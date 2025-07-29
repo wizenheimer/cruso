@@ -4,9 +4,10 @@ import { workingHours } from '@/db/schema/working-hours';
 import { eq } from 'drizzle-orm';
 import { preferenceService } from '@/services/preferences';
 import { generatePreferencesMarkdown, type PreferencesData } from '@/lib/preference';
+import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 
 export const getUser = (c: Context) => {
-    const user = c.get('user');
+    const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
     if (!user) {
         throw new Error('User not found in context');
     }

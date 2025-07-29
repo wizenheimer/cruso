@@ -3,6 +3,7 @@ import { requireAuth } from '../../middleware/auth';
 import { EmailDataSchema } from '@/schema/exchange';
 import { handleFirstPartyFlow, handleThirdPartyFlow } from '@/mastra';
 import { ExchangeDataService } from '@/services/exchange/data';
+import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 
 const mockingbird = new Hono();
 
@@ -13,7 +14,7 @@ const mockingbird = new Hono();
  * @throws Error if user is not found in context
  */
 export const getUser = (requestContext: Context) => {
-    const authenticatedUser = requestContext.get('user');
+    const authenticatedUser = requestContext.get(USER_MIDDLEWARE_CONTEXT_KEY);
     if (!authenticatedUser) {
         throw new Error('User not found in context');
     }

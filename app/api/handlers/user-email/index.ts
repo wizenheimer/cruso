@@ -1,5 +1,6 @@
 import { Context } from 'hono';
 import { userEmailService } from '@/services/user-emails';
+import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 
 /**
  * Extract the authenticated user from the request context
@@ -8,7 +9,7 @@ import { userEmailService } from '@/services/user-emails';
  * @throws Error if user is not found in context
  */
 export const getUser = (requestContext: Context) => {
-    const authenticatedUser = requestContext.get('user');
+    const authenticatedUser = requestContext.get(USER_MIDDLEWARE_CONTEXT_KEY);
     if (!authenticatedUser) {
         throw new Error('User not found in context');
     }

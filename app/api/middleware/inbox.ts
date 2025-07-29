@@ -1,6 +1,10 @@
 import { Context, Next } from 'hono';
 import { ExchangeService } from '@/services/exchange';
 import { getUserByEmail } from '@/db/queries/users';
+import {
+    EMAIL_DATA_MIDDLEWARE_CONTEXT_KEY,
+    USER_MIDDLEWARE_CONTEXT_KEY,
+} from '@/constants/middleware';
 
 /**
  * The status code to return when the webhook is disallowed
@@ -20,7 +24,7 @@ export const parseEmailDataMiddleware = async (c: Context, next: Next) => {
         const emailData = await exchangeService.processEmail(c);
 
         // Store email data in context for downstream handlers to use
-        c.set('emailData', emailData);
+        c.set(EMAIL_DATA_MIDDLEWARE_CONTEXT_KEY, emailData);
 
         await next();
     } catch (error) {
@@ -44,7 +48,7 @@ export const parseEmailDataMiddleware = async (c: Context, next: Next) => {
 export const parseUserFromEmailMiddleware = async (c: Context, next: Next) => {
     console.log('parsing user from email');
     // Get the email data from the context
-    const emailData = c.get('emailData');
+    const emailData = c.get(EMAIL_DATA_MIDDLEWARE_CONTEXT_KEY);
 
     if (!emailData) {
         return c.json(
@@ -62,7 +66,7 @@ export const parseUserFromEmailMiddleware = async (c: Context, next: Next) => {
     console.log('setting user in context', { user });
 
     // Store the user in the context
-    c.set('user', user);
+    c.set(USER_MIDDLEWARE_CONTEXT_KEY, user);
 
     // Continue to the next middleware
     await next();

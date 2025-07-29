@@ -4,6 +4,7 @@ import { account } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { Context } from 'hono';
 import { updatePrimaryAccount } from '@/db/queries/preferences';
+import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 
 /**
  * Extract the authenticated user from the request context
@@ -12,7 +13,7 @@ import { updatePrimaryAccount } from '@/db/queries/preferences';
  * @throws Error if user is not found in context
  */
 export const getUser = (requestContext: Context) => {
-    const authenticatedUser = requestContext.get('user');
+    const authenticatedUser = requestContext.get(USER_MIDDLEWARE_CONTEXT_KEY);
     if (!authenticatedUser) {
         throw new Error('User not found in context');
     }

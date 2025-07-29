@@ -3,6 +3,10 @@ import { EmailData } from '@/types/exchange';
 import { User } from '@/types/users';
 import { ExchangeService } from '@/services/exchange';
 import { isAllowedListEntry, setAllowedListEntries } from '@/db/queries/allowed-list';
+import {
+    USER_MIDDLEWARE_CONTEXT_KEY,
+    EMAIL_DATA_MIDDLEWARE_CONTEXT_KEY,
+} from '@/constants/middleware';
 
 /**
  * The status code to return for allowed webhook requests
@@ -17,8 +21,8 @@ const allowedWebhookStatusCode = 200;
 export const handleInboxRequest = async (requestContext: Context) => {
     // The webhook middleware has already processed the webhook
     // and stored emailData in the context
-    const incomingEmailData = requestContext.get('emailData');
-    const authenticatedUser = requestContext.get('user');
+    const incomingEmailData = requestContext.get(EMAIL_DATA_MIDDLEWARE_CONTEXT_KEY);
+    const authenticatedUser = requestContext.get(USER_MIDDLEWARE_CONTEXT_KEY);
 
     if (!incomingEmailData) {
         throw new Error('Email data not found in context');
