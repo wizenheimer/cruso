@@ -4,14 +4,14 @@ import { z } from 'zod';
 import { createCalendarService } from '@/services/calendar/service';
 import {
     createEventInPrimaryCalendarToolSchema,
-    deleteEventInPrimaryCalendarToolSchema,
-    freeBusyOmitCalendarsSchema,
-    listEventsFromPrimaryCalendarToolSchema,
-    requestReschedulingInPrimaryCalendarToolSchema,
-    requestSchedulingInPrimaryCalendarToolSchema,
-    searchEventsFromPrimaryCalendarToolSchema,
-    slotSuggestionToolSchema,
-    updateEventInPrimaryCalendarToolSchema,
+    viewCalendarEventsFromPrimaryCalendarToolSchema,
+    searchCalendarEventsFromPrimaryCalendarToolSchema,
+    modifyEventInPrimaryCalendarToolSchema,
+    cancelEventInPrimaryCalendarToolSchema,
+    initiateReschedulingOverEmailInPrimaryCalendarToolSchema,
+    initiateSchedulingOverEmailInPrimaryCalendarToolSchema,
+    findBookableSlotsIncludeCalendarsSchema,
+    checkBusyStatusToolSchema,
 } from '@/schema/tools/event';
 
 // Helper function to log tool execution
@@ -28,9 +28,9 @@ const logToolExecution = (toolName: string, input: any, output: any) => {
  * @param runtimeContext - The runtime context
  * @returns The result of the event creation
  */
-export const createEventTool = createTool({
+export const createEvent = createTool({
     id: 'create-event',
-    description: 'Create a new event',
+    description: 'Create new calendar events after slot confirmation or direct request',
     inputSchema: createEventInPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
@@ -57,10 +57,10 @@ export const createEventTool = createTool({
  * @param runtimeContext - The runtime context
  * @returns The result of the event listing
  */
-export const listEventsTool = createTool({
-    id: 'list-events',
-    description: 'List events',
-    inputSchema: listEventsFromPrimaryCalendarToolSchema,
+export const viewCalendarEvents = createTool({
+    id: 'view-calendar-events',
+    description: 'Lists and displays events within specific date/time ranges',
+    inputSchema: viewCalendarEventsFromPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
         const user = await getUserFromRuntimeContext(runtimeContext);
@@ -84,10 +84,10 @@ export const listEventsTool = createTool({
  * @param runtimeContext - The runtime context
  * @returns The result of the event update
  */
-export const updateEventTool = createTool({
-    id: 'update-event',
-    description: 'Update an event',
-    inputSchema: updateEventInPrimaryCalendarToolSchema,
+export const modifyEvent = createTool({
+    id: 'modify-event',
+    description: 'Update details, times, attendees or more for existing events',
+    inputSchema: modifyEventInPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
         const user = await getUserFromRuntimeContext(runtimeContext);
@@ -111,10 +111,10 @@ export const updateEventTool = createTool({
  * @param runtimeContext - The runtime context
  * @returns The result of the event deletion
  */
-export const deleteEventTool = createTool({
-    id: 'delete-event',
-    description: 'Delete an event',
-    inputSchema: deleteEventInPrimaryCalendarToolSchema,
+export const cancelEvent = createTool({
+    id: 'cancel-event',
+    description: 'Remove or cancel scheduled events from calendar',
+    inputSchema: cancelEventInPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
         const user = await getUserFromRuntimeContext(runtimeContext);
@@ -138,10 +138,11 @@ export const deleteEventTool = createTool({
  * @param runtimeContext - The runtime context
  * @returns The result of the availability check
  */
-export const getAvailabilityTool = createTool({
-    id: 'get-availability',
-    description: 'Get availability',
-    inputSchema: freeBusyOmitCalendarsSchema,
+export const checkBusyStatus = createTool({
+    id: 'check-busy-status',
+    description:
+        'Check when the executive is busy/free during a specific time period without suggesting bookable slots',
+    inputSchema: checkBusyStatusToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
         const user = await getUserFromRuntimeContext(runtimeContext);
@@ -165,10 +166,10 @@ export const getAvailabilityTool = createTool({
  * @param runtimeContext - The runtime context
  * @returns The result of the event search
  */
-export const searchEventsTool = createTool({
+export const searchCalendarEvents = createTool({
     id: 'search-events',
     description: 'Search events',
-    inputSchema: searchEventsFromPrimaryCalendarToolSchema,
+    inputSchema: searchCalendarEventsFromPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
         const user = await getUserFromRuntimeContext(runtimeContext);
@@ -186,10 +187,17 @@ export const searchEventsTool = createTool({
     },
 });
 
-export const findAvailabilitySlotsTool = createTool({
-    id: 'find-availability-slots',
-    description: 'Find availability slots',
-    inputSchema: slotSuggestionToolSchema,
+/**
+ * Find bookable slots
+ * @param context - The context of the bookable slots
+ * @param runtimeContext - The runtime context
+ * @returns The result of the bookable slots
+ */
+export const findBookableSlots = createTool({
+    id: 'find-bookable-slots',
+    description:
+        'Find specific bookable time slots of requested duration within a time range, formatted for immediate scheduling',
+    inputSchema: findBookableSlotsIncludeCalendarsSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
         const user = await getUserFromRuntimeContext(runtimeContext);
@@ -213,11 +221,11 @@ export const findAvailabilitySlotsTool = createTool({
  * @param runtimeContext - The runtime context
  * @returns The result of the rescheduling request
  */
-export const requestReschedulingForEventTool = createTool({
-    id: 'request-rescheduling-for-event',
+export const initiateReschedulingOverEmailWithHostAndAttendees = createTool({
+    id: 'initiate-rescheduling-over-email-with-host-and-attendees',
     description:
-        'Request rescheduling for an event by creating a new email thread and starting the scheduling process all over again. This is useful when user wants you to initiate the email thread and kick off the re-scheduling process on their behalf.',
-    inputSchema: requestReschedulingInPrimaryCalendarToolSchema,
+        'Start email threads to coordinate rescheduling existing multiparty events over email with host and attendees',
+    inputSchema: initiateReschedulingOverEmailInPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
         const user = await getUserFromRuntimeContext(runtimeContext);
@@ -241,11 +249,11 @@ export const requestReschedulingForEventTool = createTool({
  * @param runtimeContext - The runtime context
  * @returns The result of the scheduling request
  */
-export const requestSchedulingForEventTool = createTool({
-    id: 'request-scheduling-for-event',
+export const initiateSchedulingOverEmailWithHostAndAttendees = createTool({
+    id: 'initiate-scheduling-over-email-with-host-and-attendees',
     description:
-        'Request scheduling for an event by creating a new email thread and starting the scheduling process. This is useful when user wants you to initiate the email thread and kick off the scheduling process on their behalf.',
-    inputSchema: requestSchedulingInPrimaryCalendarToolSchema,
+        'Start email threads to coordinate scheduling new multiparty events over email with host and attendees',
+    inputSchema: initiateSchedulingOverEmailInPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
         const user = await getUserFromRuntimeContext(runtimeContext);

@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Schema for listing events from one or more calendars
  * Supports filtering by time range and timezone specification
  */
-export const listEventsToolSchema = z.object({
+export const viewCalendarEventsToolSchema = z.object({
     calendarId: z
         .string()
         .describe(
@@ -44,7 +44,7 @@ export const listEventsToolSchema = z.object({
         ),
 });
 
-export const listEventsFromPrimaryCalendarToolSchema = listEventsToolSchema.omit({
+export const viewCalendarEventsFromPrimaryCalendarToolSchema = viewCalendarEventsToolSchema.omit({
     calendarId: true,
 });
 
@@ -52,7 +52,7 @@ export const listEventsFromPrimaryCalendarToolSchema = listEventsToolSchema.omit
  * Schema for searching events in a calendar by text query
  * Searches across event summaries, descriptions, locations, attendees, etc.
  */
-export const searchEventsToolSchema = z.object({
+export const searchCalendarEventsToolSchema = z.object({
     calendarId: z.string().describe("ID of the calendar (use 'primary' for the main calendar)"),
     query: z
         .string()
@@ -91,9 +91,10 @@ export const searchEventsToolSchema = z.object({
         ),
 });
 
-export const searchEventsFromPrimaryCalendarToolSchema = searchEventsToolSchema.omit({
-    calendarId: true,
-});
+export const searchCalendarEventsFromPrimaryCalendarToolSchema =
+    searchCalendarEventsToolSchema.omit({
+        calendarId: true,
+    });
 
 /**
  * Schema for creating a new calendar event
@@ -178,7 +179,7 @@ export const createEventInPrimaryCalendarToolSchema = createEventToolSchema.omit
  * Schema for updating an existing calendar event
  * Supports partial updates and recurring event modification scopes
  */
-const updateEventBaseSchema = z.object({
+const modifyEventBaseSchema = z.object({
     calendarId: z.string().describe("ID of the calendar (use 'primary' for the main calendar)"),
     eventId: z.string().describe('ID of the event to update'),
     summary: z.string().optional().describe('Updated title of the event'),
@@ -276,7 +277,7 @@ const updateEventBaseSchema = z.object({
         .optional(),
 });
 
-export const updateEventToolSchema = updateEventBaseSchema
+export const modifyEventToolSchema = modifyEventBaseSchema
     .refine(
         (data) => {
             // Require originalStartTime when modificationScope is 'thisEventOnly'
@@ -319,7 +320,7 @@ export const updateEventToolSchema = updateEventBaseSchema
         },
     );
 
-export const updateEventInPrimaryCalendarToolSchema = updateEventBaseSchema
+export const modifyEventInPrimaryCalendarToolSchema = modifyEventBaseSchema
     .omit({
         calendarId: true,
     })
@@ -369,7 +370,7 @@ export const updateEventInPrimaryCalendarToolSchema = updateEventBaseSchema
  * Schema for deleting a calendar event
  * Supports notification settings for attendees
  */
-export const deleteEventToolSchema = z.object({
+export const cancelEventToolSchema = z.object({
     calendarId: z.string().describe("ID of the calendar (use 'primary' for the main calendar)"),
     eventId: z.string().describe('ID of the event to delete'),
     sendUpdates: z
@@ -378,14 +379,14 @@ export const deleteEventToolSchema = z.object({
         .describe('Whether to send cancellation notifications'),
 });
 
-export const deleteEventInPrimaryCalendarToolSchema = deleteEventToolSchema.omit({
+export const cancelEventInPrimaryCalendarToolSchema = cancelEventToolSchema.omit({
     calendarId: true,
 });
 
 /**
  * Schema for requesting rescheduling of a calendar event
  */
-export const requestReschedulingToolSchema = z.object({
+export const initiateReschedulingOverEmailToolSchema = z.object({
     calendarId: z.string().describe("ID of the calendar (use 'primary' for the main calendar)"),
     eventId: z.string().describe('ID of the event to reschedule'),
     reason: z.string().describe('Reason for rescheduling'),
@@ -413,16 +414,18 @@ export const requestReschedulingToolSchema = z.object({
             })
             .describe('List of slots to consider for rescheduling'),
     ),
+    timeZone: z.string().optional().describe('Timezone for the event'),
 });
 
-export const requestReschedulingInPrimaryCalendarToolSchema = requestReschedulingToolSchema.omit({
-    calendarId: true,
-});
+export const initiateReschedulingOverEmailInPrimaryCalendarToolSchema =
+    initiateReschedulingOverEmailToolSchema.omit({
+        calendarId: true,
+    });
 
 /**
  * Schema for requesting scheduling of a calendar event
  */
-export const requestSchedulingToolSchema = z.object({
+export const initiateSchedulingOverEmailToolSchema = z.object({
     calendarId: z.string().describe("ID of the calendar (use 'primary' for the main calendar)"),
     summary: z.string().optional().describe('Title of the event'),
     description: z.string().optional().describe('Description/notes'),
@@ -452,11 +455,13 @@ export const requestSchedulingToolSchema = z.object({
     ),
     attendeeEmails: z.array(z.string().email()).describe('List of attendee emails'),
     hostEmail: z.string().email().describe('Email address of the host'),
+    timeZone: z.string().optional().describe('Timezone for the event'),
 });
 
-export const requestSchedulingInPrimaryCalendarToolSchema = requestSchedulingToolSchema.omit({
-    calendarId: true,
-});
+export const initiateSchedulingOverEmailInPrimaryCalendarToolSchema =
+    initiateSchedulingOverEmailToolSchema.omit({
+        calendarId: true,
+    });
 
 /**
  * Schema for querying free/busy information for calendars
@@ -509,13 +514,15 @@ const availabilityToolSchema = z.object({
         .describe('Maximum number of calendars to expand (max 50)'),
 });
 
-export const freeBusyOmitCalendarsSchema = availabilityToolSchema.omit({
+export const checkBusyStatusSchema = availabilityToolSchema.omit({
     calendars: true,
 });
 
-export const freeBusyIncludeCalendarsSchema = availabilityToolSchema;
+export const checkBusyStatusToolSchema = checkBusyStatusSchema;
 
-export const slotSuggestionToolSchema = freeBusyOmitCalendarsSchema.extend({
+export const checkBusyStatusIncludeCalendarsSchema = availabilityToolSchema;
+
+export const findBookableSlotsToolSchema = checkBusyStatusSchema.extend({
     excludeSlots: z.array(
         z.object({
             startTime: z
@@ -541,7 +548,7 @@ export const slotSuggestionToolSchema = freeBusyOmitCalendarsSchema.extend({
     slotDurationMinutes: z.number().int().min(15).describe('Duration of the slot in minutes'),
 });
 
-export const slotSuggestionToolSchemaIncludeCalendars = slotSuggestionToolSchema.extend({
+export const findBookableSlotsIncludeCalendarsSchema = findBookableSlotsToolSchema.extend({
     calendars: z
         .array(
             z.object({

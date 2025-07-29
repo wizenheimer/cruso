@@ -1,36 +1,36 @@
 import {
     createEventInPrimaryCalendarToolSchema,
     createEventToolSchema,
-    deleteEventInPrimaryCalendarToolSchema,
-    deleteEventToolSchema,
-    freeBusyIncludeCalendarsSchema,
-    freeBusyOmitCalendarsSchema,
-    listEventsFromPrimaryCalendarToolSchema,
-    listEventsToolSchema,
-    requestReschedulingInPrimaryCalendarToolSchema,
-    requestReschedulingToolSchema,
-    requestSchedulingInPrimaryCalendarToolSchema,
-    requestSchedulingToolSchema,
-    searchEventsFromPrimaryCalendarToolSchema,
-    searchEventsToolSchema,
-    slotSuggestionToolSchema,
-    slotSuggestionToolSchemaIncludeCalendars,
-    updateEventInPrimaryCalendarToolSchema,
-    updateEventToolSchema,
+    viewCalendarEventsFromPrimaryCalendarToolSchema,
+    viewCalendarEventsToolSchema,
+    searchCalendarEventsToolSchema,
+    searchCalendarEventsFromPrimaryCalendarToolSchema,
+    modifyEventToolSchema,
+    modifyEventInPrimaryCalendarToolSchema,
+    cancelEventToolSchema,
+    cancelEventInPrimaryCalendarToolSchema,
+    initiateReschedulingOverEmailInPrimaryCalendarToolSchema,
+    initiateSchedulingOverEmailInPrimaryCalendarToolSchema,
+    initiateReschedulingOverEmailToolSchema,
+    initiateSchedulingOverEmailToolSchema,
+    checkBusyStatusToolSchema,
+    findBookableSlotsIncludeCalendarsSchema,
+    checkBusyStatusIncludeCalendarsSchema,
+    findBookableSlotsToolSchema,
 } from '@/schema/tools/event';
 import { z } from 'zod';
 
 export type ListEventsFromPrimaryCalendarOptions = z.infer<
-    typeof listEventsFromPrimaryCalendarToolSchema
+    typeof viewCalendarEventsFromPrimaryCalendarToolSchema
 >;
 
-export type ListEventsFromAnyCalendarOptions = z.infer<typeof listEventsToolSchema>;
+export type ListEventsFromAnyCalendarOptions = z.infer<typeof viewCalendarEventsToolSchema>;
 
 export type SearchEventsFromPrimaryCalendarOptions = z.infer<
-    typeof searchEventsFromPrimaryCalendarToolSchema
+    typeof searchCalendarEventsFromPrimaryCalendarToolSchema
 >;
 
-export type SearchEventsFromAnyCalendarOptions = z.infer<typeof searchEventsToolSchema>;
+export type SearchEventsFromAnyCalendarOptions = z.infer<typeof searchCalendarEventsToolSchema>;
 
 export type CreateEventInPrimaryCalendarOptions = z.infer<
     typeof createEventInPrimaryCalendarToolSchema
@@ -39,35 +39,35 @@ export type CreateEventInPrimaryCalendarOptions = z.infer<
 export type CreateEventFromAnyCalendarOptions = z.infer<typeof createEventToolSchema>;
 
 export type UpdateEventInPrimaryCalendarOptions = z.infer<
-    typeof updateEventInPrimaryCalendarToolSchema
+    typeof modifyEventInPrimaryCalendarToolSchema
 >;
 
-export type UpdateEventFromAnyCalendarOptions = z.infer<typeof updateEventToolSchema>;
+export type UpdateEventFromAnyCalendarOptions = z.infer<typeof modifyEventToolSchema>;
 
 export type DeleteEventInPrimaryCalendarOptions = z.infer<
-    typeof deleteEventInPrimaryCalendarToolSchema
+    typeof cancelEventInPrimaryCalendarToolSchema
 >;
 
-export type DeleteEventFromAnyCalendarOptions = z.infer<typeof deleteEventToolSchema>;
+export type DeleteEventFromAnyCalendarOptions = z.infer<typeof cancelEventToolSchema>;
 
-export type FreeBusyOmitCalendarsOptions = z.infer<typeof freeBusyOmitCalendarsSchema>;
+export type FreeBusyOmitCalendarsOptions = z.infer<typeof checkBusyStatusToolSchema>;
 
-export type FreeBusyIncludeCalendarsOptions = z.infer<typeof freeBusyIncludeCalendarsSchema>;
+export type FreeBusyIncludeCalendarsOptions = z.infer<typeof checkBusyStatusIncludeCalendarsSchema>;
 
-export type SlotSuggestionOptionsExcludeCalendars = z.infer<typeof slotSuggestionToolSchema>;
+export type SlotSuggestionOptionsExcludeCalendars = z.infer<typeof findBookableSlotsToolSchema>;
 
 export type SlotSuggestionOptionsIncludeCalendars = z.infer<
-    typeof slotSuggestionToolSchemaIncludeCalendars
+    typeof findBookableSlotsIncludeCalendarsSchema
 >;
 
-export type RequestReschedulingOptions = z.infer<typeof requestReschedulingToolSchema>;
+export type RequestReschedulingOptions = z.infer<typeof initiateReschedulingOverEmailToolSchema>;
 
 export type RequestReschedulingInPrimaryCalendarOptions = z.infer<
-    typeof requestReschedulingInPrimaryCalendarToolSchema
+    typeof initiateReschedulingOverEmailInPrimaryCalendarToolSchema
 >;
 
-export type SchedulingOptions = z.infer<typeof requestSchedulingToolSchema>;
+export type SchedulingOptions = z.infer<typeof initiateSchedulingOverEmailToolSchema>;
 
 export type SchedulingInPrimaryCalendarOptions = z.infer<
-    typeof requestSchedulingInPrimaryCalendarToolSchema
+    typeof initiateSchedulingOverEmailInPrimaryCalendarToolSchema
 >;

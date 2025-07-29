@@ -1,39 +1,38 @@
 import {
-    updateEventTool,
-    listEventsTool,
-    createEventTool,
-    deleteEventTool,
-    getAvailabilityTool,
-    searchEventsTool,
-    findAvailabilitySlotsTool,
-    requestReschedulingForEventTool,
-    requestSchedulingForEventTool,
+    createEvent,
+    modifyEvent,
+    cancelEvent,
+    viewCalendarEvents,
+    searchCalendarEvents,
+    checkBusyStatus,
+    initiateReschedulingOverEmailWithHostAndAttendees,
+    initiateSchedulingOverEmailWithHostAndAttendees,
 } from './event';
-import { getPreferencesTool, setPreferencesTool } from './preference';
+import { getSchedulingDefaults, updateSchedulingDefaults } from './preference';
 
 export const calendarTools = {
-    updateEventTool,
-    listEventsTool,
-    createEventTool,
-    deleteEventTool,
-    getAvailabilityTool,
-    searchEventsTool,
-    findAvailabilitySlotsTool,
-    requestReschedulingForEventTool,
-    requestSchedulingForEventTool,
+    createEvent,
+    modifyEvent,
+    cancelEvent,
+    viewCalendarEvents,
+    searchCalendarEvents,
+    checkBusyStatus,
+    initiateReschedulingOverEmailWithHostAndAttendees,
+    initiateSchedulingOverEmailWithHostAndAttendees,
 };
 
 export const thirdPartyCalendarTools = {
-    findAvailabilitySlotsTool,
-    createEventTool,
-    updateEventTool,
+    checkBusyStatus,
+    createEvent,
+    modifyEvent,
+    cancelEvent,
 };
 
 export const preferenceTools = {
-    getPreferencesTool,
-    setPreferencesTool,
+    getSchedulingDefaults,
+    updateSchedulingDefaults,
 };
 
 export const thirdPartyPreferenceTools = {
-    getPreferencesTool,
+    getSchedulingDefaults,
 };

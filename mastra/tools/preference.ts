@@ -17,7 +17,7 @@ const logToolExecution = (toolName: string, input: any, output: any) => {
  * @param runtimeContext - The runtime context
  * @returns The result of the preference get
  */
-export const getPreferencesTool = createTool({
+export const getSchedulingDefaults = createTool({
     id: 'get-preferences',
     description: 'Get default scheduling preferences',
     outputSchema: z.string(),
@@ -39,7 +39,7 @@ export const getPreferencesTool = createTool({
  * @param runtimeContext - The runtime context
  * @returns The result of the preference update
  */
-export const setPreferencesTool = createTool({
+export const updateSchedulingDefaults = createTool({
     id: 'set-preferences',
     description: "Update user's default scheduling preferences",
     inputSchema: z.object({
