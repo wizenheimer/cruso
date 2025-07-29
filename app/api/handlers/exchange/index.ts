@@ -23,6 +23,12 @@ export const handleInboxRequest = async (requestContext: Context) => {
         throw new Error('Email data not found in context');
     }
 
+    console.log('Processing webhook for message', {
+        messageId: incomingEmailData.messageId,
+        sender: incomingEmailData.sender,
+        exchangeId: incomingEmailData.exchangeId,
+    });
+
     const exchangeService = ExchangeService.getInstance();
 
     // Check if the email is the first message in the exchange
@@ -97,7 +103,11 @@ const executeAction = async (
     incomingEmailData: EmailData,
     authenticatedUser: User | null,
 ) => {
-    console.log('executing action', { action: actionToExecute });
+    console.log('executing action', {
+        action: actionToExecute,
+        messageId: incomingEmailData.messageId,
+        user: authenticatedUser?.id,
+    });
 
     const exchangeService = ExchangeService.getInstance();
 

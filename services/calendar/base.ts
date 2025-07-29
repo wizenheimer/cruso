@@ -5,6 +5,7 @@ import { calendarConnections } from '@/db/schema/calendars';
 import { account } from '@/db/schema/auth';
 import { eq, and } from 'drizzle-orm';
 import { google } from 'googleapis';
+import { DateTime } from 'luxon';
 
 export abstract class BaseCalendarService {
     protected userId: string;
@@ -117,109 +118,90 @@ export abstract class BaseCalendarService {
         }
     }
 
-    protected convertLocalTimeToUTC(
-        year: number,
-        month: number,
-        day: number,
-        hour: number,
-        minute: number,
-        second: number,
-        timezone: string,
-    ): Date {
-        // Create a date that we'll use to find the correct UTC time
-        // Start with the assumption that it's in UTC
-        let testDate = new Date(Date.UTC(year, month, day, hour, minute, second));
-
-        // Get what this UTC time looks like in the target timezone
-        const options: Intl.DateTimeFormatOptions = {
-            timeZone: timezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-        };
-
-        // Format the test date in the target timezone
-        const formatter = new Intl.DateTimeFormat('sv-SE', options);
-        const formattedInTargetTZ = formatter.format(testDate);
-
-        // Parse the formatted result to see what time it shows
-        const [datePart, timePart] = formattedInTargetTZ.split(' ');
-        const [targetYear, targetMonth, targetDay] = datePart.split('-').map(Number);
-        const [targetHour, targetMinute, targetSecond] = timePart.split(':').map(Number);
-
-        // Calculate the difference between what we want and what we got
-        const wantedTime = new Date(year, month, day, hour, minute, second).getTime();
-        const actualTime = new Date(
-            targetYear,
-            targetMonth - 1,
-            targetDay,
-            targetHour,
-            targetMinute,
-            targetSecond,
-        ).getTime();
-        const offsetMs = wantedTime - actualTime;
-
-        // Adjust the UTC time by the offset
-        return new Date(testDate.getTime() + offsetMs);
-    }
-
+    /**
+     * Convert datetime string to RFC3339 format using Luxon
+     * No regex - relies on Luxon's robust parsing
+     */
     protected convertToRFC3339(datetime: string, fallbackTimezone: string): string {
-        if (this.hasTimezoneInDatetime(datetime)) {
-            // Already has timezone, use as-is
-            return datetime;
-        } else {
-            // Timezone-naive, interpret as local time in fallbackTimezone and convert to UTC
-            try {
-                // Parse the datetime components
-                const match = datetime.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/);
-                if (!match) {
-                    throw new Error('Invalid datetime format');
-                }
+        try {
+            // Parse with Luxon first
+            const dt = DateTime.fromISO(datetime);
 
-                const [, year, month, day, hour, minute, second] = match.map(Number);
-
-                // Create a temporary date in UTC to get the baseline
-                const utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
-
-                // Find what UTC time corresponds to the desired local time in the target timezone
-                // We do this by binary search approach or by using the timezone offset
-                const targetDate = this.convertLocalTimeToUTC(
-                    year,
-                    month - 1,
-                    day,
-                    hour,
-                    minute,
-                    second,
-                    fallbackTimezone,
-                );
-
-                return targetDate.toISOString().replace(/\.000Z$/, 'Z');
-            } catch (error) {
-                // Fallback: if timezone conversion fails, append Z for UTC
-                return datetime + 'Z';
+            if (!dt.isValid) {
+                throw new Error(`Invalid datetime format: ${dt.invalidReason}`);
             }
+
+            // Check if it already has timezone info
+            if (this.hasTimezoneInfoLuxon(dt)) {
+                // Already has timezone info, convert to UTC
+                return dt.toUTC().toISO({ suppressMilliseconds: true }) || datetime;
+            }
+
+            // Timezone-naive datetime - interpret in fallback timezone and convert to UTC
+            const dtWithTz = DateTime.fromISO(datetime, { zone: fallbackTimezone });
+
+            if (!dtWithTz.isValid) {
+                throw new Error(`Invalid datetime or timezone: ${dtWithTz.invalidReason}`);
+            }
+
+            return dtWithTz.toUTC().toISO({ suppressMilliseconds: true }) || `${datetime}Z`;
+        } catch (error) {
+            console.error('Error converting datetime to RFC3339:', error);
+            // Fallback: append Z for UTC (safer than throwing)
+            return `${datetime}Z`;
         }
     }
 
+    /**
+     * Create time object for Google Calendar API
+     * Uses the more reliable approach of keeping timezone info separate
+     */
     protected createTimeObject(
         datetime: string,
         fallbackTimezone: string,
     ): { dateTime: string; timeZone?: string } {
-        if (this.hasTimezoneInDatetime(datetime)) {
-            // Timezone included in datetime - use as-is, no separate timeZone property needed
-            return { dateTime: datetime };
-        } else {
-            // Timezone-naive datetime - use fallback timezone
-            return { dateTime: datetime, timeZone: fallbackTimezone };
+        try {
+            const dt = DateTime.fromISO(datetime);
+
+            if (!dt.isValid) {
+                console.error(`Invalid datetime format: ${dt.invalidReason}`);
+                // Return with fallback timezone
+                return { dateTime: datetime, timeZone: fallbackTimezone };
+            }
+
+            if (this.hasTimezoneInfoLuxon(dt)) {
+                // Timezone included in datetime - use as-is
+                return { dateTime: dt.toISO({ suppressMilliseconds: true }) || datetime };
+            }
+
+            // For timezone-naive datetime, send with timezone info
+            // This is more reliable than converting to UTC
+            const dtWithTz = DateTime.fromISO(datetime, { zone: fallbackTimezone });
+            if (!dtWithTz.isValid) {
+                console.error(`Invalid datetime with timezone: ${dtWithTz.invalidReason}`);
+                // Fallback to UTC conversion
+                return { dateTime: this.convertToRFC3339(datetime, fallbackTimezone) };
+            }
+
+            return {
+                dateTime: datetime,
+                timeZone: fallbackTimezone,
+            };
+        } catch (error) {
+            console.error('Error creating time object:', error);
+            // Fallback to UTC conversion
+            return { dateTime: this.convertToRFC3339(datetime, fallbackTimezone) };
         }
     }
 
-    private hasTimezoneInDatetime(datetime: string): boolean {
-        return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/.test(datetime);
+    /**
+     * Check if DateTime has timezone information using Luxon properties
+     * Replaces regex-based timezone detection
+     */
+    protected hasTimezoneInfoLuxon(dt: DateTime): boolean {
+        // Check if the DateTime has explicit timezone info
+        // If zone is not 'local' and not 'invalid', it has timezone info
+        return dt.zone.type !== 'local' && dt.zone.type !== 'invalid';
     }
 
     /**
@@ -248,7 +230,7 @@ export abstract class BaseCalendarService {
         const description = event.description ? `\nDescription: ${event.description}` : '';
         const location = event.location ? `\nLocation: ${event.location}` : '';
 
-        // Format start and end times with timezone
+        // Format start and end times with timezone using Luxon
         const startTime = this.formatDateTime(
             event.start?.dateTime,
             event.start?.date,
@@ -268,16 +250,16 @@ export abstract class BaseCalendarService {
                 timeInfo = `\nDate: ${startTime}`;
             } else {
                 // Multi-day all-day event - end date is exclusive, so subtract 1 day for display
-                const endDate = event.end?.date ? new Date(event.end.date) : null;
+                const endDate = event.end?.date;
                 if (endDate) {
-                    endDate.setDate(endDate.getDate() - 1); // Subtract 1 day since end is exclusive
-                    const adjustedEndTime = endDate.toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                    });
-                    timeInfo = `\nStart Date: ${startTime}\nEnd Date: ${adjustedEndTime}`;
+                    try {
+                        const endDateTime = DateTime.fromISO(endDate).minus({ days: 1 });
+                        const adjustedEndTime = endDateTime.toLocaleString(DateTime.DATE_FULL);
+                        timeInfo = `\nStart Date: ${startTime}\nEnd Date: ${adjustedEndTime}`;
+                    } catch (error) {
+                        console.error('Error formatting end date:', error);
+                        timeInfo = `\nStart Date: ${startTime}`;
+                    }
                 } else {
                     timeInfo = `\nStart Date: ${startTime}`;
                 }
@@ -288,7 +270,6 @@ export abstract class BaseCalendarService {
         }
 
         const attendeeInfo = this.formatAttendees(event.attendees);
-
         const eventUrl = this.getEventUrl(event, calendarId);
         const urlInfo = eventUrl ? `\nView: ${eventUrl}` : '';
 
@@ -296,7 +277,8 @@ export abstract class BaseCalendarService {
     }
 
     /**
-     * Formats a date/time with timezone abbreviation
+     * Formats a date/time for AI agent consumption
+     * Returns ISO format with timezone info for clarity
      */
     private formatDateTime(
         dateTime?: string | null,
@@ -309,36 +291,38 @@ export abstract class BaseCalendarService {
             const dt = dateTime || date;
             if (!dt) return 'unspecified';
 
-            const parsedDate = new Date(dt);
-            if (isNaN(parsedDate.getTime())) return dt;
-
-            // If it's a date-only event, just return the date
+            // If it's a date-only event, format as ISO date
             if (date && !dateTime) {
-                return parsedDate.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                });
+                const luxonDate = DateTime.fromISO(date);
+                if (!luxonDate.isValid) {
+                    console.error(`Invalid date: ${luxonDate.invalidReason}`);
+                    return dt;
+                }
+                // Return ISO date format for AI clarity
+                return luxonDate.toISODate() || dt;
             }
 
-            // For timed events, include timezone
-            const options: Intl.DateTimeFormatOptions = {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                timeZoneName: 'short',
-            };
+            // For timed events, return ISO format with timezone info
+            let luxonDateTime: DateTime;
 
             if (timeZone) {
-                options.timeZone = timeZone;
+                // Parse and convert to specified timezone
+                luxonDateTime = DateTime.fromISO(dt, { zone: timeZone });
+            } else {
+                // Parse with whatever timezone info is in the string
+                luxonDateTime = DateTime.fromISO(dt);
             }
 
-            return parsedDate.toLocaleString('en-US', options);
+            if (!luxonDateTime.isValid) {
+                console.error(`Invalid datetime: ${luxonDateTime.invalidReason}`);
+                return dt;
+            }
+
+            // Return ISO format with timezone info for AI agent clarity
+            // This is unambiguous and easily parseable
+            return luxonDateTime.toISO({ suppressMilliseconds: true }) || dt;
         } catch (error) {
+            console.error('Error formatting datetime:', error);
             return dateTime || date || 'unspecified';
         }
     }
@@ -383,5 +367,33 @@ export abstract class BaseCalendarService {
         const encodedCalendarId = encodeURIComponent(calendarId);
         const encodedEventId = encodeURIComponent(eventId);
         return `https://calendar.google.com/calendar/event?eid=${encodedEventId}&cid=${encodedCalendarId}`;
+    }
+
+    /**
+     * Utility method to validate timezone strings
+     */
+    protected isValidTimezone(timezone: string): boolean {
+        try {
+            const dt = DateTime.now().setZone(timezone);
+            return dt.isValid;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Utility method to get current time in a specific timezone
+     */
+    protected getCurrentTimeInTimezone(timezone: string): string {
+        try {
+            const dt = DateTime.now().setZone(timezone);
+            if (!dt.isValid) {
+                throw new Error(`Invalid timezone: ${timezone}`);
+            }
+            return dt.toISO({ suppressMilliseconds: true }) || dt.toString();
+        } catch (error) {
+            console.error('Error getting current time in timezone:', error);
+            return DateTime.utc().toISO({ suppressMilliseconds: true }) || new Date().toISOString();
+        }
     }
 }

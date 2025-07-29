@@ -41,30 +41,71 @@ export class ExchangeDataService {
     }
 
     /**
-     * Save an email to the database
+     * Upsert an email record - insert if new, update if exists
+     * @param data - The exchange data to upsert
+     * @param messageId - The message ID for logging
+     * @returns Promise<ExchangeData> - The upserted email data
+     */
+    private async upsertEmailRecord(data: ExchangeData, messageId: string): Promise<ExchangeData> {
+        // First, check if the message already exists
+        const existingMessage = await this.getByMessageId(messageId);
+
+        if (existingMessage) {
+            console.log(`Message ${messageId} already exists, updating existing record`);
+
+            try {
+                // Update the existing record with new data
+                const [updatedExchangeData] = await this.db
+                    .update(exchangeData)
+                    .set({
+                        exchangeId: data.exchangeId,
+                        exchangeOwnerId: data.exchangeOwnerId,
+                        previousMessageId: data.previousMessageId,
+                        sender: data.sender,
+                        recipients: data.recipients,
+                        timestamp: data.timestamp,
+                        type: data.type,
+                    })
+                    .where(eq(exchangeData.messageId, data.messageId))
+                    .returning();
+
+                console.log(`Successfully updated existing message: ${messageId}`);
+                return updatedExchangeData;
+            } catch (updateError) {
+                console.error(`Failed to update existing message ${messageId}:`, updateError);
+                throw updateError;
+            }
+        }
+
+        // If the message doesn't exist, insert it
+        try {
+            const [savedExchangeData] = await this.db.insert(exchangeData).values(data).returning();
+            console.log(`Successfully inserted new message: ${messageId}`);
+            return savedExchangeData;
+        } catch (error) {
+            console.error(`Failed to insert message ${messageId}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Save an email to the database with upsert behavior
      * @param emailData - The email data to save
      * @param exchangeOwnerId - The user ID who owns this exchange
      * @returns Promise<ExchangeData> - The saved email data
      */
     async saveEmail(emailData: EmailData, exchangeOwnerId: string): Promise<ExchangeData> {
         const exchangeDataForDb = this.convertToExchangeData(emailData, exchangeOwnerId);
-        const [savedExchangeData] = await this.db
-            .insert(exchangeData)
-            .values(exchangeDataForDb)
-            .returning();
-
-        return savedExchangeData;
+        return this.upsertEmailRecord(exchangeDataForDb, emailData.messageId);
     }
 
     /**
-     * Create a new email in the database
+     * Create a new email in the database with upsert behavior
      * @param data - The email data to create
      * @returns Promise<ExchangeData> - The created email data
      */
     async createEmail(data: CreateExchangeData): Promise<ExchangeData> {
-        const [newExchangeData] = await this.db.insert(exchangeData).values(data).returning();
-
-        return newExchangeData;
+        return this.upsertEmailRecord(data, data.messageId);
     }
 
     // ============================================================================
