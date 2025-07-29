@@ -2,6 +2,7 @@ import { Context } from 'hono';
 import { EmailData } from '@/types/exchange';
 import { User } from '@/types/users';
 import { ExchangeService } from '@/services/exchange';
+import { isAllowedListEntry, setAllowedListEntries } from '@/db/queries/allowed-list';
 
 /**
  * The status code to return for allowed webhook requests
@@ -110,12 +111,16 @@ const executeAction = async (
     });
 
     const exchangeService = ExchangeService.getInstance();
-
+    const isAllowed = await isAllowedSender(incomingEmailData);
     switch (actionToExecute) {
         case 'onboard':
             await exchangeService.handleNewUser(incomingEmailData);
             break;
         case 'engage':
+            if (!isAllowed) {
+                console.log('skipping engagement for non-allowed sender');
+                return;
+            }
             if (authenticatedUser) {
                 await exchangeService.handleEngagementForExistingUser(
                     incomingEmailData,
@@ -126,6 +131,10 @@ const executeAction = async (
             }
             break;
         case 'offboard':
+            if (!isAllowed) {
+                console.log('skipping engagement for non-allowed sender');
+                return;
+            }
             if (authenticatedUser) {
                 await exchangeService.handleInvalidEngagementForExistingUser(
                     incomingEmailData,
@@ -137,3 +146,26 @@ const executeAction = async (
             break;
     }
 };
+
+/**
+ * Handles spam emails by adding the sender and recipients to the allowed list.
+ *
+ * @param {RawEmailData} emailData - The email data to handle
+ */
+async function isAllowedSender(emailData: EmailData): Promise<boolean> {
+    // Check if the sender is in allowed list
+    const isAllowed = await isAllowedListEntry(emailData.sender);
+    if (!isAllowed) {
+        return false;
+    }
+
+    // Add the receiptis to the allowed list if they are not already in the allowed list
+    const recipients = emailData.recipients;
+    try {
+        await setAllowedListEntries(recipients, true);
+    } catch (error) {
+        console.warn('warning: error adding recipients to allowed list:', error);
+    }
+
+    return true;
+}

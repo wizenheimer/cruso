@@ -1,5 +1,6 @@
 import disallowlist from '@/data/email.domain.json';
 import disallowAddressList from '@/data/shared.address.json';
+import * as emailAddresses from 'email-addresses';
 
 // Create a Map for O(1) lookup performance
 const disallowDomainMap = new Map<string, boolean>();
@@ -9,48 +10,24 @@ const disallowAddressMap = new Map<string, boolean>();
 disallowAddressList.forEach((item) => disallowAddressMap.set(item, true));
 
 /**
- * Check if the email is in the disallowlist
+ * Check if the email domain or address is in the disallowlist
  * @param email - The email to check
- * @returns true if the email is in the disallowlist, false otherwise
+ * @returns Object with domain and address validation results
  */
-export const isDisallowedDomain = (email: string) => {
+export const checkDisallowedEmail = (email: string) => {
     // Handle edge cases
     if (!email || typeof email !== 'string') {
-        return true; // Invalid email format
+        return true;
     }
 
-    // Parse domain from email
-    const atIndex = email.indexOf('@');
-    if (atIndex === -1 || atIndex === email.length - 1) {
-        // No @ symbol or @ is at the end - invalid email format
-        return true; // Invalid email format
+    // Parse email using email-addresses package
+    const parsed = emailAddresses.parseOneAddress(email);
+    if (!parsed || parsed.type !== 'mailbox') {
+        return true;
     }
 
-    const domain = email.substring(atIndex + 1).toLowerCase();
+    const domain = parsed.domain?.toLowerCase();
+    const address = parsed.local;
 
-    // Check if the domain is in the disallowlist using Map
-    return disallowDomainMap.has(domain);
-};
-
-/**
- * Check if the email is in the disallowlist
- * @param email - The email to check
- * @returns true if the email is in the disallowlist, false otherwise
- */
-export const isDisallowedAddress = (email: string) => {
-    // Handle edge cases
-    if (!email || typeof email !== 'string') {
-        return true; // Invalid email format
-    }
-
-    // Parse address from email
-    const atIndex = email.indexOf('@');
-    if (atIndex === -1 || atIndex === email.length - 1) {
-        return true; // Invalid email format
-    }
-
-    const address = email.substring(0, atIndex);
-
-    // Check if the address is in the disallowlist
-    return disallowAddressMap.has(address);
+    return !domain || disallowDomainMap.has(domain) || !address || disallowAddressMap.has(address);
 };

@@ -4,6 +4,14 @@ import { ExchangeProcessingService } from './processing';
 import { Context } from 'hono';
 import { User } from '@/types/users';
 import { CreateExchangeData, ExchangeFilters } from '@/types/exchange';
+import {
+    WELCOME_EMAIL_SUBJECT,
+    WELCOME_EMAIL_BODY,
+    WELCOME_EMAIL_SIGNATURE,
+    WAITLIST_EMAIL_SUBJECT,
+    WAITLIST_EMAIL_BODY,
+    WAITLIST_EMAIL_SIGNATURE,
+} from '@/constants/email';
 
 export class ExchangeService {
     private static instance: ExchangeService | null = null;
@@ -173,12 +181,38 @@ export class ExchangeService {
         subject: string,
         body: string,
         recipients: string[],
+        signature?: string,
     ) {
         return this.exchangeProcessingService.createNewExchangeOnBehalfOfUser(
             exchangeOwnerId,
             subject,
             body,
             recipients,
+            signature,
+        );
+    }
+
+    // ============================================================================
+    // EMAIL TEMPLATES
+    // ============================================================================
+
+    async sendWelcomeEmail(userId: string, userEmail: string) {
+        await this.createNewExchangeOnBehalfOfUser(
+            userId,
+            WELCOME_EMAIL_SUBJECT,
+            WELCOME_EMAIL_BODY,
+            [userEmail],
+            WELCOME_EMAIL_SIGNATURE,
+        );
+    }
+
+    async sendWaitlistEmail(userId: string, userEmail: string) {
+        await this.createNewExchangeOnBehalfOfUser(
+            userId,
+            WAITLIST_EMAIL_SUBJECT,
+            WAITLIST_EMAIL_BODY,
+            [userEmail],
+            WAITLIST_EMAIL_SIGNATURE,
         );
     }
 }

@@ -316,6 +316,7 @@ export class ExchangeProcessingService {
         subject: string,
         body: string,
         recipients: string[],
+        signature?: string,
     ) {
         // Get the user from the exchange owner id
         const user = await getUserById(exchangeOwnerId);
@@ -324,8 +325,9 @@ export class ExchangeProcessingService {
         }
 
         // Get the signature for the exchange owner
-        const signature =
-            await this.exchangeDataService.getSignatureForExchangeOwner(exchangeOwnerId);
+        const formattedSignature =
+            signature ||
+            (await this.exchangeDataService.getSignatureForExchangeOwner(exchangeOwnerId));
 
         const userEmail = user.email;
 
@@ -334,7 +336,7 @@ export class ExchangeProcessingService {
         recipients = recipients.filter((recipient) => recipient !== userEmail);
 
         // Formatted body with signature
-        const formattedBody = body + `\n\n${signature}`;
+        const formattedBody = body + `\n\n${formattedSignature}`;
 
         // Create a new thread
         const sentEmail = await this.emailService.sendEmail({

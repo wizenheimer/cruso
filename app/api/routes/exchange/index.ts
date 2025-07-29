@@ -1,9 +1,5 @@
 import { Hono } from 'hono';
-import {
-    parseEmailDataMiddleware,
-    parseUserFromEmailMiddleware,
-    rejectDisallowedDomainsMiddleware,
-} from '@/app/api/middleware/inbox';
+import { parseEmailDataMiddleware, parseUserFromEmailMiddleware } from '@/app/api/middleware/inbox';
 import { handleInboxRequest } from '@/app/api/handlers/exchange';
 
 /**
@@ -19,12 +15,7 @@ const webhookRequestPath = `/${process.env.MAILGUN_WEBHOOK_REQUEST_PATH || 'webh
 /**
  * Apply webhook middleware to all routes in this router
  */
-inbox.use(
-    '*',
-    parseEmailDataMiddleware,
-    rejectDisallowedDomainsMiddleware,
-    parseUserFromEmailMiddleware,
-);
+inbox.use('*', parseEmailDataMiddleware, parseUserFromEmailMiddleware);
 
 /**
  * Inbox webhook endpoint

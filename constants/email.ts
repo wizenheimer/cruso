@@ -65,6 +65,55 @@ Nick
 
 /**
  * ===============================
+ * Welcome email for new users
+ * ===============================
+ */
+export const WELCOME_EMAIL_SUBJECT = "And you're in - Welcome to Cruso";
+
+export const WELCOME_EMAIL_BODY = `Hi,
+
+Welcome to Cruso! I'm your new executive assistant, and I'm here to help manage your calendar and scheduling.
+
+I can handle meeting scheduling, rescheduling, finding available slots, and keeping your calendar organized - all with minimal back-and-forth.
+
+Here are some examples of what I can do for you:
+
+• "Schedule 30 mins tomorrow to prep for the board meeting"
+• "Find us a time for a sync with Sarah and Mike next week"
+• "What's on my calendar this afternoon?"
+• "Reschedule the quarterly review meeting with the board"
+• "Clear my calendar this afternoon"
+• "Change my working hours to 11 AM - 2 PM, Monday to Friday"
+
+To get started, simply forward me any email with scheduling context, and I'll take care of the rest.
+
+I'm a work in progress, so please bear with me as I learn more about you and your preferences. You could also help me get better by simply replying to this email or by changing your preference document in the dashboard.`;
+
+export const WELCOME_EMAIL_SIGNATURE = 'Cheers, \nCruso';
+
+/**
+ * ===============================
+ * Waitlist email for users on waitlist
+ * ===============================
+ */
+export const WAITLIST_EMAIL_SUBJECT =
+    "Good things come to those who... actually, let's speed this up";
+
+export const WAITLIST_EMAIL_BODY = `Hi there,
+
+Thanks for your interest in Cruso! We're thrilled to have you on board.
+
+Cruso is an AI executive assistant designed to handle calendar and scheduling needs with minimal back-and-forth. It can schedule meetings, find available slots, reschedule appointments, and keep calendars organized.
+
+We're gradually rolling out access for new teams, and will reach out with onboarding details as soon as your spot opens up.
+
+
+If waiting doesn't work for you (we understand!), let us know at https://cal.com/nayann/cruso. We're founders too and we occasionally fast-track access for individuals who are ready to dive straight in.`;
+
+export const WAITLIST_EMAIL_SIGNATURE = 'Cheers, \nCruso';
+
+/**
+ * ===============================
  * Offboarding email for users
  * ===============================
  */

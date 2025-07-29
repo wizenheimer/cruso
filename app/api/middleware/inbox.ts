@@ -1,17 +1,11 @@
 import { Context, Next } from 'hono';
 import { ExchangeService } from '@/services/exchange';
 import { getUserByEmail } from '@/db/queries/users';
-import { isDisallowedAddress, isDisallowedDomain } from '@/lib/email';
 
 /**
  * The status code to return when the webhook is disallowed
  */
 const disallowedWebhookStatusCode = 426;
-
-/**
- * The flag to return when the webhook is disallowed
- */
-const rejectDisallowedDomainFlag = false; // process.env.NODE_ENV === 'production';
 
 /**
  * Parse email data from the webhook - this is the first middleware to run
@@ -40,53 +34,6 @@ export const parseEmailDataMiddleware = async (c: Context, next: Next) => {
             disallowedWebhookStatusCode,
         );
     }
-};
-
-/**
- * Reject emails from disallowed domains - this is the second middleware to run
- * @param c - The context object
- * @param next - The next middleware function
- */
-export const rejectDisallowedDomainsMiddleware = async (c: Context, next: Next) => {
-    // If the reject disallowed domain flag is false, continue to the next middleware
-    if (!rejectDisallowedDomainFlag) {
-        console.log('reject disallowed domain flag is false, continuing to next middleware');
-        await next();
-        return;
-    }
-
-    // Get the email data from the context
-    const emailData = c.get('emailData');
-
-    if (!emailData) {
-        return c.json(
-            {
-                status: 'error',
-                message: 'No email data found',
-            },
-            disallowedWebhookStatusCode,
-        );
-    }
-
-    // Check if the sender is from a disallowed domain
-    const isDisallowedDomainFlag = isDisallowedDomain(emailData.sender);
-
-    // Check if the sender is from a disallowed address
-    const isDisallowedAddressFlag = isDisallowedAddress(emailData.sender);
-
-    // If the sender is from a disallowed domain, return a disallowed status code
-    if (isDisallowedDomainFlag || isDisallowedAddressFlag) {
-        return c.json(
-            {
-                status: 'error',
-                message: 'disallowed domain or address',
-            },
-            disallowedWebhookStatusCode,
-        );
-    }
-
-    // If the sender is not from a disallowed domain, continue to the next middleware
-    await next();
 };
 
 /**
