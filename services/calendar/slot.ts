@@ -236,6 +236,9 @@ export class SlotSuggestionService extends BaseCalendarService {
             return 'No available slots found in the specified time range.';
         }
 
+        // Get timezone abbreviation for display
+        const timezoneAbbr = this.getTimezoneAbbreviation(timezone);
+
         return slots
             .map((slot, index) => {
                 try {
@@ -252,7 +255,8 @@ export class SlotSuggestionService extends BaseCalendarService {
                     const startTimeStr = startDate.toFormat('h:mm a');
                     const endTimeStr = endDate.toFormat('h:mm a');
 
-                    return `${index + 1}. ${dateStr} from ${startTimeStr} to ${endTimeStr}`;
+                    // Include timezone info for AI clarity
+                    return `${index + 1}. ${dateStr} from ${startTimeStr} to ${endTimeStr} (${timezoneAbbr})`;
                 } catch (error) {
                     console.error('Error formatting slot:', error, slot);
                     return `${index + 1}. Error formatting slot`;

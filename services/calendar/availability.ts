@@ -189,7 +189,8 @@ export class AvailabilityService extends BaseCalendarService {
                 // Convert to the requested timezone for description
                 const minInTz = minDt.setZone(timezone);
                 const maxInTz = maxDt.setZone(timezone);
-                timeRangeDescription = `${minInTz.toISO({ suppressMilliseconds: true })} to ${maxInTz.toISO({ suppressMilliseconds: true })} (${timezone})`;
+                const timezoneAbbr = this.getTimezoneAbbreviation(timezone);
+                timeRangeDescription = `${minInTz.toISO({ suppressMilliseconds: true })} to ${maxInTz.toISO({ suppressMilliseconds: true })} (${timezoneAbbr})`;
             } else {
                 timeRangeDescription = `${timeMin} to ${timeMax}`;
             }
@@ -216,7 +217,8 @@ export class AvailabilityService extends BaseCalendarService {
                                     // Convert to requested timezone
                                     const startInTz = startDt.setZone(timezone);
                                     const endInTz = endDt.setZone(timezone);
-                                    return `- ${startInTz.toISO({ suppressMilliseconds: true })} to ${endInTz.toISO({ suppressMilliseconds: true })}`;
+                                    const timezoneAbbr = this.getTimezoneAbbreviation(timezone);
+                                    return `- ${startInTz.toISO({ suppressMilliseconds: true })} to ${endInTz.toISO({ suppressMilliseconds: true })} (${timezoneAbbr})`;
                                 }
                             } catch (error) {
                                 console.error('Error formatting busy time:', error);
@@ -377,7 +379,7 @@ export class AvailabilityService extends BaseCalendarService {
                     availableSlots.push({
                         start: currentTime.toISO({ suppressMilliseconds: true }) || '',
                         end: slotEnd.toISO({ suppressMilliseconds: true }) || '',
-                        displayText: `${currentTime.toFormat('ccc, MMM d')} from ${currentTime.toFormat('h:mm a')} to ${slotEnd.toFormat('h:mm a')}`,
+                        displayText: `${currentTime.toFormat('ccc, MMM d')} from ${currentTime.toFormat('h:mm a')} to ${slotEnd.toFormat('h:mm a')} (${this.getTimezoneAbbreviation(options.timeZone)})`,
                     });
 
                     currentTime = currentTime.plus({ minutes: incrementMinutes });
@@ -417,7 +419,7 @@ export class AvailabilityService extends BaseCalendarService {
                 availableSlots.push({
                     start: currentTime.toISO({ suppressMilliseconds: true }) || '',
                     end: slotEnd.toISO({ suppressMilliseconds: true }) || '',
-                    displayText: `${currentTime.toFormat('ccc, MMM d')} from ${currentTime.toFormat('h:mm a')} to ${slotEnd.toFormat('h:mm a')}`,
+                    displayText: `${currentTime.toFormat('ccc, MMM d')} from ${currentTime.toFormat('h:mm a')} to ${slotEnd.toFormat('h:mm a')} (${this.getTimezoneAbbreviation(options.timeZone)})`,
                 });
 
                 currentTime = currentTime.plus({ minutes: incrementMinutes });

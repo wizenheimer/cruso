@@ -205,6 +205,25 @@ export abstract class BaseCalendarService {
     }
 
     /**
+     * Get timezone abbreviation for display
+     */
+    protected getTimezoneAbbreviation(timezone: string): string {
+        try {
+            // Use Luxon to get the timezone abbreviation
+            const dt = DateTime.now().setZone(timezone);
+            if (dt.isValid) {
+                // Get the timezone name (e.g., "IST", "PST", "UTC")
+                const abbreviation = dt.toFormat('ZZZZ');
+                return abbreviation || timezone;
+            }
+            return timezone;
+        } catch (error) {
+            console.error('Error getting timezone abbreviation:', error);
+            return timezone;
+        }
+    }
+
+    /**
      * Detects if an event is recurring or single
      */
     protected async detectEventType(
