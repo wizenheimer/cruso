@@ -29,7 +29,7 @@ export default function NotFound() {
                     </FadeIn>
                     <FadeIn delay={0.6}>
                         <p className="text-lg md:text-xl lg:text-2xl mb-8 mt-6 max-w-2xl mx-auto text-gray-600 font-lora">
-                            We couldn't find the page you're looking for
+                            We couldn&apos;t find the page you&apos;re looking for
                         </p>
                     </FadeIn>
                     <FadeIn delay={0.8}>
