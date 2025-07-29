@@ -15,7 +15,6 @@ import {
     RequestReschedulingInPrimaryCalendarOptions,
     SchedulingInPrimaryCalendarOptions,
 } from '@/types/tools/event';
-import { calendar_v3 } from 'googleapis';
 import { SlotSuggestionService } from './slot';
 import { RequestSchedulingService } from './rescheduling';
 

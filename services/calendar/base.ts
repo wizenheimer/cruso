@@ -205,21 +205,16 @@ export abstract class BaseCalendarService {
     }
 
     /**
-     * Get timezone abbreviation for display
+     * Legacy method for backward compatibility
+     * @deprecated Use hasTimezoneInfoLuxon instead
      */
-    protected getTimezoneAbbreviation(timezone: string): string {
+    private hasTimezoneInDatetime(datetime: string): boolean {
         try {
-            // Use Luxon to get the timezone abbreviation
-            const dt = DateTime.now().setZone(timezone);
-            if (dt.isValid) {
-                // Get the timezone name (e.g., "IST", "PST", "UTC")
-                const abbreviation = dt.toFormat('ZZZZ');
-                return abbreviation || timezone;
-            }
-            return timezone;
-        } catch (error) {
-            console.error('Error getting timezone abbreviation:', error);
-            return timezone;
+            const dt = DateTime.fromISO(datetime);
+            if (!dt.isValid) return false;
+            return this.hasTimezoneInfoLuxon(dt);
+        } catch {
+            return false;
         }
     }
 
@@ -297,7 +292,7 @@ export abstract class BaseCalendarService {
 
     /**
      * Formats a date/time for AI agent consumption
-     * Returns ISO format with timezone info for clarity
+     * Returns standardized English format for consistent parsing
      */
     private formatDateTime(
         dateTime?: string | null,
@@ -317,11 +312,11 @@ export abstract class BaseCalendarService {
                     console.error(`Invalid date: ${luxonDate.invalidReason}`);
                     return dt;
                 }
-                // Return ISO date format for AI clarity
-                return luxonDate.toISODate() || dt;
+                // Return standardized date format for AI clarity
+                return luxonDate.toFormat('cccc, MMMM d, yyyy');
             }
 
-            // For timed events, return ISO format with timezone info
+            // For timed events, return standardized format with timezone info
             let luxonDateTime: DateTime;
 
             if (timeZone) {
@@ -337,9 +332,11 @@ export abstract class BaseCalendarService {
                 return dt;
             }
 
-            // Return ISO format with timezone info for AI agent clarity
-            // This is unambiguous and easily parseable
-            return luxonDateTime.toISO({ suppressMilliseconds: true }) || dt;
+            // Return standardized format for AI agent clarity
+            const timezoneAbbr = timeZone ? this.getTimezoneAbbreviation(timeZone) : '';
+            const baseFormat = luxonDateTime.toFormat('cccc, MMMM d, yyyy, h:mm a');
+
+            return timezoneAbbr ? `${baseFormat} (${timezoneAbbr})` : baseFormat;
         } catch (error) {
             console.error('Error formatting datetime:', error);
             return dateTime || date || 'unspecified';
@@ -389,30 +386,21 @@ export abstract class BaseCalendarService {
     }
 
     /**
-     * Utility method to validate timezone strings
+     * Get timezone abbreviation for display
      */
-    protected isValidTimezone(timezone: string): boolean {
+    protected getTimezoneAbbreviation(timezone: string): string {
         try {
+            // Use Luxon to get the timezone abbreviation
             const dt = DateTime.now().setZone(timezone);
-            return dt.isValid;
-        } catch {
-            return false;
-        }
-    }
-
-    /**
-     * Utility method to get current time in a specific timezone
-     */
-    protected getCurrentTimeInTimezone(timezone: string): string {
-        try {
-            const dt = DateTime.now().setZone(timezone);
-            if (!dt.isValid) {
-                throw new Error(`Invalid timezone: ${timezone}`);
+            if (dt.isValid) {
+                // Get the timezone name (e.g., "IST", "PST", "UTC")
+                const abbreviation = dt.toFormat('ZZZZ');
+                return abbreviation || timezone;
             }
-            return dt.toISO({ suppressMilliseconds: true }) || dt.toString();
+            return timezone;
         } catch (error) {
-            console.error('Error getting current time in timezone:', error);
-            return DateTime.utc().toISO({ suppressMilliseconds: true }) || new Date().toISOString();
+            console.error('Error getting timezone abbreviation:', error);
+            return timezone;
         }
     }
 }

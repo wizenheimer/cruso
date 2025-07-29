@@ -10,6 +10,7 @@ import {
     DeleteEventFromAnyCalendarOptions,
 } from '@/types/tools/event';
 import { calendar_v3 } from 'googleapis';
+import { DateTime } from 'luxon';
 
 export class EventsService extends BaseCalendarService {
     // ================================
@@ -72,8 +73,20 @@ export class EventsService extends BaseCalendarService {
                 const timezone =
                     options.timeZone ||
                     (await this.getCalendarDefaultTimezone(options.calendarId, calendar));
+
+                console.log('Converting time range for event listing:', {
+                    originalTimeMin: timeMin,
+                    originalTimeMax: timeMax,
+                    timezone: timezone,
+                });
+
                 timeMin = timeMin ? this.convertToRFC3339(timeMin, timezone) : undefined;
                 timeMax = timeMax ? this.convertToRFC3339(timeMax, timezone) : undefined;
+
+                console.log('Converted time range:', {
+                    timeMin: timeMin,
+                    timeMax: timeMax,
+                });
             }
 
             const response = await calendar.events.list({
@@ -139,6 +152,12 @@ export class EventsService extends BaseCalendarService {
                 options.timeZone ||
                 (await this.getCalendarDefaultTimezone(options.calendarId, calendar));
 
+            console.log('Creating event with timezone info:', {
+                timezone: timezone,
+                start: options.start,
+                end: options.end,
+            });
+
             const requestBody: calendar_v3.Schema$Event = {
                 summary: options.summary,
                 description: options.description,
@@ -150,6 +169,8 @@ export class EventsService extends BaseCalendarService {
                 reminders: options.reminders,
                 recurrence: options.recurrence,
             };
+
+            console.log('Event creation request body:', JSON.stringify(requestBody, null, 2));
 
             const response = await calendar.events.insert({
                 calendarId: options.calendarId,
@@ -389,13 +410,18 @@ export class EventsService extends BaseCalendarService {
     }
 
     /**
-     * Calculates the UNTIL date for future instance updates
+     * Calculates the UNTIL date for future instance updates using Luxon
      */
     private calculateUntilDate(futureStartDate: string): string {
         try {
-            const futureDate = new Date(futureStartDate);
-            const untilDate = new Date(futureDate.getTime() - 86400000); // -1 day
-            return untilDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const futureDate = DateTime.fromISO(futureStartDate);
+            if (!futureDate.isValid) {
+                throw new Error(`Invalid future start date: ${futureDate.invalidReason}`);
+            }
+
+            const untilDate = futureDate.minus({ days: 1 });
+            // Return in the required format: YYYYMMDDTHHMMSSZ
+            return untilDate.toUTC().toFormat("yyyyMMdd'T'HHmmss'Z'");
         } catch (error) {
             console.error('Error calculating until date:', error);
             throw new Error(
@@ -405,19 +431,25 @@ export class EventsService extends BaseCalendarService {
     }
 
     /**
-     * Calculates the end time for a new event
+     * Calculates the end time for a new event using Luxon
      */
     private calculateEndTime(
         newStartTime: string,
         originalEvent: calendar_v3.Schema$Event,
     ): string {
         try {
-            const newStart = new Date(newStartTime);
-            const originalStart = new Date(originalEvent.start!.dateTime!);
-            const originalEnd = new Date(originalEvent.end!.dateTime!);
-            const duration = originalEnd.getTime() - originalStart.getTime();
+            const newStart = DateTime.fromISO(newStartTime);
+            const originalStart = DateTime.fromISO(originalEvent.start!.dateTime!);
+            const originalEnd = DateTime.fromISO(originalEvent.end!.dateTime!);
 
-            return new Date(newStart.getTime() + duration).toISOString();
+            if (!newStart.isValid || !originalStart.isValid || !originalEnd.isValid) {
+                throw new Error('Invalid datetime values for end time calculation');
+            }
+
+            const duration = originalEnd.diff(originalStart);
+            const newEnd = newStart.plus(duration);
+
+            return newEnd.toISO({ suppressMilliseconds: true }) || newStartTime;
         } catch (error) {
             console.error('Error calculating end time:', error);
             throw new Error(
@@ -468,9 +500,6 @@ export class EventsService extends BaseCalendarService {
 
     /**
      * Builds the request body for an event update
-     * @param args - The options for the event update
-     * @param defaultTimeZone - The default timezone for the event
-     * @returns The request body for the event update
      */
     private buildUpdateRequestBody(args: any, defaultTimeZone?: string): calendar_v3.Schema$Event {
         try {
@@ -495,6 +524,12 @@ export class EventsService extends BaseCalendarService {
             let timeChanged = false;
             const effectiveTimeZone = args.timeZone || defaultTimeZone;
 
+            console.log('Building update request body with timezone:', {
+                effectiveTimeZone: effectiveTimeZone,
+                start: args.start,
+                end: args.end,
+            });
+
             if (args.start !== undefined && args.start !== null) {
                 requestBody.start = this.createTimeObject(args.start, effectiveTimeZone);
                 timeChanged = true;
@@ -512,6 +547,7 @@ export class EventsService extends BaseCalendarService {
                 if (!requestBody.end.timeZone) requestBody.end.timeZone = effectiveTimeZone;
             }
 
+            console.log('Final update request body:', JSON.stringify(requestBody, null, 2));
             return requestBody;
         } catch (error) {
             console.error('Error building update request body:', error);
@@ -522,14 +558,17 @@ export class EventsService extends BaseCalendarService {
     }
 
     /**
-     * Formats an instance ID for single instance updates
+     * Formats an instance ID for single instance updates using Luxon
      */
     private formatInstanceId(eventId: string, originalStartTime: string): string {
         try {
-            // Convert to UTC first, then format to basic format: YYYYMMDDTHHMMSSZ
-            const utcDate = new Date(originalStartTime);
-            const basicTimeFormat = utcDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const dt = DateTime.fromISO(originalStartTime);
+            if (!dt.isValid) {
+                throw new Error(`Invalid original start time: ${dt.invalidReason}`);
+            }
 
+            // Convert to UTC and format as YYYYMMDDTHHMMSSZ
+            const basicTimeFormat = dt.toUTC().toFormat("yyyyMMdd'T'HHmmss'Z'");
             return `${eventId}_${basicTimeFormat}`;
         } catch (error) {
             console.error('Error formatting instance ID:', error);
@@ -552,10 +591,11 @@ export class EventsService extends BaseCalendarService {
             if (!primaryCalendarId) {
                 throw new Error('Primary calendar not found');
             }
-            return await this.deleteEventFromAnyCalendar({
+            await this.deleteEventFromAnyCalendar({
                 ...options,
                 calendarId: primaryCalendarId,
             });
+            return `Event with ID ${options.eventId} deleted successfully from primary calendar.`;
         } catch (error) {
             console.error('Error deleting event from primary calendar:', error);
             throw new Error(
@@ -581,6 +621,8 @@ export class EventsService extends BaseCalendarService {
                 eventId: options.eventId,
                 sendUpdates: options.sendUpdates,
             });
+
+            return `Event with ID ${options.eventId} deleted successfully from calendar ${options.calendarId}.`;
         } catch (error) {
             console.error('Error deleting event from calendar:', error);
             throw new Error(

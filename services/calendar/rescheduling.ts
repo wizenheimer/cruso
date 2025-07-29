@@ -5,6 +5,7 @@ import {
 import { BaseCalendarService } from './base';
 import { calendar_v3 } from 'googleapis';
 import { ExchangeService } from '@/services/exchange';
+import { DateTime } from 'luxon';
 
 export class RequestSchedulingService extends BaseCalendarService {
     async requestSchedulingForEvent(options: SchedulingInPrimaryCalendarOptions): Promise<string> {
@@ -23,10 +24,13 @@ export class RequestSchedulingService extends BaseCalendarService {
         }
 
         const exchangeOwnerId = this.userId;
-
         const exchangeService = await this.getExchangeService();
-
         const emailSubject = `Scheduling Request: ${options.summary || 'Event'}`;
+
+        console.log('Creating scheduling email with timezone:', {
+            timeZone: options.timeZone,
+            slots: options.slots,
+        });
 
         const emailBody = this.formatScheduleEmailBody(options);
 
@@ -71,21 +75,16 @@ export class RequestSchedulingService extends BaseCalendarService {
         }
 
         const exchangeOwnerId = this.userId;
-
         const exchangeService = await this.getExchangeService();
 
-        // Format the event date/time for the email
-        const eventDateTime = event.start?.dateTime
-            ? new Date(event.start.dateTime).toLocaleString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  timeZoneName: 'short',
-              })
-            : 'the scheduled time';
+        // Format the event date/time using Luxon for proper timezone handling
+        const eventDateTime = this.formatEventDateTime(event, options.timeZone);
+
+        console.log('Creating rescheduling email with timezone:', {
+            timeZone: options.timeZone,
+            eventDateTime: eventDateTime,
+            slots: options.slots,
+        });
 
         const emailSubject = `Reschedule Request: ${eventTitle}`;
         const emailBody = this.formatRescheduleEmailBody(
@@ -93,6 +92,7 @@ export class RequestSchedulingService extends BaseCalendarService {
             eventDateTime,
             options.slots,
             options.reason,
+            options.timeZone,
         );
 
         await exchangeService.createNewExchangeOnBehalfOfUser(
@@ -130,11 +130,113 @@ export class RequestSchedulingService extends BaseCalendarService {
         return ExchangeService.getInstance();
     }
 
+    /**
+     * Format event datetime using Luxon for proper timezone handling
+     */
+    private formatEventDateTime(event: calendar_v3.Schema$Event, timeZone?: string): string {
+        try {
+            if (!event.start?.dateTime) {
+                return 'the scheduled time';
+            }
+
+            const eventStart = DateTime.fromISO(event.start.dateTime);
+            if (!eventStart.isValid) {
+                console.error('Invalid event start time:', event.start.dateTime);
+                return event.start.dateTime;
+            }
+
+            // Use provided timezone or the event's timezone
+            const targetTimezone = timeZone || event.start.timeZone || 'UTC';
+            const eventInTimezone = eventStart.setZone(targetTimezone);
+
+            if (!eventInTimezone.isValid) {
+                console.error('Invalid timezone conversion:', { timeZone: targetTimezone });
+                return eventStart.toLocaleString(DateTime.DATETIME_FULL);
+            }
+
+            // Format with timezone abbreviation for clarity
+            const timezoneAbbr = this.getTimezoneAbbreviation(targetTimezone);
+
+            return `${eventInTimezone.toLocaleString({
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            })} (${timezoneAbbr})`;
+        } catch (error) {
+            console.error('Error formatting event datetime:', error);
+            return event.start?.dateTime || 'the scheduled time';
+        }
+    }
+
+    /**
+     * Format time slots using Luxon for consistent timezone handling
+     */
+    private formatTimeSlots(
+        slots: Array<{ startTime: string; endTime: string }>,
+        timeZone?: string,
+    ): string {
+        return slots
+            .map((slot, index) => {
+                try {
+                    const startDate = DateTime.fromISO(slot.startTime);
+                    const endDate = DateTime.fromISO(slot.endTime);
+
+                    if (!startDate.isValid || !endDate.isValid) {
+                        console.error('Invalid slot times:', {
+                            slot,
+                            startValid: startDate.isValid,
+                            endValid: endDate.isValid,
+                        });
+                        return `${index + 1}. Invalid time slot`;
+                    }
+
+                    // Convert to specified timezone or keep original
+                    const targetTimezone = timeZone || startDate.zoneName || 'UTC';
+                    const startInTZ = startDate.setZone(targetTimezone);
+                    const endInTZ = endDate.setZone(targetTimezone);
+
+                    if (!startInTZ.isValid || !endInTZ.isValid) {
+                        console.error('Invalid timezone conversion for slot:', {
+                            timeZone: targetTimezone,
+                        });
+                        // Fallback to original times
+                        return `${index + 1}. ${startDate.toLocaleString(DateTime.DATETIME_FULL)} - ${endDate.toLocaleString(DateTime.TIME_SIMPLE)}`;
+                    }
+
+                    // Get timezone abbreviation for clarity
+                    const timezoneAbbr = this.getTimezoneAbbreviation(targetTimezone);
+
+                    const formattedStart = startInTZ.toLocaleString({
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    });
+
+                    const formattedEnd = endInTZ.toLocaleString({
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    });
+
+                    return `${index + 1}. ${formattedStart} - ${formattedEnd} (${timezoneAbbr})`;
+                } catch (error) {
+                    console.error('Error formatting slot:', error, slot);
+                    return `${index + 1}. Error formatting time slot`;
+                }
+            })
+            .join('\n');
+    }
+
     private formatRescheduleEmailBody(
         event: calendar_v3.Schema$Event,
         eventDateTime: string,
         slots: Array<{ startTime: string; endTime: string }>,
         reason: string,
+        timeZone?: string,
     ): string {
         const eventTitle = event.summary || 'Event';
         const eventDescription = event.description || 'No description provided';
@@ -147,27 +249,8 @@ export class RequestSchedulingService extends BaseCalendarService {
                 .filter(Boolean)
                 .join(', ') || 'No attendees listed';
 
-        // Format the suggested slots
-        const formattedSlots = slots
-            .map((slot, index) => {
-                const startDate = new Date(slot.startTime);
-                const endDate = new Date(slot.endTime);
-                const formattedStart = startDate.toLocaleString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZoneName: 'short',
-                });
-                const formattedEnd = endDate.toLocaleString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZoneName: 'short',
-                });
-                return `${index + 1}. ${formattedStart} - ${formattedEnd}`;
-            })
-            .join('\n');
+        // Format the suggested slots using Luxon
+        const formattedSlots = this.formatTimeSlots(slots, timeZone);
 
         return `Hi there,
 
@@ -188,38 +271,25 @@ Here are some alternative time slots that are available:
 Suggested Time Slots:
 ${formattedSlots}
 
-Please let us know which of these times work best for you, or suggest an alternative time that fits your schedule.`;
+Please let us know which of these times work best for you, or suggest an alternative time that fits your schedule.
+
+Best regards,
+AI Assistant`;
     }
 
     private formatScheduleEmailBody(options: SchedulingInPrimaryCalendarOptions): string {
         const eventTitle = options.summary || 'Event';
         const eventDescription = options.description || 'No description provided';
 
-        // Format the suggested slots
-        const formattedSlots = options.slots
-            .map((slot, index) => {
-                const startDate = new Date(slot.startTime);
-                const endDate = new Date(slot.endTime);
-                const formattedStart = startDate.toLocaleString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZoneName: 'short',
-                });
-                const formattedEnd = endDate.toLocaleString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZoneName: 'short',
-                });
-                return `${index + 1}. ${formattedStart} - ${formattedEnd}`;
-            })
-            .join('\n');
+        // Format the suggested slots using Luxon with proper timezone handling
+        const formattedSlots = this.formatTimeSlots(options.slots, options.timeZone);
 
         // Format attendee list for a more personal touch
         const attendeeList = options.attendeeEmails.join(', ');
         const hostInfo = options.hostEmail ? `\nHost: ${options.hostEmail}` : '';
+
+        // Add timezone info if available
+        const timezoneInfo = options.timeZone ? `\nTimezone: ${options.timeZone}` : '';
 
         return `Hi there,
 
@@ -228,7 +298,7 @@ A meeting scheduling request is being made.
 Event Details:
 Title: ${eventTitle}
 Description: ${eventDescription}
-Attendees: ${attendeeList}${hostInfo}
+Attendees: ${attendeeList}${hostInfo}${timezoneInfo}
 
 Here are some time slots that are available:
 
