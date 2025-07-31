@@ -13,7 +13,7 @@ function normalizeEmail(email: string): string {
  * Get allowed list entry by email
  * Handles email normalization and returns the entry if found
  */
-export async function getAllowedListEntry(email: string) {
+async function getAllowedListEntry(email: string) {
     const normalizedEmail = normalizeEmail(email);
 
     const [entry] = await db
@@ -30,8 +30,9 @@ export async function getAllowedListEntry(email: string) {
  */
 export async function isAllowedListEntry(email: string) {
     const normalizedEmail = normalizeEmail(email);
-    const entry = await getAllowedListEntry(normalizedEmail);
-    return entry?.isAllowed || false;
+    const emailEntry = await getAllowedListEntry(normalizedEmail);
+    const domainEntry = await getAllowedListEntry(`*@${normalizedEmail.split('@')[1]}`);
+    return emailEntry?.isAllowed || domainEntry?.isAllowed || false;
 }
 
 /**

@@ -8,11 +8,6 @@ import {
     parseMultipartToFormData,
     parseEmailDataFromMailgunWebhookFormData,
 } from '@/services/exchange/parsing/form';
-import {
-    isAllowedListEntry,
-    setAllowedListEntries,
-    setAllowedListEntry,
-} from '@/db/queries/allowed-list';
 
 /**
  * Tolerance options for business emails with higher tolerance settings.

@@ -5,7 +5,7 @@ import {
     WAITLIST_EMAIL_BODY,
 } from '@/constants/email';
 import { UserBeforeCreateHook, UserAfterCreateHook } from './types';
-import { getAllowedListEntry, setAllowedListEntry } from '@/db/queries/allowed-list';
+import { isAllowedListEntry, setAllowedListEntry } from '@/db/queries/allowed-list';
 import { checkDisallowedEmail } from '@/lib/email';
 import { EmailService } from '@/services/email';
 
@@ -22,8 +22,7 @@ export const beforeUserCreationHook = (async (user, context) => {
  * Hooks triggered after user creation
  */
 export const afterUserCreationHook = (async (user) => {
-    const entry = await getAllowedListEntry(user.email);
-    const isAllowedEntry = entry?.isAllowed || false;
+    const isAllowedEntry = await isAllowedListEntry(user.email);
     const isAllowedDomain = !checkDisallowedEmail(user.email);
     const emailService = EmailService.getInstance();
     // const exchangeService = await ExchangeService.getInstance();

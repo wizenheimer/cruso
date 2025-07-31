@@ -158,8 +158,8 @@ const executeAction = async (
  */
 async function isAllowedSender(emailData: EmailData): Promise<boolean> {
     // Check if the sender is in allowed list
-    const isAllowed = await isAllowedListEntry(emailData.sender);
-    if (!isAllowed) {
+    const isAllowedEmail = await isAllowedListEntry(emailData.sender);
+    if (!isAllowedEmail) {
         return false;
     }
 
