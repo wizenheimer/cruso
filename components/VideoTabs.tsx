@@ -6,23 +6,27 @@ import FadeIn from './ui/fade-in';
 const tabs = [
     {
         title: 'Scheduling',
-        videoId: 'vk9D_EH3u9o',
+        videoId: '4f67BmWlZN0',
         description: 'Learn how to start using your AI assistant via email',
+        comingSoon: false,
     },
     {
         title: 'Monitoring',
-        videoId: 'HjRdddeqZA4',
+        videoId: '4f67BmWlZN0',
         description: 'See how the AI understands context and provides helpful responses',
+        comingSoon: true,
     },
     {
         title: 'Deal Flow',
-        videoId: 'BdILX-0n93Y',
+        videoId: '4f67BmWlZN0',
         description: 'Get help with scheduling, reminders, and daily tasks',
+        comingSoon: true,
     },
     {
         title: 'Research',
-        videoId: '_CSwFnwr-ow',
+        videoId: '4f67BmWlZN0',
         description: 'Ask questions and get assistance with writing',
+        comingSoon: true,
     },
 ];
 
@@ -101,7 +105,7 @@ export default function VideoTabs() {
             if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '9') {
                 e.preventDefault();
                 const tabIndex = parseInt(e.key) - 1;
-                if (tabIndex < tabs.length) {
+                if (tabIndex < tabs.length && !tabs[tabIndex].comingSoon) {
                     setActiveTab(tabIndex);
                     setIsPlaying(false);
                 }
@@ -157,15 +161,22 @@ export default function VideoTabs() {
                     {tabs.map((tab, index) => (
                         <button
                             key={index}
-                            onClick={() => setActiveTab(index)}
+                            onClick={() => !tab.comingSoon && setActiveTab(index)}
+                            disabled={tab.comingSoon}
                             className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                                activeTab === index
-                                    ? 'bg-black text-white shadow-lg'
-                                    : 'bg-white text-black border border-gray-300 hover:bg-gray-50'
+                                tab.comingSoon
+                                    ? 'bg-white text-gray-500 border border-gray-200 cursor-not-allowed opacity-60'
+                                    : activeTab === index
+                                      ? 'bg-black text-white shadow-lg'
+                                      : 'bg-white text-black border border-gray-300 hover:bg-gray-50'
                             }`}
                         >
                             <span>{tab.title}</span>
-                            <span className="ml-2 text-xs opacity-60">⌘{index + 1}</span>
+                            {tab.comingSoon ? (
+                                <span className="ml-2 text-xs opacity-40">Coming Soon</span>
+                            ) : (
+                                <span className="ml-2 text-xs opacity-60">Beta</span>
+                            )}
                         </button>
                     ))}
                 </div>

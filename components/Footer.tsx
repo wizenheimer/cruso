@@ -26,12 +26,10 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link
-                                    href="/#monitoring"
-                                    className="text-sm text-zinc-400 hover:text-white transition-colors"
-                                >
+                                <span className="text-sm text-zinc-500 cursor-not-allowed">
                                     Monitoring
-                                </Link>
+                                    <span className="ml-1 text-xs opacity-40">Coming Soon</span>
+                                </span>
                             </li>
                             <li>
                                 <Link
@@ -42,12 +40,10 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link
-                                    href="/#dealflow"
-                                    className="text-sm text-zinc-400 hover:text-white transition-colors"
-                                >
-                                    Dealflow
-                                </Link>
+                                <span className="text-sm text-zinc-500 cursor-not-allowed">
+                                    Deal Flow
+                                    <span className="ml-1 text-xs opacity-40">Coming Soon</span>
+                                </span>
                             </li>
                         </ul>
                     </div>
