@@ -17,6 +17,7 @@ import {
     PreferencesView,
     CalendarSection,
     InboxSection,
+    ExploreView,
     CalendarAccount,
     EmailAccount,
     Preferences,
@@ -41,7 +42,9 @@ interface ApiEmailAccount {
 }
 
 export default function DashboardPage() {
-    const [activeView, setActiveView] = useState<'preferences' | 'accounts'>('accounts');
+    const [activeView, setActiveView] = useState<'preferences' | 'accounts' | 'getting-started'>(
+        'accounts',
+    );
     const [loading, setLoading] = useState(true);
 
     const [calendarAccounts, setCalendarAccounts] = useState<CalendarAccount[]>([]);
@@ -553,8 +556,17 @@ export default function DashboardPage() {
      * @param viewType - The view type to get the label for
      * @returns The human-readable label for the view
      */
-    const getViewLabel = (viewType: 'preferences' | 'accounts') => {
-        return viewType === 'preferences' ? 'Preferences' : 'Accounts';
+    const getViewLabel = (viewType: 'preferences' | 'accounts' | 'getting-started') => {
+        switch (viewType) {
+            case 'preferences':
+                return 'Preferences';
+            case 'accounts':
+                return 'Accounts';
+            case 'getting-started':
+                return 'Scheduling';
+            default:
+                return 'Accounts';
+        }
     };
 
     if (loading) {
@@ -569,16 +581,16 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white flex">
+        <div className="min-h-screen bg-white flex h-screen">
             {/* Desktop Sidebar */}
-            <div className="hidden md:block">
+            <div className="hidden md:block flex-shrink-0">
                 <Sidebar activeView={activeView} onViewChange={setActiveView} />
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Mobile Header */}
-                <div className="md:hidden bg-white px-4 py-3 flex items-center justify-between">
+                <div className="md:hidden bg-white px-4 py-3 flex items-center justify-between flex-shrink-0">
                     <h1 className="text-lg font-semibold text-gray-900">Cruso</h1>
 
                     <div className="flex items-center space-x-3">
@@ -593,6 +605,16 @@ export default function DashboardPage() {
                                 align="end"
                                 className="bg-white border border-gray-200 shadow-lg w-40"
                             >
+                                <DropdownMenuItem
+                                    onClick={() => setActiveView('getting-started')}
+                                    className={`cursor-pointer ${
+                                        activeView === 'getting-started'
+                                            ? 'bg-gray-50 text-gray-900'
+                                            : 'text-gray-600'
+                                    }`}
+                                >
+                                    Scheduling
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => setActiveView('accounts')}
                                     className={`cursor-pointer ${
@@ -621,7 +643,9 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 px-4 md:px-6 pb-8 max-w-6xl mx-auto w-full">
+                <div className="flex-1 px-4 md:px-6 pb-8 max-w-6xl mx-auto w-full overflow-y-auto">
+                    {activeView === 'getting-started' && <ExploreView />}
+
                     {activeView === 'accounts' && (
                         <div className="space-y-8 md:space-y-12 mt-4 md:mt-6">
                             <CalendarSection

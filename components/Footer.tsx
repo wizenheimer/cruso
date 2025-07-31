@@ -28,7 +28,6 @@ export default function Footer() {
                             <li>
                                 <span className="text-sm text-zinc-500 cursor-not-allowed">
                                     Monitoring
-                                    <span className="ml-1 text-xs opacity-40">Coming Soon</span>
                                 </span>
                             </li>
                             <li>
@@ -42,7 +41,6 @@ export default function Footer() {
                             <li>
                                 <span className="text-sm text-zinc-500 cursor-not-allowed">
                                     Deal Flow
-                                    <span className="ml-1 text-xs opacity-40">Coming Soon</span>
                                 </span>
                             </li>
                         </ul>
