@@ -12,10 +12,9 @@ import { LogOut, HelpCircle, X } from 'lucide-react';
 import { authClient } from '@/client/auth';
 import { AVATAR_COLORS, AVATAR_VARIANT } from '@/constants/palette';
 import { showToast } from '@/lib/toast';
+import { useDashboardStore } from '@/lib/stores/dashboard';
 
 interface SidebarProps {
-    activeView: 'preferences' | 'accounts' | 'getting-started';
-    onViewChange: (view: 'preferences' | 'accounts' | 'getting-started') => void;
     onClose?: () => void;
 }
 
@@ -115,7 +114,9 @@ export function MobileAvatar() {
     );
 }
 
-export function Sidebar({ activeView, onViewChange, onClose }: SidebarProps) {
+export function Sidebar({ onClose }: SidebarProps) {
+    const { activeView, setActiveView } = useDashboardStore();
+
     return (
         <div className="w-64 md:w-64 bg-white h-screen flex-shrink-0 flex flex-col shadow-lg md:shadow-none">
             {/* Mobile Header */}
@@ -143,7 +144,7 @@ export function Sidebar({ activeView, onViewChange, onClose }: SidebarProps) {
                         Scheduling
                     </div>
                     <button
-                        onClick={() => onViewChange('accounts')}
+                        onClick={() => setActiveView('accounts')}
                         className={`w-full text-left px-0 py-2 text-sm font-medium transition-colors ${
                             activeView === 'accounts'
                                 ? 'text-gray-900'
@@ -153,7 +154,7 @@ export function Sidebar({ activeView, onViewChange, onClose }: SidebarProps) {
                         Accounts
                     </button>
                     <button
-                        onClick={() => onViewChange('preferences')}
+                        onClick={() => setActiveView('preferences')}
                         className={`w-full text-left px-0 py-2 text-sm font-medium transition-colors ${
                             activeView === 'preferences'
                                 ? 'text-gray-900'
@@ -166,9 +167,9 @@ export function Sidebar({ activeView, onViewChange, onClose }: SidebarProps) {
                         Explore
                     </div>
                     <button
-                        onClick={() => onViewChange('getting-started')}
+                        onClick={() => setActiveView('explore')}
                         className={`w-full text-left px-0 py-2 text-sm font-medium transition-colors ${
-                            activeView === 'getting-started'
+                            activeView === 'explore'
                                 ? 'text-gray-900'
                                 : 'text-gray-600 hover:text-gray-900'
                         }`}

@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import { apiClient } from '@/client/api';
 import { authClient } from '@/client/auth';
 import { showToast } from '@/lib/toast';
+import { useDashboardStore } from '@/lib/stores/dashboard';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -42,9 +43,7 @@ interface ApiEmailAccount {
 }
 
 export default function DashboardPage() {
-    const [activeView, setActiveView] = useState<'preferences' | 'accounts' | 'getting-started'>(
-        'accounts',
-    );
+    const { activeView, setActiveView } = useDashboardStore();
     const [loading, setLoading] = useState(true);
 
     const [calendarAccounts, setCalendarAccounts] = useState<CalendarAccount[]>([]);
@@ -556,13 +555,13 @@ export default function DashboardPage() {
      * @param viewType - The view type to get the label for
      * @returns The human-readable label for the view
      */
-    const getViewLabel = (viewType: 'preferences' | 'accounts' | 'getting-started') => {
+    const getViewLabel = (viewType: 'preferences' | 'accounts' | 'explore') => {
         switch (viewType) {
             case 'preferences':
                 return 'Preferences';
             case 'accounts':
                 return 'Accounts';
-            case 'getting-started':
+            case 'explore':
                 return 'Scheduling';
             default:
                 return 'Accounts';
@@ -584,7 +583,7 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-white flex h-screen">
             {/* Desktop Sidebar */}
             <div className="hidden md:block flex-shrink-0">
-                <Sidebar activeView={activeView} onViewChange={setActiveView} />
+                <Sidebar />
             </div>
 
             {/* Main Content */}
@@ -606,9 +605,9 @@ export default function DashboardPage() {
                                 className="bg-white border border-gray-200 shadow-lg w-40"
                             >
                                 <DropdownMenuItem
-                                    onClick={() => setActiveView('getting-started')}
+                                    onClick={() => setActiveView('explore')}
                                     className={`cursor-pointer ${
-                                        activeView === 'getting-started'
+                                        activeView === 'explore'
                                             ? 'bg-gray-50 text-gray-900'
                                             : 'text-gray-600'
                                     }`}
@@ -644,7 +643,7 @@ export default function DashboardPage() {
 
                 {/* Content */}
                 <div className="flex-1 px-4 md:px-6 pb-8 max-w-6xl mx-auto w-full overflow-y-auto">
-                    {activeView === 'getting-started' && <ExploreView />}
+                    {activeView === 'explore' && <ExploreView />}
 
                     {activeView === 'accounts' && (
                         <div className="space-y-8 md:space-y-12 mt-4 md:mt-6">
