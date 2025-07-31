@@ -5,9 +5,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Testimonial {
     quote: string;
-    author: string;
-    title: string;
-    rating: number;
 }
 
 interface TestimonialsProps {
@@ -53,10 +50,6 @@ export const Testimonials = ({
         setCurrentIndex(index);
     };
 
-    const renderStars = (rating: number) => {
-        return '★'.repeat(rating);
-    };
-
     const currentTestimonial = testimonials[currentIndex];
 
     return (
@@ -67,16 +60,8 @@ export const Testimonials = ({
         >
             {/* Main testimonial content */}
             <div className="relative w-full">
-                <div className="text-base lg:text-lg xl:text-xl font-semibold mb-4 text-gray-800 max-w-xl text-left leading-relaxed transition-opacity duration-300">
+                <div className="text-xs lg:text-sm xl:text-base font-semibold mb-4 text-gray-800 max-w-xl text-left leading-relaxed transition-opacity duration-300">
                     {currentTestimonial.quote}
-                </div>
-
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="font-medium text-gray-700">— {currentTestimonial.author}</span>
-                    <span className="text-gray-400 text-sm">{currentTestimonial.title}</span>
-                    <span className="ml-2 text-yellow-400">
-                        {renderStars(currentTestimonial.rating)}
-                    </span>
                 </div>
             </div>
 

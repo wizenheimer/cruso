@@ -101,10 +101,10 @@ const LoginPage = () => {
                         transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
                     >
                         <h1 className="text-2xl font-semibold mb-2 text-center">
-                            We&apos;re almost there
+                            Let&apos;s get you signed in
                         </h1>
                         <p className="text-base text-muted-foreground mb-6 text-center">
-                            Quick auth and we make this official
+                            Quick auth and we&apos;ll get you on your way
                         </p>
                         <Button
                             onClick={signUpWithGoogle}
