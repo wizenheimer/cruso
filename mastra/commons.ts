@@ -1,9 +1,6 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { User } from '@/types/users';
 import { PinoLogger } from '@mastra/loggers';
-import { readFileSync } from 'fs';
-import { existsSync } from 'fs';
-import { join } from 'path';
 import { DateTime, Info } from 'luxon';
 
 export const USER_CONTEXT_KEY = 'user';
@@ -133,47 +130,11 @@ export const getTimezoneFromRuntimeContext = (runtimeContext: RuntimeContext) =>
 };
 
 /**
- * Get the agent prompt
- * @returns The agent prompt
+ * Get the timestamp prompt
+ * @param timestamp - The timestamp
+ * @param timezone - The timezone
+ * @returns The timestamp prompt
  */
-export async function getBasePromptForAgent(
-    defaultPrompt: string,
-    localPromptPath?: string,
-    remotePromptPath?: string,
-): Promise<string> {
-    if (localPromptPath) {
-        console.log('getting base prompt for agent from local file', localPromptPath);
-        const promptPath = join(process.cwd(), 'mastra', 'prompt', localPromptPath);
-
-        // Try to read from local file first
-        if (existsSync(promptPath)) {
-            try {
-                return readFileSync(promptPath, 'utf-8');
-            } catch (error) {
-                console.warn('Failed to read local prompt file:', error);
-            }
-        }
-    }
-
-    // Fallback to URL if local file doesn't exist or failed to read
-    if (remotePromptPath) {
-        console.log('getting base prompt for agent from remote url', remotePromptPath);
-        try {
-            const response = await fetch(remotePromptPath);
-            if (response.ok) {
-                return await response.text();
-            } else {
-                throw new Error(`Failed to fetch prompt from URL: ${response.status}`);
-            }
-        } catch (error) {
-            console.error('Failed to fetch prompt from URL:', error);
-        }
-    }
-
-    console.log('getting base prompt for agent from default prompt', defaultPrompt);
-    return defaultPrompt;
-}
-
 export const getTimestampPrompt = (timestamp: number, timezone: string) => {
     let date: DateTime;
 
@@ -197,16 +158,31 @@ export const getTimestampPrompt = (timestamp: number, timezone: string) => {
     The USER'S CURRENT TIME is ${formattedDate} and THE USER'S CURRENT TIMEZONE is ${timezone}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${formattedDate}) in mind. Always make sure to use the correct date and resolve conflicts based on this date.`;
 };
 
+/**
+ * Get the host prompt
+ * @param host - The host
+ * @returns The host prompt
+ */
 export const getHostPrompt = (host: string) => {
     return `# Host\n
     The host is ${host}.`;
 };
 
+/**
+ * Get the attendees prompt
+ * @param attendees - The attendees
+ * @returns The attendees prompt
+ */
 export const getAttendeesPrompt = (attendees: string[]) => {
     return `# Attendees\n
     The attendees are ${attendees.join(', ')}.`;
 };
 
+/**
+ * Get the preference prompt
+ * @param preference - The preference
+ * @returns The preference prompt
+ */
 export const getPreferencePrompt = (preference: string) => {
     return `# Executive's Preferences\n
     ${preference.trim()}`;

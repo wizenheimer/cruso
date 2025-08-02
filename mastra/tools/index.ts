@@ -10,6 +10,7 @@ import {
     findBookableSlots,
 } from './event';
 import { getSchedulingDefaults, updateSchedulingDefaults } from './preference';
+import { validateEmailHTMLTool } from './email';
 
 export const calendarTools = {
     createEvent,
@@ -23,18 +24,14 @@ export const calendarTools = {
     initiateSchedulingOverEmailWithHostAndAttendees,
 };
 
-export const thirdPartyCalendarTools = {
-    createEvent,
-    findBookableSlots,
-    modifyEvent,
-    cancelEvent,
-};
-
 export const preferenceTools = {
     getSchedulingDefaults,
     updateSchedulingDefaults,
 };
 
-export const thirdPartyPreferenceTools = {
-    getSchedulingDefaults,
+/**
+ * Export the focused HTML validation tool
+ */
+export const emailTools = {
+    validateEmailHTMLTool,
 };

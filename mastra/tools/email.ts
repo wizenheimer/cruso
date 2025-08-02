@@ -122,9 +122,4 @@ export const validateEmailHTMLTool = createTool({
     },
 });
 
-/**
- * Export the focused HTML validation tool
- */
-export const htmlValidationTools = {
-    validateEmailHTMLTool,
-};
+

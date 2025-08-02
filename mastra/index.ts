@@ -3,14 +3,14 @@ import { Mastra } from '@mastra/core/mastra';
 import { storage } from './storage/pg';
 import { logger } from './commons';
 import {
-    firstPartySchedulingAgent,
-    getFirstPartySchedulingAgentRuntimeContext,
-} from './agent/fpscheduling';
+    firstPersonSchedulingAgent,
+    getfirstPersonSchedulingAgentRuntimeContext,
+} from './agent/first-person-scheduling';
 import {
-    getThirdPartySchedulingAgentRuntimeContext,
-    thirdPartySchedulingAgent,
-} from './agent/tpscheduling';
-import { emailFormattingAgent } from './agent/formatter';
+    getthirdPersonSchedulingAgentRuntimeContext,
+    thirdPersonSchedulingAgent,
+} from './agent/third-person-scheduling';
+import { emailDraftingAgent } from './agent/email-drafting';
 import { EmailData, ExchangeData } from '@/types/exchange';
 import { User } from '@/types/users';
 import { getUserById } from '@/db/queries/users';
@@ -20,9 +20,9 @@ import { getUserById } from '@/db/queries/users';
  */
 export const mastra = new Mastra({
     agents: {
-        firstPartySchedulingAgent,
-        thirdPartySchedulingAgent,
-        emailFormattingAgent,
+        firstPersonSchedulingAgent,
+        thirdPersonSchedulingAgent,
+        emailDraftingAgent,
     },
     storage,
     logger,
@@ -36,7 +36,7 @@ async function formatEmailText(originalText: string): Promise<{
     content: string;
 }> {
     try {
-        const result = await emailFormattingAgent.generate(originalText, {
+        const result = await emailDraftingAgent.generate(originalText, {
             output: z.object({
                 htmlContent: z
                     .string()
@@ -75,13 +75,16 @@ export async function handleThirdPartyFlow(
         throw new Error('User not found');
     }
 
-    const runtimeContext = await getThirdPartySchedulingAgentRuntimeContext(
+    const runtimeContext = await getthirdPersonSchedulingAgentRuntimeContext(
         user,
         emailData,
         exchangeData,
     );
 
-    const result = await thirdPartySchedulingAgent.generate(emailData.body, {
+    // Combine subject and body for the agent
+    const stringifiedEmailContent = `${emailData.subject}: ${emailData.body}`;
+
+    const result = await thirdPersonSchedulingAgent.generate(stringifiedEmailContent, {
         maxSteps: 10, // Allow up to 10 tool usage steps
         resourceId: exchangeData.exchangeOwnerId,
         threadId: emailData.exchangeId,
@@ -102,13 +105,16 @@ export async function handleFirstPartyFlow(
     emailData: EmailData,
     exchangeData: ExchangeData,
 ) {
-    const runtimeContext = await getFirstPartySchedulingAgentRuntimeContext(
+    const runtimeContext = await getfirstPersonSchedulingAgentRuntimeContext(
         user,
         emailData,
         exchangeData,
     );
 
-    const result = await firstPartySchedulingAgent.generate(emailData.body, {
+    // Combine subject and body for the agent
+    const stringifiedEmailContent = `${emailData.subject}: ${emailData.body}`;
+
+    const result = await firstPersonSchedulingAgent.generate(stringifiedEmailContent, {
         maxSteps: 10, // Allow up to 10 tool usage steps
         resourceId: exchangeData.exchangeOwnerId,
         threadId: emailData.exchangeId,

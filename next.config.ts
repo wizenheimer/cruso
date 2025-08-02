@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
     /* config options here */
-    serverExternalPackages: ['@mastra/*'],
+    serverExternalPackages: ['@mastra/*', '@statsig/statsig-node-core'],
     output: 'standalone',
 };
 
