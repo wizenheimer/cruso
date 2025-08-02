@@ -50,42 +50,42 @@ mockingbird.post('/', async (c) => {
         }
 
         // Transform timestamp to Unix timestamp in milliseconds if needed before parsing
-        const transformedEmailData = {
-            ...rawEmailData,
-            timestamp: (() => {
-                const timestamp = rawEmailData.timestamp;
+        // const transformedEmailData = {
+        //     ...rawEmailData,
+        //     timestamp: (() => {
+        //         const timestamp = rawEmailData.timestamp;
 
-                // If it's already a number, validate it's a positive integer
-                if (typeof timestamp === 'number') {
-                    if (!Number.isInteger(timestamp) || timestamp <= 0) {
-                        throw new Error(
-                            'Timestamp must be a positive integer (Unix timestamp in milliseconds)',
-                        );
-                    }
-                    return timestamp;
-                }
+        //         // If it's already a number, validate it's a positive integer
+        //         if (typeof timestamp === 'number') {
+        //             if (!Number.isInteger(timestamp) || timestamp <= 0) {
+        //                 throw new Error(
+        //                     'Timestamp must be a positive integer (Unix timestamp in milliseconds)',
+        //                 );
+        //             }
+        //             return timestamp;
+        //         }
 
-                // If it's a Date object, convert to Unix timestamp
-                if (timestamp instanceof Date) {
-                    return timestamp.getTime();
-                }
+        //         // If it's a Date object, convert to Unix timestamp
+        //         if (timestamp instanceof Date) {
+        //             return timestamp.getTime();
+        //         }
 
-                // If it's a string, try to parse it
-                if (typeof timestamp === 'string') {
-                    const parsed = new Date(timestamp).getTime();
-                    if (isNaN(parsed)) {
-                        throw new Error('Invalid timestamp string format');
-                    }
-                    return parsed;
-                }
+        //         // If it's a string, try to parse it
+        //         if (typeof timestamp === 'string') {
+        //             const parsed = new Date(timestamp).getTime();
+        //             if (isNaN(parsed)) {
+        //                 throw new Error('Invalid timestamp string format');
+        //             }
+        //             return parsed;
+        //         }
 
-                // If none of the above, throw error
-                throw new Error('Timestamp must be a number, Date object, or valid date string');
-            })(),
-        };
+        //         // If none of the above, throw error
+        //         throw new Error('Timestamp must be a number, Date object, or valid date string');
+        //     })(),
+        // };
 
         // Parse emailData as EmailData type
-        const emailData = EmailDataSchema.parse(transformedEmailData);
+        const emailData = EmailDataSchema.parse(rawEmailData);
 
         // Save the email to the database
         const exchangeDataService = ExchangeDataService.getInstance();
