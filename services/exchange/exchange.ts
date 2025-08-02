@@ -175,21 +175,21 @@ export class ExchangeService {
         return this.exchangeDataService.searchEmails(filters);
     }
 
-    async createNewExchangeOnBehalfOfUser(
-        exchangeOwnerId: string,
-        subject: string,
-        body: string,
-        recipients: string[],
-        signature?: string,
-    ) {
-        return this.exchangeProcessingService.createNewExchangeOnBehalfOfUser(
-            exchangeOwnerId,
-            subject,
-            body,
-            recipients,
-            signature,
-        );
-    }
+    // async createNewExchangeOnBehalfOfUser(
+    //     exchangeOwnerId: string,
+    //     subject: string,
+    //     body: string,
+    //     recipients: string[],
+    //     signature?: string,
+    // ) {
+    //     return this.exchangeProcessingService.createNewExchangeOnBehalfOfUser(
+    //         exchangeOwnerId,
+    //         subject,
+    //         body,
+    //         recipients,
+    //         signature,
+    //     );
+    // }
 
     // ============================================================================
     // EMAIL TEMPLATES

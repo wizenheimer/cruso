@@ -15,6 +15,7 @@ import {
     checkBusyStatusToolSchema,
 } from '@/schema/tools/event';
 import { logToolExecution } from './log';
+import { createSchedulingInitiatorService } from '@/services/batch';
 
 /**
  * Create a new event
@@ -231,8 +232,8 @@ export const initiateReschedulingOverEmailWithHostAndAttendees = createTool({
 
         const { ...options } = context;
 
-        const calendarService = createCalendarService(user.id);
-        const result = await calendarService.requestReschedulingForEvent(options);
+        const batchSchedulingService = createSchedulingInitiatorService(user.id);
+        const result = await batchSchedulingService.emailReschedulingRequest(options);
 
         logToolExecution('request-rescheduling-for-event', context, result);
         return result;
@@ -259,8 +260,8 @@ export const initiateSchedulingOverEmailWithHostAndAttendees = createTool({
 
         const { ...options } = context;
 
-        const calendarService = createCalendarService(user.id);
-        const result = await calendarService.requestSchedulingForEvent(options);
+        const batchSchedulingService = createSchedulingInitiatorService(user.id);
+        const result = await batchSchedulingService.emailSchedulingRequest(options);
 
         logToolExecution('request-scheduling-for-event', context, result);
         return result;

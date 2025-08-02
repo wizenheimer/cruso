@@ -332,48 +332,6 @@ export class ExchangeProcessingService {
 
         return mergedReceipts;
     }
-
-    async createNewExchangeOnBehalfOfUser(
-        exchangeOwnerId: string,
-        subject: string,
-        body: string,
-        recipients: string[],
-        signature?: string,
-    ) {
-        // Get the user from the exchange owner id
-        const user = await getUserById(exchangeOwnerId);
-        if (!user) {
-            throw new Error('User not found');
-        }
-
-        // Get the signature for the exchange owner
-        const formattedSignature =
-            signature ||
-            (await this.exchangeDataService.getSignatureForExchangeOwner(exchangeOwnerId));
-
-        const userEmail = user.email;
-
-        // Remove any @crusolabs.com emails from the recipients and user email from the recipients
-        recipients = recipients.filter((recipient) => !recipient.includes('@crusolabs.com'));
-        recipients = recipients.filter((recipient) => recipient !== userEmail);
-
-        // Formatted body with signature
-        const formattedBody = body + `\n\n${formattedSignature}`;
-
-        // Create a new thread
-        const sentEmail = await this.emailService.sendEmail({
-            recipients: recipients,
-            cc: [userEmail],
-            subject: subject,
-            body: formattedBody,
-            newThread: true, // Force new thread for onboarding
-        });
-
-        // Save the sent email to the database
-        const savedEmail = await this.exchangeDataService.saveEmail(sentEmail, exchangeOwnerId);
-
-        return savedEmail;
-    }
 }
 
 export interface FlowHandlers {
