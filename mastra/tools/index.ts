@@ -7,6 +7,7 @@ import {
     checkBusyStatus,
     initiateReschedulingOverEmailWithHostAndAttendees,
     initiateSchedulingOverEmailWithHostAndAttendees,
+    findBookableSlots,
 } from './event';
 import { getSchedulingDefaults, updateSchedulingDefaults } from './preference';
 
@@ -17,13 +18,14 @@ export const calendarTools = {
     viewCalendarEvents,
     searchCalendarEvents,
     checkBusyStatus,
+    findBookableSlots,
     initiateReschedulingOverEmailWithHostAndAttendees,
     initiateSchedulingOverEmailWithHostAndAttendees,
 };
 
 export const thirdPartyCalendarTools = {
-    checkBusyStatus,
     createEvent,
+    findBookableSlots,
     modifyEvent,
     cancelEvent,
 };
