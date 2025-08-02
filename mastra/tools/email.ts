@@ -1,14 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { HtmlValidate, ConfigData, Message } from 'html-validate';
-
-// Helper function to log tool execution
-const logToolExecution = (toolName: string, input: any, output: any) => {
-    console.log('='.repeat(50));
-    console.log(`[${toolName}] Input:`, JSON.stringify(input, null, 2));
-    console.log(`[${toolName}] Output:`, output);
-    console.log('='.repeat(50));
-};
+import { logToolExecution } from './log';
 
 /**
  * HTML validation configuration optimized for email HTML
@@ -121,5 +114,3 @@ export const validateEmailHTMLTool = createTool({
         }
     },
 });
-
-

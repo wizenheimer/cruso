@@ -2,14 +2,7 @@ import { createTool } from '@mastra/core/tools';
 import { getUserFromRuntimeContext } from '@/mastra/commons';
 import { z } from 'zod';
 import { preferenceService } from '@/services/preferences';
-
-// Helper function to log tool execution
-const logToolExecution = (toolName: string, input: any, output: any) => {
-    console.log('='.repeat(50));
-    console.log(`[${toolName}] Input:`, JSON.stringify(input, null, 2));
-    console.log(`[${toolName}] Output:`, output);
-    console.log('='.repeat(50));
-};
+import { logToolExecution } from './log';
 
 /**
  * Get default scheduling preferences
@@ -40,7 +33,7 @@ export const getSchedulingDefaults = createTool({
  * @returns The result of the preference update
  */
 export const updateSchedulingDefaults = createTool({
-    id: 'set-preferences',
+    id: 'update-preferences',
     description: "Update user's default scheduling preferences",
     inputSchema: z.object({
         updateInstruction: z.string(),

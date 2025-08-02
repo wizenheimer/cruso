@@ -12,6 +12,9 @@ import {
 import { getSchedulingDefaults, updateSchedulingDefaults } from './preference';
 import { validateEmailHTMLTool } from './email';
 
+/**
+ * Export calendar tools
+ */
 export const calendarTools = {
     createEvent,
     modifyEvent,
@@ -24,6 +27,9 @@ export const calendarTools = {
     initiateSchedulingOverEmailWithHostAndAttendees,
 };
 
+/**
+ * Export preference tools
+ */
 export const preferenceTools = {
     getSchedulingDefaults,
     updateSchedulingDefaults,
@@ -34,4 +40,13 @@ export const preferenceTools = {
  */
 export const emailTools = {
     validateEmailHTMLTool,
+};
+
+/**
+ * Export all tools
+ */
+export const allTools = {
+    ...calendarTools,
+    ...preferenceTools,
+    ...emailTools,
 };

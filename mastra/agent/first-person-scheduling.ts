@@ -1,38 +1,28 @@
 import { Agent } from '@mastra/core/agent';
 import {
+    DEFAULT_FIRST_PERSON_SCHEDULING_MODEL,
     DEFAULT_FIRST_PERSON_SCHEDULING_PROMPT,
     DEFAULT_FIRST_PERSON_SCHEDULING_TOOLS,
-    DEFAULT_FIRST_PERSON_SCHEDULING_MODEL,
 } from '@/constants/flag';
-import { openai } from '@ai-sdk/openai';
-import { calendarTools, preferenceTools } from '../tools';
 import { User } from '@/types/users';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { preferenceService } from '@/services/preferences/service';
-import { Statsig, StatsigUser } from '@statsig/statsig-node-core';
 import {
     USER_CONTEXT_KEY,
     PREFERENCE_CONTEXT_KEY,
     TIMESTAMP_CONTEXT_KEY,
-    getUserFromRuntimeContext,
-    getUserPreferenceFromRuntimeContext,
-    getTimestampFromRuntimeContext,
     HOST_CONTEXT_KEY,
     ATTENDEES_CONTEXT_KEY,
-    getAttendeesFromRuntimeContext,
-    getHostFromRuntimeContext,
-    getTimestampPrompt,
-    getHostPrompt,
-    getAttendeesPrompt,
-    getPreferencePrompt,
-    getTimezoneFromRuntimeContext,
     TIMEZONE_CONTEXT_KEY,
-} from '../commons';
+} from '@/constants/runtime';
 import { EmailData, ExchangeData } from '@/types/exchange';
-import { agentMemory } from '../memory';
-
-const statsig = new Statsig(process.env.STATSIG_SERVER_KEY!);
-const statsigInitialized = statsig.initialize();
+import { agentMemory } from '@/mastra/memory';
+import {
+    createAgentConfig,
+    getAgentInstructions,
+    getAllowedTools,
+    getInferenceConfig,
+} from '@/mastra/commons';
 
 // Helper function to log context setting
 const logContextSetting = (agentName: string, contextKey: string, value: any) => {
@@ -42,6 +32,9 @@ const logContextSetting = (agentName: string, contextKey: string, value: any) =>
     console.log('='.repeat(50));
 };
 
+/**
+ * Scheduling agent runtime context
+ */
 type SchedulingAgentRuntimeContext = {
     user: User;
     preference: string;
@@ -52,31 +45,40 @@ type SchedulingAgentRuntimeContext = {
 };
 
 /**
- * Get prompt from Statsig
- * @param user - The user
- * @returns The prompt
+ * Agent configuration for feature flags
  */
-const getStatsigPrompt = async (userId: string, flagId: string): Promise<string> => {
-    try {
-        await statsigInitialized;
+const firstPersonSchedulingAgentConfig = createAgentConfig(
+    'first_party_scheduling_agent',
+    DEFAULT_FIRST_PERSON_SCHEDULING_PROMPT,
+    DEFAULT_FIRST_PERSON_SCHEDULING_TOOLS,
+    DEFAULT_FIRST_PERSON_SCHEDULING_MODEL,
+    'firstPersonSchedulingAgent',
+);
 
-        const statsigUser = new StatsigUser({
-            userID: userId,
-        });
+/**
+ * Scheduling agent instance
+ */
+export const firstPersonSchedulingAgent = new Agent({
+    name: 'firstPersonSchedulingAgent',
+    instructions: async ({ runtimeContext }) => {
+        return await getAgentInstructions(runtimeContext, firstPersonSchedulingAgentConfig);
+    },
+    tools: async ({ runtimeContext }) => {
+        return await getAllowedTools(runtimeContext, firstPersonSchedulingAgentConfig);
+    },
+    model: async ({ runtimeContext }) => {
+        return await getInferenceConfig(runtimeContext, firstPersonSchedulingAgentConfig);
+    },
+    memory: agentMemory,
+});
 
-        const config = statsig.getDynamicConfig(statsigUser, flagId);
-        const prompt = config.getValue('prompt', DEFAULT_FIRST_PERSON_SCHEDULING_PROMPT);
-
-        console.log(
-            `[firstPersonSchedulingAgent] Got prompt from Statsig for user ${userId}: ${prompt}`,
-        );
-        return prompt;
-    } catch (error) {
-        console.error('[firstPersonSchedulingAgent] Failed to get prompt from Statsig:', error);
-        return DEFAULT_FIRST_PERSON_SCHEDULING_PROMPT;
-    }
-};
-
+/**
+ * Get the runtime context for the first person scheduling agent
+ * @param user - The user
+ * @param emailData - The email data
+ * @param exchangeData - The exchange data
+ * @returns The runtime context
+ */
 export const getfirstPersonSchedulingAgentRuntimeContext = async (
     user: User,
     emailData: EmailData,
@@ -122,171 +124,3 @@ export const getfirstPersonSchedulingAgentRuntimeContext = async (
 
     return context;
 };
-
-/**
- * Get the agent instructions
- * @param runtimeContext - The runtime context
- * @returns The agent instructions
- */
-const getAgentInstructions = async ({ runtimeContext }: { runtimeContext: RuntimeContext }) => {
-    const user = getUserFromRuntimeContext(runtimeContext);
-    if (!user) {
-        console.error('no user found in runtime context');
-    }
-
-    // Get prompt from Statsig
-    const basePrompt = await getStatsigPrompt(user.id, 'first_party_scheduling_agent');
-
-    // Keep all your existing prompt building logic
-    const timezone = getTimezoneFromRuntimeContext(runtimeContext);
-    const timestamp = getTimestampFromRuntimeContext(runtimeContext);
-    const timestampPrompt = getTimestampPrompt(timestamp, timezone);
-
-    const host = getHostFromRuntimeContext(runtimeContext);
-    const hostPrompt = getHostPrompt(host);
-
-    const attendees = getAttendeesFromRuntimeContext(runtimeContext);
-    const attendeesPrompt = getAttendeesPrompt(attendees);
-
-    const preference = getUserPreferenceFromRuntimeContext(runtimeContext);
-    const preferencePrompt = getPreferencePrompt(preference);
-
-    return `
-    ${basePrompt.trim()}\n
-    ${timestampPrompt}\n
-    ${hostPrompt}\n
-    ${attendeesPrompt}\n
-    ${preferencePrompt}
-    `;
-};
-
-const getStatsigAllowedTools = async (userId: string, flagId: string): Promise<string[]> => {
-    try {
-        await statsigInitialized;
-
-        const statsigUser = new StatsigUser({
-            userID: userId,
-        });
-
-        const config = statsig.getDynamicConfig(statsigUser, flagId);
-        const allowedTools = config.getValue('tools', DEFAULT_FIRST_PERSON_SCHEDULING_TOOLS);
-
-        console.log(
-            `[firstPersonSchedulingAgent] Got allowedTools from Statsig for user ${userId}:`,
-            allowedTools,
-        );
-        return allowedTools;
-    } catch (error) {
-        console.error(
-            '[firstPersonSchedulingAgent] Failed to get allowedTools from Statsig:',
-            error,
-        );
-        // Return default tools on error
-        return DEFAULT_FIRST_PERSON_SCHEDULING_TOOLS;
-    }
-};
-
-const getStatsigPrimaryModel = async (
-    userId: string,
-    flagId: string,
-): Promise<{ model: string; provider: string }> => {
-    try {
-        await statsigInitialized;
-
-        const statsigUser = new StatsigUser({
-            userID: userId,
-        });
-
-        const config = statsig.getDynamicConfig(statsigUser, flagId);
-        const primaryModel = config.getValue('inference', DEFAULT_FIRST_PERSON_SCHEDULING_MODEL);
-
-        console.log(
-            `[firstPersonSchedulingAgent] Got primaryModel from Statsig for user ${userId}:`,
-            primaryModel,
-        );
-        return primaryModel;
-    } catch (error) {
-        console.error(
-            '[firstPersonSchedulingAgent] Failed to get primaryModel from Statsig:',
-            error,
-        );
-        // Return default model on error
-        return DEFAULT_FIRST_PERSON_SCHEDULING_MODEL;
-    }
-};
-
-const getAllowedTools = async ({ runtimeContext }: { runtimeContext: RuntimeContext }) => {
-    // Get user info from runtime context
-    const user = getUserFromRuntimeContext(runtimeContext);
-
-    const allowedToolNames = await getStatsigAllowedTools(user.id, 'first_party_scheduling_agent');
-
-    // Map tool names to actual tool functions
-    const allAvailableTools = {
-        ...calendarTools,
-        ...preferenceTools,
-    };
-
-    // Filter tools based on allowed list from Statsig
-    const filteredTools: Record<string, any> = {};
-    for (const toolName of allowedToolNames) {
-        if (toolName in allAvailableTools) {
-            filteredTools[toolName] = (allAvailableTools as any)[toolName];
-        } else {
-            console.warn(
-                `[firstPersonSchedulingAgent] Tool '${toolName}' not found in available tools`,
-            );
-        }
-    }
-
-    console.log(
-        `[firstPersonSchedulingAgent] Returning ${Object.keys(filteredTools).length} allowed tools:`,
-        Object.keys(filteredTools),
-    );
-
-    return filteredTools;
-};
-
-const getPrimaryModel = async ({ runtimeContext }: { runtimeContext: RuntimeContext }) => {
-    // Get user info from runtime context
-    const user = getUserFromRuntimeContext(runtimeContext);
-
-    const modelConfig = await getStatsigPrimaryModel(user.id, 'first_party_scheduling_agent');
-
-    // Map provider to actual model function (you'll need to adjust this based on your model setup)
-    try {
-        switch (modelConfig.provider) {
-            case 'openai':
-                return openai(modelConfig.model);
-            case 'anthropic':
-                // Add anthropic model if you have it
-                // return anthropic(modelConfig.model);
-                console.warn(
-                    `[firstPersonSchedulingAgent] Anthropic provider not implemented, falling back to OpenAI`,
-                );
-                return openai(DEFAULT_FIRST_PERSON_SCHEDULING_MODEL.model);
-            default:
-                console.warn(
-                    `[firstPersonSchedulingAgent] Unknown provider '${modelConfig.provider}', falling back to default`,
-                );
-                return openai(DEFAULT_FIRST_PERSON_SCHEDULING_MODEL.model);
-        }
-    } catch (error) {
-        console.error(
-            '[firstPersonSchedulingAgent] Failed to get primaryModel from Statsig:',
-            error,
-        );
-        return openai(DEFAULT_FIRST_PERSON_SCHEDULING_MODEL.model);
-    }
-};
-
-/**
- * Scheduling agent instance
- */
-export const firstPersonSchedulingAgent = new Agent({
-    name: 'firstPersonSchedulingAgent',
-    instructions: getAgentInstructions,
-    tools: getAllowedTools,
-    model: getPrimaryModel,
-    memory: agentMemory,
-});

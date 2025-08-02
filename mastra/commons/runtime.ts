@@ -1,22 +1,18 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { User } from '@/types/users';
-import { PinoLogger } from '@mastra/loggers';
-import { DateTime, Info } from 'luxon';
+import {
+    USER_CONTEXT_KEY,
+    PREFERENCE_CONTEXT_KEY,
+    TIMEZONE_CONTEXT_KEY,
+    TIMESTAMP_CONTEXT_KEY,
+    HOST_CONTEXT_KEY,
+    ATTENDEES_CONTEXT_KEY,
+} from '@/constants/runtime';
+import { Info } from 'luxon';
 
-export const USER_CONTEXT_KEY = 'user';
-export const PREFERENCE_CONTEXT_KEY = 'preference';
-export const TIMEZONE_CONTEXT_KEY = 'timezone';
-export const TIMESTAMP_CONTEXT_KEY = 'timestamp';
-export const HOST_CONTEXT_KEY = 'host';
-export const ATTENDEES_CONTEXT_KEY = 'attendees';
-
-/**
- * Logger - It is used to log the data of the workflow and agent.
- */
-export const logger = new PinoLogger({
-    name: 'Mastra',
-    level: 'info',
-});
+// ================================
+// Runtime Utility Functions
+// ================================
 
 /**
  * Get the user from the runtime context
@@ -127,63 +123,4 @@ export const getTimezoneFromRuntimeContext = (runtimeContext: RuntimeContext) =>
         timezone = 'UTC';
     }
     return timezone;
-};
-
-/**
- * Get the timestamp prompt
- * @param timestamp - The timestamp
- * @param timezone - The timezone
- * @returns The timestamp prompt
- */
-export const getTimestampPrompt = (timestamp: number, timezone: string) => {
-    let date: DateTime;
-
-    try {
-        // Try to create DateTime with the specified timezone
-        date = DateTime.fromMillis(timestamp).setZone(timezone);
-
-        // Check if the date is valid (this will catch invalid timezone issues too)
-        if (!date.isValid) {
-            throw new Error('Invalid timezone or date');
-        }
-    } catch (error) {
-        console.warn(`Failed to use timezone "${timezone}", falling back to UTC:`, error);
-        // Fallback to UTC if timezone is invalid
-        date = DateTime.fromMillis(timestamp).setZone('UTC');
-    }
-
-    const formattedDate = date.toFormat('yyyy-MM-dd HH:mm:ss ZZZZ');
-
-    return `# Current Time and Timezone\n
-    The USER'S CURRENT TIME is ${formattedDate} and THE USER'S CURRENT TIMEZONE is ${timezone}. This timestamp is the sole reference for determining all scheduling times. Anchor to this exact date value for the duration of this exchange. No exceptions. Every event, timeslot, deadline, or conflict must be evaluated and resolved with this EXACT timestamp (${formattedDate}) in mind. Always make sure to use the correct date and resolve conflicts based on this date.`;
-};
-
-/**
- * Get the host prompt
- * @param host - The host
- * @returns The host prompt
- */
-export const getHostPrompt = (host: string) => {
-    return `# Host\n
-    The host is ${host}.`;
-};
-
-/**
- * Get the attendees prompt
- * @param attendees - The attendees
- * @returns The attendees prompt
- */
-export const getAttendeesPrompt = (attendees: string[]) => {
-    return `# Attendees\n
-    The attendees are ${attendees.join(', ')}.`;
-};
-
-/**
- * Get the preference prompt
- * @param preference - The preference
- * @returns The preference prompt
- */
-export const getPreferencePrompt = (preference: string) => {
-    return `# Executive's Preferences\n
-    ${preference.trim()}`;
 };
