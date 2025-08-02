@@ -59,7 +59,8 @@ export const createEvent = createTool({
  */
 export const viewCalendarEvents = createTool({
     id: 'view-calendar-events',
-    description: 'Lists and displays events within specific date/time ranges',
+    description:
+        'Display all events within a specific date/time range. Use for calendar overviews, daily/weekly summaries, or when user asks "what\'s on my calendar".',
     inputSchema: viewCalendarEventsFromPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
@@ -141,7 +142,7 @@ export const cancelEvent = createTool({
 export const checkBusyStatus = createTool({
     id: 'check-busy-status',
     description:
-        'Check when the executive is busy/free during a specific time period without suggesting bookable slots',
+        'Check if executive is busy or free during specific time periods. Use only for general availability questions, NOT for finding meeting slots. Use findBookableSlots for scheduling requests.',
     inputSchema: checkBusyStatusToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
@@ -168,7 +169,8 @@ export const checkBusyStatus = createTool({
  */
 export const searchCalendarEvents = createTool({
     id: 'search-events',
-    description: 'Search events',
+    description:
+        'Search for existing calendar events by keywords, attendee names, or event details. Use when user wants to find specific past or future meetings.',
     inputSchema: searchCalendarEventsFromPrimaryCalendarToolSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
@@ -196,7 +198,7 @@ export const searchCalendarEvents = createTool({
 export const findBookableSlots = createTool({
     id: 'find-bookable-slots',
     description:
-        'Find specific bookable time slots of requested duration within a time range, formatted for immediate scheduling',
+        'Find specific available time slots for scheduling meetings. Use this when user asks for available times, slots, or wants to schedule meetings. Returns discrete time options for user to choose from.',
     inputSchema: findBookableSlotsIncludeCalendarsSchema,
     outputSchema: z.string(),
     execute: async ({ context, runtimeContext }) => {
