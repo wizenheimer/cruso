@@ -1,5 +1,6 @@
+// mastra/memory/index.ts
 import { Memory } from '@mastra/memory';
-import { storage } from '../storage/pg';
+import { storage } from '../storage';
 import { openai } from '@ai-sdk/openai';
 import { DEFAULT_SMALL_LANGUAGE_MODEL } from '@/constants/model';
 

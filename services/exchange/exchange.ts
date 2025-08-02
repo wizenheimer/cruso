@@ -4,6 +4,8 @@ import { ExchangeProcessingService } from './processing';
 import { Context } from 'hono';
 import { User } from '@/types/users';
 import { CreateExchangeData, ExchangeFilters } from '@/types/exchange';
+import { handleFirstPartyFlow } from '@/mastra/flows/first-person-flow';
+import { handleThirdPartyFlow } from '@/mastra/flows/third-person-flow';
 
 export class ExchangeService {
     private static instance: ExchangeService | null = null;
@@ -11,8 +13,13 @@ export class ExchangeService {
     private exchangeProcessingService: ExchangeProcessingService;
 
     private constructor() {
+        // Get flow handler
         this.exchangeDataService = ExchangeDataService.getInstance();
         this.exchangeProcessingService = ExchangeProcessingService.getInstance();
+        this.exchangeProcessingService.setFlowHandlers({
+            handleFirstPartyFlow,
+            handleThirdPartyFlow,
+        });
     }
 
     public static getInstance(): ExchangeService {

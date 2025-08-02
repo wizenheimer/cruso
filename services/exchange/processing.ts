@@ -14,7 +14,6 @@ import {
 } from '@/constants/email';
 import { ExchangeData } from '@/types/exchange';
 import { User } from '@/types/users';
-import { handleFirstPartyFlow, handleThirdPartyFlow, mastra } from '@/mastra';
 import { getUserById } from '@/db/queries/users';
 
 const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
@@ -24,6 +23,7 @@ export class ExchangeProcessingService {
     private exchangeDataService: ExchangeDataService;
     private emailParsingService: EmailParsingService;
     private emailService: EmailService;
+    private flowHandlers?: FlowHandlers; // Injected by the ExchangeService for flow handling
 
     private constructor() {
         this.exchangeDataService = ExchangeDataService.getInstance();
@@ -36,6 +36,10 @@ export class ExchangeProcessingService {
             ExchangeProcessingService.instance = new ExchangeProcessingService();
         }
         return ExchangeProcessingService.instance;
+    }
+
+    public setFlowHandlers(handlers: FlowHandlers) {
+        this.flowHandlers = handlers;
     }
 
     // ============================================================================
@@ -201,6 +205,11 @@ export class ExchangeProcessingService {
      * @description This method handles non-user exchanges - triggered when Cruso acts on behalf of a user
      */
     async handleEngagementForNonUser(emailData: EmailData) {
+        // Check if the flow handlers are initialized
+        if (!this.flowHandlers) {
+            throw new Error('Flow handlers not initialized. Call setFlowHandlers first.');
+        }
+
         // Check if the previous message exists
         if (!emailData.previousMessageId) {
             return this.handleOnboardingFlowForNonUser(emailData);
@@ -237,7 +246,11 @@ export class ExchangeProcessingService {
         // Get the signature and add it to the response
         const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
 
-        const result = await handleThirdPartyFlow(emailData, signature, exchangeData);
+        const result = await this.flowHandlers?.handleThirdPartyFlow(
+            emailData,
+            signature,
+            exchangeData,
+        );
 
         // Send the reply
         const sentEmail = await this.emailService.sendReply(emailData, {
@@ -260,6 +273,10 @@ export class ExchangeProcessingService {
      * @description This method handles existing user interactions with Cruso
      */
     async handleEngagementForExistingUser(emailData: EmailData, user: User) {
+        if (!this.flowHandlers) {
+            throw new Error('Flow handlers not initialized. Call setFlowHandlers first.');
+        }
+
         // Check if the previous message exists
         if (emailData.previousMessageId) {
             const previousExchangeData = await this.exchangeDataService.getByMessageId(
@@ -276,7 +293,12 @@ export class ExchangeProcessingService {
 
         const signature = await this.exchangeDataService.getSignature(emailData.exchangeId);
 
-        const result = await handleFirstPartyFlow(user, signature, emailData, exchangeData);
+        const result = await this.flowHandlers?.handleFirstPartyFlow(
+            user,
+            signature,
+            emailData,
+            exchangeData,
+        );
 
         // Send the reply
         const sentEmail = await this.emailService.sendReply(emailData, {
@@ -352,4 +374,18 @@ export class ExchangeProcessingService {
 
         return savedEmail;
     }
+}
+
+export interface FlowHandlers {
+    handleFirstPartyFlow: (
+        user: User,
+        signature: string,
+        emailData: EmailData,
+        exchangeData: ExchangeData,
+    ) => Promise<any>;
+    handleThirdPartyFlow: (
+        emailData: EmailData,
+        signature: string,
+        exchangeData: ExchangeData,
+    ) => Promise<any>;
 }

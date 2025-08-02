@@ -1,17 +1,18 @@
+// mastra/agent/email-drafting.ts
 import { Agent } from '@mastra/core/agent';
 import {
     DEFAULT_EMAIL_FORMATTING_PROMPT,
     DEFAULT_EMAIL_DRAFTING_TOOLS,
     DEFAULT_EMAIL_DRAFTING_MODEL,
 } from '@/constants/flag';
-import {
-    createAgentConfig,
-    getAllowedTools,
-    getInferenceConfig,
-    getAgentInstructions,
-} from '@/mastra/commons';
+import { createAgentConfig } from '../flag';
+import { getAgentInstructions } from '../prompt';
+import { getAllowedTools } from '../tools';
+import { getInferenceConfig } from '../inference';
 
-// Agent configuration for feature flags
+/**
+ * Email formatting agent configuration
+ */
 const emailDraftingAgentConfig = createAgentConfig(
     'email_drafting_agent',
     DEFAULT_EMAIL_FORMATTING_PROMPT,

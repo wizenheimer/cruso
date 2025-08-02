@@ -30,11 +30,7 @@ import {
     PreferenceUpdateExcludingSystemFieldsSchema,
     PreferenceUpdateUsingInstructionSchema,
 } from '@/schema/preferences';
-import {
-    DEFAULT_LARGE_LANGUAGE_MODEL,
-    DEFAULT_SMALL_LANGUAGE_MODEL,
-    LARGE_LANGUAGE_MODEL,
-} from '@/constants/model';
+import { DEFAULT_LARGE_LANGUAGE_MODEL } from '@/constants/model';
 import yaml from 'yaml';
 
 /**

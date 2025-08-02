@@ -1,20 +1,21 @@
+// mastra/commons/instructions.ts
 import { RuntimeContext } from '@mastra/core/runtime-context';
-import { AgentFeatureFlagConfig } from './flag';
-import { getUserFromRuntimeContext } from './runtime';
+import { AgentFeatureFlagConfig } from '../flag';
+import { getUserFromRuntimeContext } from '../runtime/context';
 import {
     getTimestampPrompt,
     getHostPrompt,
     getAttendeesPrompt,
     getPreferencePrompt,
-} from './prompt';
-import { getStatsigPrompt } from './flag';
+} from './extras';
+import { getStatsigPrompt } from '../flag';
 import {
     getTimezoneFromRuntimeContext,
     getTimestampFromRuntimeContext,
     getHostFromRuntimeContext,
     getAttendeesFromRuntimeContext,
     getUserPreferenceFromRuntimeContext,
-} from './runtime';
+} from '../runtime/context';
 
 /**
  * Get the agent instructions

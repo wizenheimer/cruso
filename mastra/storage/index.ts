@@ -1,3 +1,4 @@
+// mastra/storage/index.ts
 import { PostgresStore } from '@mastra/pg';
 
 // Use global to cache storage instance across hot reloads

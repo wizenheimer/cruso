@@ -1,3 +1,4 @@
+// mastra/tools/email.ts
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { HtmlValidate, ConfigData, Message } from 'html-validate';

@@ -1,6 +1,7 @@
+// mastra/commons/model.ts
 import { RuntimeContext } from '@mastra/core/runtime-context';
-import { getUserFromRuntimeContext } from './runtime';
-import { getStatsigPrimaryModel, AgentFeatureFlagConfig } from './flag';
+import { getUserFromRuntimeContext } from '../runtime/context';
+import { getStatsigPrimaryModel, AgentFeatureFlagConfig } from '../flag';
 import { openai } from '@ai-sdk/openai';
 
 /**

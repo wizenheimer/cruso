@@ -1,5 +1,6 @@
+// mastra/tools/preference.ts
 import { createTool } from '@mastra/core/tools';
-import { getUserFromRuntimeContext } from '@/mastra/commons';
+import { getUserFromRuntimeContext } from '../runtime/context';
 import { z } from 'zod';
 import { preferenceService } from '@/services/preferences';
 import { logToolExecution } from './log';

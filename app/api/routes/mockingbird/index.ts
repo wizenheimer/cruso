@@ -1,7 +1,8 @@
 import { Context, Hono } from 'hono';
 import { requireAuth } from '../../middleware/auth';
 import { EmailDataSchema } from '@/schema/exchange';
-import { handleFirstPartyFlow, handleThirdPartyFlow } from '@/mastra';
+import { handleFirstPartyFlow } from '@/mastra/flows/first-person-flow';
+import { handleThirdPartyFlow } from '@/mastra/flows/third-person-flow';
 import { ExchangeDataService } from '@/services/exchange/data';
 import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 

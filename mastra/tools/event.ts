@@ -1,5 +1,6 @@
+// mastra/tools/event.ts
 import { createTool } from '@mastra/core/tools';
-import { getUserFromRuntimeContext } from '@/mastra/commons';
+import { getUserFromRuntimeContext } from '../runtime/context';
 import { z } from 'zod';
 import { createCalendarService } from '@/services/calendar/service';
 import {

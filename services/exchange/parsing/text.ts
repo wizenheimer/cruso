@@ -1,4 +1,4 @@
-import { decodeFormValue } from '@/services/exchange/parsing/form';
+import { decodeFormValue } from './utils';
 
 /**
  * Clean up the plain text content of an email.
