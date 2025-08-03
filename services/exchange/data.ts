@@ -139,7 +139,7 @@ export class ExchangeDataService {
             }
 
             // Fallback to the original logic if no signature is set
-            return `Best,\n${exchangeOwner.userEmail}'s AI Assistant`;
+            return `Best,\nAssistant to ${exchangeOwner.userEmail}`;
         }
 
         return `Best,\nCruso`;

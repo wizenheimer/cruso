@@ -106,7 +106,7 @@ async function getSmartDefaults(userId: string) {
     // Determine signature (use display name)
     let signature = PREFERENCES_DEFAULTS.SIGNATURE;
     if (displayName) {
-        signature = `${displayName}'s AI Assistant`;
+        signature = `Assistant to ${displayName}`;
     }
 
     // Determine timezone (prefer calendar timezone, fallback to defaults)

@@ -221,7 +221,7 @@ export class PreferenceService {
             const displayName = userName || PREFERENCES_DEFAULTS.DISPLAY_NAME;
             const nickname = userName || PREFERENCES_DEFAULTS.NICKNAME;
             const signature = userName
-                ? `${userName}'s AI Assistant`
+                ? `Assistant to ${userName}`
                 : PREFERENCES_DEFAULTS.SIGNATURE;
 
             // Generate preferences document
@@ -689,7 +689,7 @@ Please provide the final updated preferences object that combines both the exist
         // Determine signature (use display name)
         let signature = PREFERENCES_DEFAULTS.SIGNATURE;
         if (displayName) {
-            signature = `${displayName}'s AI Assistant`;
+            signature = `Assistant to ${displayName}`;
         }
 
         // Determine timezone (prefer calendar timezone, fallback to defaults)

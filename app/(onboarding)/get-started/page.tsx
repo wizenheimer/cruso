@@ -43,16 +43,28 @@ const totalSteps = 5;
 // Feature descriptions for the final step
 const features = [
     {
-        description:
-            'Smart email automation that learns your preferences and handles your inbox intelligently.',
+        description: 'Schedule meetings by simply emailing Cruso instead of using booking forms.',
     },
     {
-        description:
-            'Intelligent calendar management with AI assistance for optimal scheduling and time management.',
+        description: 'View your calendar and find events across all your connected calendars.',
     },
     {
-        description:
-            'Seamless integration with your existing workflow to boost productivity without disruption.',
+        description: 'Update meeting details, add attendees, or change recurring schedules.',
+    },
+    {
+        description: 'Find free time slots that work for everyone involved.',
+    },
+    {
+        description: 'Reschedule meetings by suggesting new times through email.',
+    },
+    {
+        description: 'Coordinate new meetings with multiple people via email.',
+    },
+    {
+        description: 'Cancel meetings and notify everyone automatically.',
+    },
+    {
+        description: 'Manage recurring meetings with flexible modification options.',
     },
 ];
 

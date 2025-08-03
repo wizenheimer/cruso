@@ -125,7 +125,7 @@ const CalendarStep = ({
         <>
             <h1 className="text-2xl font-semibold mb-2 text-center">Connect More Calendar</h1>
             <p className="text-base text-muted-foreground mb-8 text-center">
-                Quick auth and we&apos;ll make it official
+                Bring all your existing calendars to Cruso
             </p>
 
             {/* Connected Calendars List */}

@@ -70,7 +70,7 @@ const BufferStep = ({ buffers, onUpdateBuffers }: BufferStepProps) => {
         <>
             <h1 className="text-2xl font-semibold mb-2 text-center">Usual Meeting Buffers</h1>
             <p className="text-base text-muted-foreground mb-8 text-center">
-                Quick auth and we&apos;ll make it official
+                Set your preferred buffer times for meetings
             </p>
 
             {/* Buffer Settings */}

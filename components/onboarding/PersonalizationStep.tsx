@@ -28,7 +28,7 @@ const PersonalizationStep = ({ fields, onUpdateFields }: PersonalizationStepProp
                 How would Cruso like to call you?
             </h1>
             <p className="text-base text-muted-foreground mb-8 text-center">
-                Quick auth and we&apos;ll make it official
+                Set your preferred name and signature for your emails
             </p>
 
             {/* Personalization Fields */}

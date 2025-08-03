@@ -18,5 +18,5 @@ export const PREFERENCES_DEFAULTS = {
     DOCUMENT: '' as string,
     DISPLAY_NAME: 'User' as string,
     NICKNAME: 'User' as string,
-    SIGNATURE: "User's AI Assistant" as string,
+    SIGNATURE: "Assistant to User" as string,
 } as const;
