@@ -3,6 +3,7 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { getUserFromRuntimeContext } from '../runtime/context';
 import { getStatsigPrimaryModel, AgentFeatureFlagConfig } from '../flag';
 import { openai } from '@ai-sdk/openai';
+import { mistral } from '@ai-sdk/mistral';
 
 /**
  * Get the primary model
@@ -24,6 +25,8 @@ export const getInferenceConfig = async (
         switch (modelConfig.provider) {
             case 'openai':
                 return openai(modelConfig.model);
+            case 'mistral':
+                return mistral(modelConfig.model);
             case 'anthropic':
                 // Add anthropic model if you have it
                 // return anthropic(modelConfig.model);
