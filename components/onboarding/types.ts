@@ -33,3 +33,7 @@ export interface DaySchedule {
 export interface WeeklySchedule {
     [key: string]: DaySchedule;
 }
+
+export interface TimezoneData {
+    timezone: string;
+}

@@ -14,6 +14,7 @@ import {
     BufferStep,
     PersonalizationStep,
     ScheduleStep,
+    TimezoneStep,
     CompletionStep,
     ConnectedCalendar,
     BufferSetting,
@@ -25,6 +26,7 @@ import MailboxOverlay from '@/components/icons/dynamic/mail-overlay';
 import EnvelopeOverlay from '@/components/icons/dynamic/envelope-overlay';
 import ScheduleViewOverlay from '@/components/icons/dynamic/schedule-view-overlay';
 import ScheduleHeatmapOverlay from '@/components/icons/dynamic/schedule-heatmap-overlay';
+import WorldMapOverlay from '@/components/icons/dynamic/worldmap-overlay';
 import Image from 'next/image';
 
 interface ApiCalendarAccount {
@@ -38,7 +40,7 @@ interface ApiCalendarAccount {
     }>;
 }
 
-const totalSteps = 5;
+const totalSteps = 6;
 
 // Feature descriptions for the final step
 const features = [
@@ -121,6 +123,8 @@ const OnboardingContent = () => {
         Sunday: { enabled: false, timeSlots: [{ id: '7', startTime: '09:00', endTime: '17:00' }] },
     });
 
+    const [timezone, setTimezone] = useState<string>('America/New_York');
+
     // Load existing data from APIs
     const loadOnboardingData = useCallback(async () => {
         try {
@@ -194,6 +198,11 @@ const OnboardingContent = () => {
                     });
                     return updated;
                 });
+
+                // Update timezone from preferences
+                if (prefs.timezone) {
+                    setTimezone(prefs.timezone as string);
+                }
             }
 
             // Load working hours schedule
@@ -329,6 +338,17 @@ const OnboardingContent = () => {
         }
     }, [schedule]);
 
+    const saveTimezoneData = useCallback(async () => {
+        const prefsData = {
+            timezone: timezone,
+        };
+
+        const response = await apiClient.updatePreferences(prefsData);
+        if (!response.success) {
+            await apiClient.createPreferences(prefsData);
+        }
+    }, [timezone]);
+
     const finalizeOnboarding = useCallback(async () => {
         // Generate preferences document and mark onboarding as complete
         const documentResponse = await apiClient.generatePreferencesDocument();
@@ -356,15 +376,26 @@ const OnboardingContent = () => {
                 await savePersonalizationData();
                 break;
             case 4:
+                // Timezone step - save preferences
+                await saveTimezoneData();
+                break;
+            case 5:
                 // Schedule step - save availability
                 await saveScheduleData();
                 break;
-            case 5:
+            case 6:
                 // Completion step - finalize onboarding
                 await finalizeOnboarding();
                 break;
         }
-    }, [step, saveBufferSettings, savePersonalizationData, saveScheduleData, finalizeOnboarding]);
+    }, [
+        step,
+        saveBufferSettings,
+        savePersonalizationData,
+        saveTimezoneData,
+        saveScheduleData,
+        finalizeOnboarding,
+    ]);
 
     // Handle next step for the onboarding flow
     const handleNext = useCallback(async () => {
@@ -456,8 +487,10 @@ const OnboardingContent = () => {
             case 3:
                 return <PersonalizationStep fields={fields} onUpdateFields={setFields} />;
             case 4:
-                return <ScheduleStep schedule={schedule} onUpdateSchedule={setSchedule} />;
+                return <TimezoneStep timezone={timezone} onUpdateTimezone={setTimezone} />;
             case 5:
+                return <ScheduleStep schedule={schedule} onUpdateSchedule={setSchedule} />;
+            case 6:
                 return <CompletionStep />;
             default:
                 return null;
@@ -487,9 +520,12 @@ const OnboardingContent = () => {
                     />
                 );
             case 4:
-                return <ScheduleHeatmapOverlay />;
+                // Timezone step - show worldmap overlay
+                return <WorldMapOverlay />;
             case 5:
-                // Step 5 content is now handled in the main layout
+                return <ScheduleHeatmapOverlay />;
+            case 6:
+                // Completion step - no overlay needed
                 return null;
             default:
                 return null;
@@ -571,8 +607,8 @@ const OnboardingContent = () => {
 
             {/* Right side - Testimonial and Image */}
             <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex-col justify-start rounded-l-2xl">
-                {step === 5 ? (
-                    // For step 5, use the signup page layout
+                {step === totalSteps ? (
+                    // For step 6, use the signup page layout
                     <>
                         <motion.div
                             className="px-8 xl:px-16 pt-8 xl:pt-16 pb-4 w-full"
@@ -611,7 +647,11 @@ const OnboardingContent = () => {
                 ) : (
                     // For other steps, use the original centered layout
                     <div className="flex items-center justify-center w-full h-full p-8">
-                        <div className="w-96 h-auto max-w-full">{renderRightHalfContent()}</div>
+                        <div
+                            className={`h-auto max-w-full ${step === 4 ? 'w-full max-w-2xl' : 'w-96'}`}
+                        >
+                            {renderRightHalfContent()}
+                        </div>
                     </div>
                 )}
             </div>
