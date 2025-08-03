@@ -181,7 +181,7 @@ const LoginPage = () => {
                     <Testimonials
                         testimonials={testimonials}
                         autoPlay={true}
-                        interval={5000}
+                        interval={10000}
                         showNavigation={true}
                         className="w-full"
                     />

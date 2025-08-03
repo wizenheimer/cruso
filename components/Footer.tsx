@@ -18,12 +18,9 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link
-                                    href="/#research"
-                                    className="text-sm text-zinc-400 hover:text-white transition-colors"
-                                >
+                                <span className="text-sm text-zinc-500 cursor-not-allowed">
                                     Research
-                                </Link>
+                                </span>
                             </li>
                             <li>
                                 <span className="text-sm text-zinc-500 cursor-not-allowed">
@@ -31,12 +28,9 @@ export default function Footer() {
                                 </span>
                             </li>
                             <li>
-                                <Link
-                                    href="/#briefings"
-                                    className="text-sm text-zinc-400 hover:text-white transition-colors"
-                                >
+                                <span className="text-sm text-zinc-500 cursor-not-allowed">
                                     Briefings
-                                </Link>
+                                </span>
                             </li>
                             <li>
                                 <span className="text-sm text-zinc-500 cursor-not-allowed">
@@ -70,7 +64,7 @@ export default function Footer() {
                                 </li> */}
                                 <li>
                                     <a
-                                        href="mailto:hey@cruso.dev"
+                                        href="mailto:nick@crusolabs.com"
                                         className="text-sm text-zinc-400 hover:text-white transition-colors"
                                     >
                                         Contact

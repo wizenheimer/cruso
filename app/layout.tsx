@@ -12,7 +12,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://cruso.com'),
+    metadataBase: new URL('https://crusolabs.com'),
     title: {
         default: 'Cruso',
         template: '%s | Cruso',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Cruso',
         description: 'AI Assistant You Can Email',
-        url: 'https://cruso.com',
+        url: 'https://crusolabs.com',
         siteName: 'Cruso',
         images: [
             {
