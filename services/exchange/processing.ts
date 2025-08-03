@@ -16,7 +16,7 @@ import { ExchangeData } from '@/types/exchange';
 import { User } from '@/types/users';
 import { getUserById } from '@/db/queries/users';
 
-const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick.roy@cruso.app';
+const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick.roy@crusolabs.com';
 
 export class ExchangeProcessingService {
     private static instance: ExchangeProcessingService | null = null;

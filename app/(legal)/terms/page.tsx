@@ -123,7 +123,7 @@ export default function TermsAndConditions() {
                     <h2 className="text-2xl font-semibold mt-8 mb-4">Contact Us</h2>
                     <p>
                         Any questions or complaints regarding these Terms can be addressed by
-                        sending an email to nick.roy@cruso.app.
+                        sending an email to nick.roy@crusolabs.com.
                     </p>
 
                     <div className="mt-8 pt-8 border-t">
