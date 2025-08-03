@@ -116,9 +116,7 @@ const OnboardingContent = () => {
             setError(null);
 
             // Load calendar connections
-            console.log('┌─ [API] Loading calendar connections...');
             const calendarResponse = await apiClient.getCalendarAccounts();
-            console.log('├─ [API] Calendar connections response received');
             if (calendarResponse.success && calendarResponse.data) {
                 const calendarAccountsData = calendarResponse.data as ApiCalendarAccount[];
                 const calendars = calendarAccountsData.map((account) => ({
@@ -127,23 +125,13 @@ const OnboardingContent = () => {
                     provider: 'google' as const,
                 }));
                 setConnectedCalendars(calendars);
-                console.log(
-                    '└─ [API] Successfully loaded',
-                    calendars.length,
-                    'calendar connections',
-                );
-            } else {
-                console.log('└─ [API] Failed to load calendar connections');
             }
 
             // Load existing preferences
-            console.log('┌─ [API] Loading existing preferences...');
             const preferencesResponse = await apiClient.getPreferences();
-            console.log('├─ [API] Preferences response received');
             if (preferencesResponse.success && preferencesResponse.data) {
                 const responseData = preferencesResponse.data as Record<string, unknown>;
                 const prefs = responseData.preferences as Record<string, unknown>;
-                console.log('├─ [API] Parsed preferences data');
 
                 // Update buffer settings from preferences
                 setBuffers((prev) => {
@@ -168,10 +156,8 @@ const OnboardingContent = () => {
                             default:
                                 break;
                         }
-                        console.log(`├─ [API] Buffer ${buffer.id} updated`);
                         return { ...buffer, value: newValue };
                     });
-                    console.log('├─ [API] Updated buffers:', updated);
                     return updated;
                 });
 
@@ -192,22 +178,14 @@ const OnboardingContent = () => {
                             default:
                                 break;
                         }
-                        console.log(`├─ [API] Field ${field.id} updated`);
                         return { ...field, value: newValue };
                     });
-                    console.log('├─ [API] Updated fields:', updated);
                     return updated;
                 });
-
-                console.log('└─ [API] Successfully loaded existing preferences');
-            } else {
-                console.log('└─ [API] No existing preferences found or error occurred');
             }
 
             // Load working hours schedule
-            console.log('┌─ [API] Loading working hours schedule...');
             const availabilityResponse = await apiClient.getWorkingHours();
-            console.log('├─ [API] Availability response received');
             if (availabilityResponse.success && availabilityResponse.data) {
                 const workingHours = availabilityResponse.data as Array<{
                     id: number;
@@ -230,12 +208,8 @@ const OnboardingContent = () => {
                 );
 
                 setSchedule(newSchedule);
-                console.log('└─ [API] Successfully loaded working hours schedule');
-            } else {
-                console.log('└─ [API] No existing working hours schedule found');
             }
-        } catch (error) {
-            console.error('Error loading onboarding data:', error);
+        } catch {
             showToast.error('Failed to load onboarding data');
             setError('Failed to load onboarding data');
         } finally {
@@ -279,7 +253,6 @@ const OnboardingContent = () => {
         const action = searchParams.get('action');
         if (action === 'linked') {
             // Refresh calendar data after OAuth callback
-            console.log('┌─ [OAUTH] Detected OAuth callback, refreshing calendar data...');
             loadOnboardingData();
         }
     }, [searchParams, loadOnboardingData]);
@@ -301,15 +274,9 @@ const OnboardingContent = () => {
         };
 
         // Try to update existing preferences, if not found create new ones
-        console.log('┌─ [API] Saving buffer settings...');
         const response = await apiClient.updatePreferences(prefsData);
-        console.log('├─ [API] Update preferences response received');
         if (!response.success) {
-            console.log('├─ [API] Update failed, creating new preferences...');
             await apiClient.createPreferences(prefsData);
-            console.log('└─ [API] Create preferences response received');
-        } else {
-            console.log('└─ [API] Successfully saved buffer settings');
         }
     }, [buffers]);
 
@@ -320,63 +287,41 @@ const OnboardingContent = () => {
             signature: fields.find((f) => f.id === 'signature')?.value || '',
         };
 
-        console.log('┌─ [API] Saving personalization data...');
         const response = await apiClient.updatePreferences(prefsData);
-        console.log('├─ [API] Update preferences response received');
         if (!response.success) {
-            console.log('├─ [API] Update failed, creating new preferences...');
             await apiClient.createPreferences(prefsData);
-            console.log('└─ [API] Create preferences response received');
-        } else {
-            console.log('└─ [API] Successfully saved personalization data');
         }
     }, [fields]);
 
     const saveScheduleData = useCallback(async () => {
         // Clear existing working hours first
-        console.log('┌─ [API] Saving schedule data...');
-        console.log('├─ [API] Getting existing working hours...');
         const existingAvailability = await apiClient.getWorkingHours();
-        console.log('├─ [API] Existing availability response received');
         if (existingAvailability.success && existingAvailability.data) {
             const existing = existingAvailability.data as Array<{ id: number }>;
-            console.log('├─ [API] Deleting', existing.length, 'existing working hours records...');
             for (const avail of existing) {
                 await apiClient.deleteWorkingHours(avail.id);
             }
-            console.log('├─ [API] Deleted existing working hours records');
         }
 
         // Convert schedule to working hours format using utility function
-        console.log('├─ [API] Converting schedule to working hours format...');
         const { convertScheduleToWorkingHours } = await import('@/lib/working-hours');
         const workingHoursData = convertScheduleToWorkingHours(schedule);
 
         // Create new working hours records
-        console.log('├─ [API] Creating new working hours records...');
-        let createdCount = 0;
         for (const avail of workingHoursData) {
             await apiClient.createWorkingHours({
                 days: avail.days,
                 startTime: avail.startTime,
                 endTime: avail.endTime,
             });
-            createdCount++;
         }
-        console.log('└─ [API] Created', createdCount, 'new working hours records');
     }, [schedule]);
 
     const finalizeOnboarding = useCallback(async () => {
         // Generate preferences document and mark onboarding as complete
-        console.log('┌─ [API] Finalizing onboarding...');
-
-        // Generate the preferences document
-        console.log('├─ [API] Generating preferences document...');
         const documentResponse = await apiClient.generatePreferencesDocument();
-        console.log('├─ [API] Generate document response received');
 
         if (!documentResponse.success) {
-            console.log('└─ [API] Failed to generate preferences document');
             const errorMessage =
                 documentResponse.error || 'Failed to generate preferences document';
             showToast.error(errorMessage);
@@ -430,7 +375,6 @@ const OnboardingContent = () => {
         } catch (error) {
             const errorMessage =
                 error instanceof Error ? error.message : 'Failed to save step data';
-            console.error('Failed to proceed to next step:', errorMessage);
             showToast.error(errorMessage);
             setError(errorMessage);
             setLoading(false);
@@ -440,37 +384,27 @@ const OnboardingContent = () => {
     // Handle adding calendar during onboarding
     const handleAddCalendar = async () => {
         try {
-            console.log('[FRONTEND] Starting Google account linking process...');
             setError(null);
 
-            console.log('[FRONTEND] Calling authClient.linkSocial...');
             const response = await authClient.linkSocial({
                 provider: 'google',
                 callbackURL: '/get-started?action=linked&step=1',
                 fetchOptions: {
-                    onError: (error) => {
-                        console.error('Error linking Google account:', error);
+                    onError: () => {
                         showToast.error('Failed to link Google account. Please try again.');
                     },
                 },
             });
 
-            console.log('[FRONTEND] linkSocial response received');
-
             if (response.error) {
-                console.error('[FRONTEND] Error in linkSocial response:', response.error);
                 throw new Error(response.error.message || 'Failed to link account');
             }
 
             if (response.data?.url) {
-                console.log('[FRONTEND] Redirecting to OAuth URL');
                 window.location.href = response.data.url;
-            } else {
-                console.warn('[FRONTEND] No redirect URL received from linkSocial');
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to link account';
-            console.error('[FRONTEND] Error linking additional Google account:', error);
             showToast.error(errorMessage);
             setError(errorMessage);
         }
