@@ -6,25 +6,25 @@ import FadeIn from './ui/fade-in';
 const tabs = [
     {
         title: 'Scheduling',
-        videoId: 'nrMWolEmAY8',
+        videoId: 'A3-49JtB3Ws',
         description: 'Learn how to start using your AI assistant via email',
         comingSoon: false,
     },
     {
         title: 'Monitoring',
-        videoId: 'nrMWolEmAY8',
+        videoId: 'A3-49JtB3Ws',
         description: 'See how the AI understands context and provides helpful responses',
         comingSoon: true,
     },
     {
         title: 'Deal Flow',
-        videoId: 'nrMWolEmAY8',
+        videoId: 'A3-49JtB3Ws',
         description: 'Get help with scheduling, reminders, and daily tasks',
         comingSoon: true,
     },
     {
         title: 'Research',
-        videoId: 'nrMWolEmAY8',
+        videoId: 'A3-49JtB3Ws',
         description: 'Ask questions and get assistance with writing',
         comingSoon: true,
     },
