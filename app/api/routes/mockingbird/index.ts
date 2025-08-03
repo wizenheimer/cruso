@@ -47,7 +47,7 @@ mockingbird.post('/', async (c) => {
             console.log('defaulting to firstParty');
             userType = 'firstParty';
         } else {
-            console.log('userType', userType);
+            console.log('userType:', userType);
         }
 
         // Transform timestamp to Unix timestamp in milliseconds if needed before parsing

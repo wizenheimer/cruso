@@ -63,7 +63,7 @@ export const parseUserFromEmailMiddleware = async (c: Context, next: Next) => {
     // Get the user from the email
     const user = await getUserByEmail(emailData.sender);
 
-    console.log('setting user in context', { user });
+    console.log('setting user in context');
 
     // Store the user in the context
     c.set(USER_MIDDLEWARE_CONTEXT_KEY, user);

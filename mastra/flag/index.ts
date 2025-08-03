@@ -36,7 +36,7 @@ export const getStatsigPrompt = async (
         const dynamicConfig = statsig.getDynamicConfig(statsigUser, config.flagId);
         const prompt = dynamicConfig.getValue('prompt', config.defaultInstructions);
 
-        console.log(`[${config.agentName}] Got prompt from Statsig for user ${userId}: ${prompt}`);
+        console.log(`[${config.agentName}] Got prompt from Statsig for user`);
         return prompt;
     } catch (error) {
         console.error(`[${config.agentName}] Failed to get prompt from Statsig:`, error);

@@ -10,7 +10,7 @@ import { getUser } from './connections';
 export async function handleRefreshCalendars(c: Context) {
     try {
         const user = getUser(c);
-        console.log('Manual refresh requested for user:', user.id);
+        console.log('Manual refresh requested for user');
 
         // Use the calendar service to handle token refresh and syncing
         const calendarService = createCalendarService(user.id);

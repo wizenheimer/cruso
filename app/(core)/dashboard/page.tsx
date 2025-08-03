@@ -77,11 +77,7 @@ export default function DashboardPage() {
             // Load calendar accounts
             console.log('┌─ [API] Loading calendar accounts...');
             const calendarResponse = await apiClient.getCalendarAccounts();
-            console.log('├─ [API] Calendar accounts response:', {
-                success: calendarResponse.success,
-                dataLength: Array.isArray(calendarResponse.data) ? calendarResponse.data.length : 0,
-                error: calendarResponse.error,
-            });
+            console.log('├─ [API] Calendar accounts response received');
             if (calendarResponse.success && calendarResponse.data) {
                 const calendarAccountsData = calendarResponse.data as ApiCalendarAccount[];
                 setCalendarAccounts(
@@ -109,11 +105,7 @@ export default function DashboardPage() {
             // Load email accounts
             console.log('┌─ [API] Loading email accounts...');
             const emailResponse = await apiClient.getUserEmails();
-            console.log('├─ [API] Email accounts response:', {
-                success: emailResponse.success,
-                dataLength: Array.isArray(emailResponse.data) ? emailResponse.data.length : 0,
-                error: emailResponse.error,
-            });
+            console.log('├─ [API] Email accounts response received');
             if (emailResponse.success && emailResponse.data) {
                 const emailAccountsData = emailResponse.data as ApiEmailAccount[];
                 setEmailAccounts(
@@ -136,11 +128,7 @@ export default function DashboardPage() {
             // Load preferences
             console.log('┌─ [API] Loading preferences...');
             const preferencesResponse = await apiClient.getPreferences();
-            console.log('├─ [API] Preferences response:', {
-                success: preferencesResponse.success,
-                hasData: !!preferencesResponse.data,
-                error: preferencesResponse.error,
-            });
+            console.log('├─ [API] Preferences response received');
             if (preferencesResponse.success && preferencesResponse.data) {
                 const userPreferencesData = preferencesResponse.data as PreferencesWithPrimaries;
                 setPreferences(userPreferencesData.preferences);
@@ -176,14 +164,11 @@ export default function DashboardPage() {
      */
     const handleMakePrimaryCalendar = async (primaryAccountId: string) => {
         try {
-            console.log('┌─ [API] Making calendar primary...', { accountId: primaryAccountId });
+            console.log('┌─ [API] Making calendar primary...');
 
             // Update preferences to set this account as primary
             const updatePrimaryResponse = await apiClient.updatePrimaryAccount(primaryAccountId);
-            console.log('├─ [API] Update primary account response:', {
-                success: updatePrimaryResponse.success,
-                error: updatePrimaryResponse.error,
-            });
+            console.log('├─ [API] Update primary account response received');
             if (updatePrimaryResponse.success) {
                 // Update local preferences state
                 setPreferences((previousPreferences) =>
@@ -219,12 +204,9 @@ export default function DashboardPage() {
      */
     const handleRemoveCalendar = async (accountIdToRemove: string) => {
         try {
-            console.log('┌─ [API] Removing calendar...', { accountId: accountIdToRemove });
+            console.log('┌─ [API] Removing calendar...');
             const deleteCalendarResponse = await apiClient.deleteCalendarAccount(accountIdToRemove);
-            console.log('├─ [API] Remove calendar response:', {
-                success: deleteCalendarResponse.success,
-                error: deleteCalendarResponse.error,
-            });
+            console.log('├─ [API] Remove calendar response received');
             if (deleteCalendarResponse.success) {
                 // Update local state
                 setCalendarAccounts((currentCalendarAccounts) =>
@@ -250,14 +232,11 @@ export default function DashboardPage() {
      */
     const handleMakePrimaryEmail = async (primaryEmailId: number) => {
         try {
-            console.log('┌─ [API] Making email primary...', { emailId: primaryEmailId });
+            console.log('┌─ [API] Making email primary...');
 
             // Update preferences to set this email as primary
             const updatePrimaryEmailResponse = await apiClient.updatePrimaryEmail(primaryEmailId);
-            console.log('├─ [API] Update primary email response:', {
-                success: updatePrimaryEmailResponse.success,
-                error: updatePrimaryEmailResponse.error,
-            });
+            console.log('├─ [API] Update primary email response received');
             if (updatePrimaryEmailResponse.success) {
                 // Update local preferences state
                 setPreferences((previousPreferences) =>
@@ -295,12 +274,9 @@ export default function DashboardPage() {
      */
     const handleRemoveEmail = async (emailIdToRemove: number) => {
         try {
-            console.log('┌─ [API] Removing email...', { emailId: emailIdToRemove });
+            console.log('┌─ [API] Removing email...');
             const deleteEmailResponse = await apiClient.deleteUserEmail(emailIdToRemove);
-            console.log('├─ [API] Remove email response:', {
-                success: deleteEmailResponse.success,
-                error: deleteEmailResponse.error,
-            });
+            console.log('├─ [API] Remove email response received');
             if (deleteEmailResponse.success) {
                 // Update local state
                 setEmailAccounts((currentEmailAccounts) =>
@@ -325,12 +301,9 @@ export default function DashboardPage() {
      */
     const handleAddEmail = async (newEmailAddress: string) => {
         try {
-            console.log('┌─ [API] Adding email...', { email: newEmailAddress });
+            console.log('┌─ [API] Adding email...');
             const addEmailResponse = await apiClient.addUserEmail({ email: newEmailAddress });
-            console.log('├─ [API] Add email response:', {
-                success: addEmailResponse.success,
-                error: addEmailResponse.error,
-            });
+            console.log('├─ [API] Add email response received');
             if (addEmailResponse.success && addEmailResponse.data) {
                 const newEmailData = addEmailResponse.data as ApiEmailAccount;
                 const newEmailAccount: EmailAccount = {
@@ -399,7 +372,7 @@ export default function DashboardPage() {
                 isActive: preferences.isActive,
             };
 
-            console.log('┌─ [API] Saving preferences...', { isCreate: preferences.id === 0 });
+            console.log('┌─ [API] Saving preferences...');
             if (preferences.id === 0) {
                 // Create new preferences
                 savePreferencesResponse = await apiClient.createPreferences(preferencesPayload);
@@ -408,10 +381,7 @@ export default function DashboardPage() {
                 savePreferencesResponse =
                     await apiClient.updatePreferencesDocument(preferencesPayload);
             }
-            console.log('├─ [API] Save preferences response:', {
-                success: savePreferencesResponse.success,
-                error: savePreferencesResponse.error,
-            });
+            console.log('├─ [API] Save preferences response received');
 
             if (savePreferencesResponse.success && savePreferencesResponse.data) {
                 const savedPreferences = savePreferencesResponse.data as Preferences;
@@ -462,7 +432,7 @@ export default function DashboardPage() {
 
             console.log('├─ [DEBUG] Account found:', targetAccount);
             console.log('├─ [DEBUG] Calendar found:', targetCalendar);
-            console.log('├─ [DEBUG] Calendar ID:', targetCalendar?.id);
+            console.log('├─ [DEBUG] Calendar found');
             console.log('├─ [DEBUG] All calendars in account:', targetAccount?.calendars);
 
             if (targetAccount && targetCalendar && targetCalendar.id) {
@@ -473,11 +443,7 @@ export default function DashboardPage() {
                         includeInAvailability: !targetCalendar.enabled,
                     },
                 );
-                console.log('├─ [API] Toggle calendar response:', {
-                    success: toggleCalendarResponse.success,
-                    error: toggleCalendarResponse.error,
-                    newState: !targetCalendar.enabled,
-                });
+                console.log('├─ [API] Toggle calendar response received');
 
                 if (toggleCalendarResponse.success) {
                     // Update local state
@@ -527,7 +493,7 @@ export default function DashboardPage() {
                 },
             });
 
-            console.log('[FRONTEND] linkSocial response:', linkSocialResponse);
+            console.log('[FRONTEND] linkSocial response received');
 
             if (linkSocialResponse.error) {
                 console.error('[FRONTEND] Error in linkSocial response:', linkSocialResponse.error);

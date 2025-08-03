@@ -62,7 +62,7 @@ export async function handleCreatePreferences(requestContext: Context) {
             return requestContext.json({ error: createPreferencesResult.error }, 400);
         }
 
-        console.log('[HANDLER] Preferences created successfully for user:', authenticatedUser.id);
+        console.log('[HANDLER] Preferences created successfully for user');
         return requestContext.json(createPreferencesResult.data, 201);
     } catch (createPreferencesError) {
         console.error('Error creating preferences:', createPreferencesError);
@@ -91,7 +91,7 @@ export async function handleUpdatePreferences(requestContext: Context) {
             return requestContext.json({ error: updatePreferencesResult.error }, 400);
         }
 
-        console.log('[HANDLER] Preferences updated successfully for user:', authenticatedUser.id);
+        console.log('[HANDLER] Preferences updated successfully for user');
         return requestContext.json(updatePreferencesResult.data);
     } catch (updatePreferencesError) {
         console.error('Error updating preferences:', updatePreferencesError);
@@ -118,7 +118,7 @@ export async function handleDeletePreferences(requestContext: Context) {
             return requestContext.json({ error: deletePreferencesResult.error }, 400);
         }
 
-        console.log('[HANDLER] Preferences deleted successfully for user:', authenticatedUser.id);
+        console.log('[HANDLER] Preferences deleted successfully for user');
         return requestContext.json({ success: true });
     } catch (deletePreferencesError) {
         console.error('Error deleting preferences:', deletePreferencesError);
@@ -266,7 +266,7 @@ export async function handleUpdatePrimaryEmail(requestContext: Context) {
             return requestContext.json({ error: updatePrimaryEmailResult.error }, 400);
         }
 
-        console.log('[HANDLER] Primary email updated successfully for user:', authenticatedUser.id);
+        console.log('[HANDLER] Primary email updated successfully for user');
         return requestContext.json(updatePrimaryEmailResult.data);
     } catch (updatePrimaryEmailError) {
         console.error('Error updating primary email:', updatePrimaryEmailError);

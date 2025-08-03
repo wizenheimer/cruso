@@ -86,7 +86,7 @@ export async function parseInboundWebhookWithoutAttachments(body: string): Promi
 
     const emailData = await parseEmailDataFromMailgunWebhookFormData(formData);
 
-    console.log('emailData', emailData);
+    console.log('emailData parsed successfully');
 
     return emailData;
 }
@@ -123,7 +123,7 @@ export async function parseInboundWebhookWithAttachments(body: string): Promise<
 
     const emailData = await parseEmailDataFromMailgunWebhookFormData(formData);
 
-    console.log('processed emailData', emailData);
+    console.log('processed emailData successfully');
 
     return emailData;
 }

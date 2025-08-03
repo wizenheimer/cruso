@@ -72,7 +72,7 @@ const CalendarStep = ({
     const removeCalendar = async (id: string) => {
         try {
             setRemovingCalendar(id);
-            console.log('┌─ [API] Removing calendar...', { accountId: id });
+            console.log('┌─ [API] Removing calendar...');
 
             const deleteCalendarResponse = await apiClient.deleteCalendarAccount(id);
             console.log('├─ [API] Remove calendar response:', {

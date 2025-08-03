@@ -51,7 +51,7 @@ export class ExchangeDataService {
         const existingMessage = await this.getByMessageId(messageId);
 
         if (existingMessage) {
-            console.log(`Message ${messageId} already exists, updating existing record`);
+            console.log(`Message already exists, updating existing record`);
 
             try {
                 // Update the existing record with new data
@@ -69,7 +69,7 @@ export class ExchangeDataService {
                     .where(eq(exchangeData.messageId, data.messageId))
                     .returning();
 
-                console.log(`Successfully updated existing message: ${messageId}`);
+                console.log(`Successfully updated existing message`);
                 return updatedExchangeData;
             } catch (updateError) {
                 console.error(`Failed to update existing message ${messageId}:`, updateError);
@@ -80,7 +80,7 @@ export class ExchangeDataService {
         // If the message doesn't exist, insert it
         try {
             const [savedExchangeData] = await this.db.insert(exchangeData).values(data).returning();
-            console.log(`Successfully inserted new message: ${messageId}`);
+            console.log(`Successfully inserted new message`);
             return savedExchangeData;
         } catch (error) {
             console.error(`Failed to insert message ${messageId}:`, error);

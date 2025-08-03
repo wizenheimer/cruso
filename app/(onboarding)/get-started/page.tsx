@@ -118,11 +118,7 @@ const OnboardingContent = () => {
             // Load calendar connections
             console.log('┌─ [API] Loading calendar connections...');
             const calendarResponse = await apiClient.getCalendarAccounts();
-            console.log('├─ [API] Calendar connections response:', {
-                success: calendarResponse.success,
-                dataLength: Array.isArray(calendarResponse.data) ? calendarResponse.data.length : 0,
-                error: calendarResponse.error,
-            });
+            console.log('├─ [API] Calendar connections response received');
             if (calendarResponse.success && calendarResponse.data) {
                 const calendarAccountsData = calendarResponse.data as ApiCalendarAccount[];
                 const calendars = calendarAccountsData.map((account) => ({
@@ -143,16 +139,11 @@ const OnboardingContent = () => {
             // Load existing preferences
             console.log('┌─ [API] Loading existing preferences...');
             const preferencesResponse = await apiClient.getPreferences();
-            console.log('├─ [API] Preferences response:', {
-                success: preferencesResponse.success,
-                hasData: !!preferencesResponse.data,
-                data: preferencesResponse.data,
-                error: preferencesResponse.error,
-            });
+            console.log('├─ [API] Preferences response received');
             if (preferencesResponse.success && preferencesResponse.data) {
                 const responseData = preferencesResponse.data as Record<string, unknown>;
                 const prefs = responseData.preferences as Record<string, unknown>;
-                console.log('├─ [API] Parsed preferences data:', prefs);
+                console.log('├─ [API] Parsed preferences data');
 
                 // Update buffer settings from preferences
                 setBuffers((prev) => {
@@ -177,7 +168,7 @@ const OnboardingContent = () => {
                             default:
                                 break;
                         }
-                        console.log(`├─ [API] Buffer ${buffer.id}: ${buffer.value} -> ${newValue}`);
+                        console.log(`├─ [API] Buffer ${buffer.id} updated`);
                         return { ...buffer, value: newValue };
                     });
                     console.log('├─ [API] Updated buffers:', updated);
@@ -201,7 +192,7 @@ const OnboardingContent = () => {
                             default:
                                 break;
                         }
-                        console.log(`├─ [API] Field ${field.id}: ${field.value} -> ${newValue}`);
+                        console.log(`├─ [API] Field ${field.id} updated`);
                         return { ...field, value: newValue };
                     });
                     console.log('├─ [API] Updated fields:', updated);
@@ -216,13 +207,7 @@ const OnboardingContent = () => {
             // Load working hours schedule
             console.log('┌─ [API] Loading working hours schedule...');
             const availabilityResponse = await apiClient.getWorkingHours();
-            console.log('├─ [API] Availability response:', {
-                success: availabilityResponse.success,
-                dataLength: Array.isArray(availabilityResponse.data)
-                    ? availabilityResponse.data.length
-                    : 0,
-                error: availabilityResponse.error,
-            });
+            console.log('├─ [API] Availability response received');
             if (availabilityResponse.success && availabilityResponse.data) {
                 const workingHours = availabilityResponse.data as Array<{
                     id: number;
@@ -245,7 +230,7 @@ const OnboardingContent = () => {
                 );
 
                 setSchedule(newSchedule);
-                console.log('└─ [API] Successfully loaded working hours schedule:', newSchedule);
+                console.log('└─ [API] Successfully loaded working hours schedule');
             } else {
                 console.log('└─ [API] No existing working hours schedule found');
             }
@@ -318,17 +303,11 @@ const OnboardingContent = () => {
         // Try to update existing preferences, if not found create new ones
         console.log('┌─ [API] Saving buffer settings...');
         const response = await apiClient.updatePreferences(prefsData);
-        console.log('├─ [API] Update preferences response:', {
-            success: response.success,
-            error: response.error,
-        });
+        console.log('├─ [API] Update preferences response received');
         if (!response.success) {
             console.log('├─ [API] Update failed, creating new preferences...');
-            const createResponse = await apiClient.createPreferences(prefsData);
-            console.log('└─ [API] Create preferences response:', {
-                success: createResponse.success,
-                error: createResponse.error,
-            });
+            await apiClient.createPreferences(prefsData);
+            console.log('└─ [API] Create preferences response received');
         } else {
             console.log('└─ [API] Successfully saved buffer settings');
         }
@@ -343,17 +322,11 @@ const OnboardingContent = () => {
 
         console.log('┌─ [API] Saving personalization data...');
         const response = await apiClient.updatePreferences(prefsData);
-        console.log('├─ [API] Update preferences response:', {
-            success: response.success,
-            error: response.error,
-        });
+        console.log('├─ [API] Update preferences response received');
         if (!response.success) {
             console.log('├─ [API] Update failed, creating new preferences...');
-            const createResponse = await apiClient.createPreferences(prefsData);
-            console.log('└─ [API] Create preferences response:', {
-                success: createResponse.success,
-                error: createResponse.error,
-            });
+            await apiClient.createPreferences(prefsData);
+            console.log('└─ [API] Create preferences response received');
         } else {
             console.log('└─ [API] Successfully saved personalization data');
         }
@@ -364,12 +337,7 @@ const OnboardingContent = () => {
         console.log('┌─ [API] Saving schedule data...');
         console.log('├─ [API] Getting existing working hours...');
         const existingAvailability = await apiClient.getWorkingHours();
-        console.log('├─ [API] Existing availability response:', {
-            success: existingAvailability.success,
-            dataLength: Array.isArray(existingAvailability.data)
-                ? existingAvailability.data.length
-                : 0,
-        });
+        console.log('├─ [API] Existing availability response received');
         if (existingAvailability.success && existingAvailability.data) {
             const existing = existingAvailability.data as Array<{ id: number }>;
             console.log('├─ [API] Deleting', existing.length, 'existing working hours records...');
@@ -405,10 +373,7 @@ const OnboardingContent = () => {
         // Generate the preferences document
         console.log('├─ [API] Generating preferences document...');
         const documentResponse = await apiClient.generatePreferencesDocument();
-        console.log('├─ [API] Generate document response:', {
-            success: documentResponse.success,
-            error: documentResponse.error,
-        });
+        console.log('├─ [API] Generate document response received');
 
         if (!documentResponse.success) {
             console.log('└─ [API] Failed to generate preferences document');
@@ -490,7 +455,7 @@ const OnboardingContent = () => {
                 },
             });
 
-            console.log('[FRONTEND] linkSocial response:', response);
+            console.log('[FRONTEND] linkSocial response received');
 
             if (response.error) {
                 console.error('[FRONTEND] Error in linkSocial response:', response.error);
@@ -498,7 +463,7 @@ const OnboardingContent = () => {
             }
 
             if (response.data?.url) {
-                console.log('[FRONTEND] Redirecting to OAuth URL:', response.data.url);
+                console.log('[FRONTEND] Redirecting to OAuth URL');
                 window.location.href = response.data.url;
             } else {
                 console.warn('[FRONTEND] No redirect URL received from linkSocial');
