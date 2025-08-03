@@ -5209,7 +5209,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"sender\": \"user@example.com\",\n  \"recipient\": \"me@crusolabs.com\",\n  \"subject\": \"Test Email\",\n  \"body\": \"Email content\",\n  \"timestamp\": \"2024-01-01T10:00:00Z\"\n}",
+                            "raw": "{\n  \"sender\": \"user@example.com\",\n  \"recipient\": \"me@cruso.app\",\n  \"subject\": \"Test Email\",\n  \"body\": \"Email content\",\n  \"timestamp\": \"2024-01-01T10:00:00Z\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"

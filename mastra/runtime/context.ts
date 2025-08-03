@@ -222,12 +222,12 @@ export const getUserFromRuntimeContext = (runtimeContext: RuntimeContext) => {
  * @returns The host
  */
 export const getHostFromRuntimeContext = (runtimeContext: RuntimeContext) => {
-    // Filter out any email address that are from crusolabs.com domain
+    // Filter out any email address that are from cruso.app domain
     const host = runtimeContext.get(HOST_CONTEXT_KEY) as string;
     if (!host) {
         return '';
     }
-    if (host.includes('@crusolabs.com')) {
+    if (host.includes('@cruso.app')) {
         return '';
     }
     return host;
@@ -239,12 +239,12 @@ export const getHostFromRuntimeContext = (runtimeContext: RuntimeContext) => {
  * @returns The attendees
  */
 export const getAttendeesFromRuntimeContext = (runtimeContext: RuntimeContext) => {
-    // Filter out any email address that are from crusolabs.com domain
+    // Filter out any email address that are from cruso.app domain
     const attendees = runtimeContext.get(ATTENDEES_CONTEXT_KEY) as string[];
     if (!attendees || !Array.isArray(attendees)) {
         return [];
     }
-    return attendees.filter((attendee) => !attendee.includes('@crusolabs.com'));
+    return attendees.filter((attendee) => !attendee.includes('@cruso.app'));
 };
 
 /**

@@ -21,7 +21,7 @@ export class EmailService {
     private constructor() {
         this.apiKey = process.env.MAILGUN_API_KEY || '';
         this.domain = process.env.MAILGUN_DOMAIN || '';
-        this.senderEmail = process.env.MAIN_EMAIL_ADDRESS || 'cruso@crusolabs.com';
+        this.senderEmail = process.env.MAIN_EMAIL_ADDRESS || 'cruso@cruso.app';
 
         if (!this.apiKey || !this.domain) {
             throw new Error(

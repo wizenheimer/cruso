@@ -38,7 +38,7 @@ Welcome to Cruso! We're thrilled to have you on board.
 
 This is Nick, founder of Cruso. Quick auth, and you'd be all set.
 
-https://crusolabs.com/signup
+https://cruso.app/signup
 
 Best,
 Nick
@@ -53,7 +53,7 @@ No worries at all - happens all the time! I'm Nick, the founder, and I'd love to
 
 Just hop over here when you get a sec
 
-https://crusolabs.com/signup
+https://cruso.app/signup
 
 Can't wait to see you onboarded!
 

@@ -16,7 +16,7 @@ import { ExchangeData } from '@/types/exchange';
 import { User } from '@/types/users';
 import { getUserById } from '@/db/queries/users';
 
-const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick@crusolabs.com';
+const ONBOARDING_EMAIL_RECIPIENT = process.env.FOUNDER_EMAIL || 'nick.roy@cruso.app';
 
 export class ExchangeProcessingService {
     private static instance: ExchangeProcessingService | null = null;
@@ -324,10 +324,10 @@ export class ExchangeProcessingService {
         const currentMessageReceipts = currentEmailData.recipients;
         let mergedReceipts = [...new Set([...previousMessageReceipts, ...currentMessageReceipts])];
 
-        // Remove the sender and any @crusolabs.com emails from the merged receipts
+        // Remove the sender and any @cruso.app emails from the merged receipts
         mergedReceipts = mergedReceipts.filter(
             (recipient) =>
-                recipient !== currentEmailData.sender && !recipient.includes('@crusolabs.com'),
+                recipient !== currentEmailData.sender && !recipient.includes('@cruso.app'),
         );
 
         return mergedReceipts;

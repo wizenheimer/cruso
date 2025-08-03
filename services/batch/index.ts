@@ -192,9 +192,9 @@ export class SchedulingInitiatorService extends BaseCalendarService {
             processedRecipients.push(user.email);
         }
 
-        // Remove any @crusolabs.com emails from the recipients
+        // Remove any @cruso.app emails from the recipients
         processedRecipients = processedRecipients.filter(
-            (recipient) => !recipient.includes('@crusolabs.com'),
+            (recipient) => !recipient.includes('@cruso.app'),
         );
 
         // Remove user email from recipients if excluding it

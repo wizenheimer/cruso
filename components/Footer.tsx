@@ -64,7 +64,7 @@ export default function Footer() {
                                 </li> */}
                                 <li>
                                     <a
-                                        href="mailto:nick@crusolabs.com"
+                                        href="mailto:nick.roy@cruso.app"
                                         className="text-sm text-zinc-400 hover:text-white transition-colors"
                                     >
                                         Contact
