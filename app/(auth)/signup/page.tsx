@@ -95,7 +95,7 @@ const SignupPage = () => {
                     transition={{ duration: 0.8, ease: 'easeOut' }}
                 >
                     <motion.div
-                        className="w-full max-w-xs flex flex-col items-center"
+                        className="w-full max-w-sm flex flex-col items-center"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
@@ -104,7 +104,7 @@ const SignupPage = () => {
                             We&apos;re almost there
                         </h1>
                         <p className="text-base text-muted-foreground mb-6 text-center">
-                            Quick auth and we make this official
+                            Connect your calendar and kickoff scheduling
                         </p>
                         <Button
                             onClick={signUpWithGoogle}
