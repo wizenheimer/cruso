@@ -55,7 +55,7 @@ export default function TermsAndConditions() {
                         </li>
                         <li>
                             &ldquo;Website&rdquo; means the public website available at
-                            https://cruso.app
+                            https://www.cruso.app
                         </li>
                     </ul>
 

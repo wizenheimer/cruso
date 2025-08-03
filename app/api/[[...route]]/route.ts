@@ -29,7 +29,16 @@ app.use('*', logger());
 app.use(
     '*',
     cors({
-        origin: ['http://localhost:3000', 'https://cruso.app'],
+        origin: [
+            // --- Local domains ---
+            'http://localhost:3000',
+            // --- Prod domains ---
+            'https://cruso.app',
+            'https://www.cruso.app',
+            // --- Pre-Prod domains ---
+            'https://crusolabs.com',
+            'https://www.crusolabs.com',
+        ],
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         allowHeaders: ['Content-Type', 'Authorization'],
     }),

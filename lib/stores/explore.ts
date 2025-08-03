@@ -63,7 +63,7 @@ export const useExploreStore = create<ExploreState>()(
                             description:
                                 'Link your primary calendar (Google Calendar, Outlook, etc.) so Cruso can check availability and create events.',
                             completed: false,
-                            url: 'https://cruso.app/dashboard',
+                            url: 'https://www.cruso.app/dashboard',
                         },
                         {
                             id: 'set-preferences',
@@ -71,7 +71,7 @@ export const useExploreStore = create<ExploreState>()(
                             description:
                                 'Set your working hours, default meeting lengths, and timezone preferences for optimal scheduling.',
                             completed: false,
-                            url: 'https://cruso.app/dashboard',
+                            url: 'https://www.cruso.app/dashboard',
                         },
                     ],
                     expanded: true,
