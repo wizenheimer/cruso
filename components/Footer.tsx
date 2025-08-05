@@ -19,22 +19,7 @@ export default function Footer() {
                             </li>
                             <li>
                                 <span className="text-sm text-zinc-500 cursor-not-allowed">
-                                    Research
-                                </span>
-                            </li>
-                            <li>
-                                <span className="text-sm text-zinc-500 cursor-not-allowed">
-                                    Monitoring
-                                </span>
-                            </li>
-                            <li>
-                                <span className="text-sm text-zinc-500 cursor-not-allowed">
-                                    Briefings
-                                </span>
-                            </li>
-                            <li>
-                                <span className="text-sm text-zinc-500 cursor-not-allowed">
-                                    Deal Flow
+                                    Note Taking
                                 </span>
                             </li>
                         </ul>

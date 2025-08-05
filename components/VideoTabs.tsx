@@ -11,21 +11,9 @@ const tabs = [
         comingSoon: false,
     },
     {
-        title: 'Monitoring',
+        title: 'Note Taking',
         videoId: 'A3-49JtB3Ws',
         description: 'See how the AI understands context and provides helpful responses',
-        comingSoon: true,
-    },
-    {
-        title: 'Deal Flow',
-        videoId: 'A3-49JtB3Ws',
-        description: 'Get help with scheduling, reminders, and daily tasks',
-        comingSoon: true,
-    },
-    {
-        title: 'Research',
-        videoId: 'A3-49JtB3Ws',
-        description: 'Ask questions and get assistance with writing',
         comingSoon: true,
     },
 ];
